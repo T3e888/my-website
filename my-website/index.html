@@ -1,11 +1,30 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My Website</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CardCollectAR</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'login.html?redirect=index.html';
+      throw '';
+    }
+  </script>
+
+  <h1>My Card Collection</h1>
+  <div id="collection"></div>
+  <a href="scan.html?key=">Scan a Card</a> |
+  <a href="#" onclick="logout()">Logout</a>
+
+  <script src="script.js"></script>
+  <script>
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>
