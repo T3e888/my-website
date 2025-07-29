@@ -1,35 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>เข้าสู่ระบบ</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      filter: grayscale(100%);
+    }
+
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
-  <div class="form-container">
-    <h2>Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email" required>
-    <input type="password" id="loginPassword" placeholder="Password" required>
-    <button id="btnLogin">Login</button>
-    <p>Don't have an account? <a href="register.html">Register here</a></p>
-  </div>
+  <h2>เข้าสู่ระบบ</h2>
+  <input id="username" placeholder="ชื่อผู้ใช้">
+  <input id="password" type="password" placeholder="รหัสผ่าน">
+  <button onclick="login()">เข้าสู่ระบบ</button>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const redirectUrl = urlParams.get('redirect') || 'index.html';
+    function login() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
 
-    document.getElementById('btnLogin').addEventListener('click', () => {
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
-      const users = JSON.parse(localStorage.getItem('users')||'{}');
-      if (users[email] && users[email] === password) {
-        localStorage.setItem('token', email);
-        window.location.href = redirectUrl;
+      if (u === "admin" && p === "1234") {
+        localStorage.setItem("isLoggedIn", "true");
+        window.location.href = "index.html";
       } else {
-        alert('Incorrect email or password.');
+        alert("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
       }
-    });
+    }
   </script>
 </body>
 </html>
