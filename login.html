@@ -16,17 +16,15 @@
   </div>
 
   <script>
-    // เก็บ redirect URL ถ้ามีพารามิเตอร์ redirect
     const urlParams = new URLSearchParams(window.location.search);
     const redirectUrl = urlParams.get('redirect') || 'index.html';
 
-    const btnLogin = document.getElementById('btnLogin');
-    btnLogin.addEventListener('click', () => {
+    document.getElementById('btnLogin').addEventListener('click', () => {
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
       const users = JSON.parse(localStorage.getItem('users')||'{}');
       if (users[email] && users[email] === password) {
-        localStorage.setItem('token', email);  // สร้าง token จำลอง
+        localStorage.setItem('token', email);
         window.location.href = redirectUrl;
       } else {
         alert('Incorrect email or password.');
