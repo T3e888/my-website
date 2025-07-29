@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Card Collection</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+  const params = new URLSearchParams(window.location.search);
+  const cardId = params.get('card');
+
+  if (cardId) {
+    let unlocked = JSON.parse(localStorage.getItem('unlockedCards') || '[]');
+
+    if (!unlocked.includes(cardId)) {
+      unlocked.push(cardId);
+      localStorage.setItem('unlockedCards', JSON.stringify(unlocked));
+      alert("ปลดล็อกการ์ดแล้ว: " + cardId);
+    }
+  }
+  </script>
 </head>
 <body>
   <script>
