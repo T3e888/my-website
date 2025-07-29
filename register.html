@@ -16,15 +16,13 @@
   </div>
 
   <script>
-    const btnRegister = document.getElementById('btnRegister');
-    btnRegister.addEventListener('click', () => {
+    document.getElementById('btnRegister').addEventListener('click', () => {
       const email = document.getElementById('regEmail').value;
       const password = document.getElementById('regPassword').value;
       if (!email || !password) {
         alert('Please fill both fields.');
         return;
       }
-      // เก็บข้อมูลใน localStorage (simple demo)
       const users = JSON.parse(localStorage.getItem('users')||'{}');
       if (users[email]) {
         alert('Email already registered.');
