@@ -5,80 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Scan a Card</title>
   <link rel="stylesheet" href="style.css">
-  <!-- นำเข้าไลบรารีสำหรับสแกน QR code -->
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script> <!-- ไลบรารีสแกน QR0 -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
   <h1>Scan QR Code</h1>
-  <!-- พื้นที่แสดงกล้องเพื่อสแกน QR -->
   <div id="reader" style="max-width: 300px; margin: auto;"></div>
 
   <script>
-    // ตรวจสอบว่าเข้าสู่ระบบหรือยัง
     if (!localStorage.getItem('token')) {
-      // ถ้ายัง ไม่ล็อกอิน ให้ไปหน้า login ก่อน แล้วย้อนกลับมาหน้านี้หลังล็อกอินสำเร็จ
       const currentPage = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.href = 'login.html?redirect=' + currentPage;
-      throw ''; // ยกเลิกการทำงานส่วนที่เหลือ
+      throw '';
     }
 
-    // ดึงพารามิเตอร์ key จาก URL (ถ้ามี)
     const params = new URLSearchParams(window.location.search);
-    const cardKey = params.get('key');  // เช่น ?key=card1 จะได้ cardKey = "card1"
+    const cardKey = params.get('key');
 
-    // ฟังก์ชันสำหรับปลดล็อคการ์ดโดยเพิ่มลง LocalStorage
     function unlockCard(key) {
-      const currentUser = localStorage.getItem('token');              // อีเมลผู้ใช้ปัจจุบัน (token)
-      const userCardsKey = currentUser + '_cards';                   // ชื่อคีย์สำหรับเก็บการ์ดของผู้ใช้คนนี้
-      let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}'); // อ่าน object การ์ดที่ปลดล็อคแล้ว (ถ้าไม่มี ให้ใช้ {})
+      const currentUser = localStorage.getItem('token');
+      const userCardsKey = currentUser + '_cards';
+      let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
 
       if (!unlocked[key]) {
-        // ถ้ายังไม่มีการ์ดใบนี้ในคอลเลกชันของผู้ใช้ -> ปลดล็อคใบใหม่
-        unlocked[key] = 1;  // เพิ่มการ์ดใบนี้และตั้งจำนวนเป็น 1
-        localStorage.setItem(userCardsKey, JSON.stringify(unlocked)); // บันทึกกลับไปที่ LocalStorage
-        alert('ปลดล็อคการ์ดสำเร็จ!');  // แจ้งเตือนว่าปลดล็อคสำเร็จ
-        // หากต้องการ เสียงแจ้งเตือน สามารถเล่นเสียงที่นี่
-        // เช่น:
-        // let audio = new Audio('assets/sounds/unlock.mp3');
-        // audio.play();
+        unlocked[key] = 1;
+        alert('ปลดล็อคการ์ดสำเร็จ!');
       } else {
-        // ถ้ามีการ์ดใบนี้อยู่แล้ว -> เพิ่มจำนวนการ์ด +1
         unlocked[key] += 1;
-        localStorage.setItem(userCardsKey, JSON.stringify(unlocked));
-        alert('คุณมีการ์ดนี้แล้ว! จำนวนการ์ด +1');  // แจ้งเตือนว่ามีแล้วและเพิ่มจำนวน
+        alert('คุณมีการ์ดนี้อยู่แล้ว! จำนวน +1');
       }
+      localStorage.setItem(userCardsKey, JSON.stringify(unlocked));
     }
 
     if (cardKey) {
-      // *** กรณีที่ 1: ผู้ใช้เข้าหน้านี้พร้อมพารามิเตอร์ key (มาจากการสแกน QR ผ่านกล้องภายนอก) ***
-      unlockCard(cardKey);           // ปลดล็อคการ์ดตามคีย์ที่ได้จาก QR
-      window.location.href = 'index.html'; // จากนั้นพาไปหน้าคอลเลกชันหลัก
+      unlockCard(cardKey);
+      window.location.href = 'index.html';
     } else {
-      // *** กรณีที่ 2: ผู้ใช้เข้าหน้านี้เพื่อสแกน QR ด้วยกล้องในเว็บ ***
       function onScanSuccess(decodedText, decodedResult) {
-        // ฟังก์ชันนี้จะถูกเรียกเมื่อสแกน QR code สำเร็จ (decodedText คือข้อความที่ได้จาก QR)
-        // หยุดการสแกนเพิ่มเติมเพื่อไม่ให้สแกนซ้ำ
-        html5QrcodeScanner.clear();  // เคลียร์กล้องและหยุดการสแกน
-
-        // ปลดล็อคการ์ดที่สแกนได้ (decodedText จะเป็น key ของการ์ด เช่น "card1")
+        html5QrcodeScanner.clear();
         unlockCard(decodedText);
-
-        // หลังปลดล็อคแล้ว พาผู้ใช้ไปหน้าคอลเลกชันหลัก เพื่อดูการ์ดที่ปลดล็อค
         window.location.href = 'index.html';
       }
 
-      function onScanFailure(error) {
-        // ฟังก์ชันนี้จะถูกเรียกเป็นระยะหากยังสแกนไม่ได้ (เราจะไม่ทำอะไรในที่นี้ก็ได้)
-        // console.warn(`Scan failed: ${error}`);
-      }
+      function onScanFailure(error) {}
 
-      // สร้างตัวสแกนเนอร์ของไลบรารี Html5Qrcode และเริ่มสแกนที่องค์ประกอบ <div id="reader">
       const html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader",                    // ID ของ div ที่จะแสดง UI กล้อง
-        { fps: 10, qrbox: { width: 250, height: 250 } }, // ตั้งค่าความเร็วและขนาดกรอบสแกน1
-        false                       // ไม่เปิด log verbose
+        "reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
       );
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure); // เริ่มการทำงาน พร้อมกำหนด callback
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
     }
   </script>
 </body>
