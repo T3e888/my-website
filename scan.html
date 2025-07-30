@@ -1,61 +1,336 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Scan a Card</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stroke Hero - Scan QR</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 200px;
+      background: #d32f2f;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar h2 {
+      color: #fff;
+      text-align: center;
+      margin: 20px 0 10px;
+    }
+    .sidebar .username {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex-grow: 1;
+    }
+    .sidebar li {
+      border-top: 1px solid #c62828;
+    }
+    .sidebar li:first-child {
+      border-top: none;
+    }
+    .sidebar li a {
+      display: block;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 16px;
+    }
+    .sidebar li:hover {
+      background: #c62828;
+    }
+    .sidebar li.active {
+      background: #b71c1c;
+    }
+    .sidebar li.active a {
+      font-weight: bold;
+    }
+    .sidebar .bottom a {
+      display: block;
+      text-align: center;
+      padding: 12px 16px;
+      color: #fff;
+      text-decoration: none;
+      border-top: 1px solid #c62828;
+    }
+    .sidebar .bottom a:hover {
+      background: #c62828;
+    }
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+    #video {
+      margin: 10px 0;
+      max-width: 100%;
+    }
+    /* Popup styles (ใช้ popup ร่วมกับหน้าอื่นๆ) */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-content {
+      background: #fff;
+      padding: 20px;
+      border: 2px solid #d32f2f;
+      border-radius: 8px;
+      text-align: center;
+      width: 300px;
+      max-width: 80%;
+    }
+    .popup-content h3 {
+      color: #d32f2f;
+      margin-top: 0;
+    }
+    .popup-content img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 10px auto;
+    }
+    .popup-content p {
+      font-weight: bold;
+    }
+    .popup-content button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .popup-content button:hover {
+      background: #b71c1c;
+    }
+  </style>
+  <script>
+    // ตรวจสอบการล็อกอิน
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'login.html?redirect=scan.html';
+    }
+  </script>
 </head>
 <body>
-  <h1>Scan QR Code</h1>
-  <div id="reader" style="max-width: 300px; margin: auto;"></div>
+  <div class="container">
+    <!-- Sidebar เมนู -->
+    <div class="sidebar">
+      <div>
+        <h2>Stroke Hero</h2>
+        <div class="username">User: <span id="usernameDisplay"></span></div>
+        <ul class="menu">
+          <li><a href="index.html">List Card</a></li>
+          <li class="active"><a href="scan.html">Scan QR</a></li>
+          <li><a href="mission.html">Mission</a></li>
+          <li><a href="change.html">Change Card</a></li>
+        </ul>
+      </div>
+      <div class="bottom">
+        <a href="#" id="logoutLink">LOG OUT</a>
+      </div>
+    </div>
+    <!-- Main content -->
+    <div class="content">
+      <h1>Scan QR Code</h1>
+      <p>สแกน QR เพื่อรับการ์ด: ให้สิทธิ์กล้องหรืออัพโหลดรูปภาพ QR</p>
+      <!-- ปุ่มสำหรับเปิดกล้องและอัพโหลดรูป -->
+      <button id="cameraBtn">📷 Use Camera</button>
+      <button id="stopBtn" style="display:none;">Stop Camera</button>
+      <input type="file" id="fileInput" accept="image/*" />
+      <br/>
+      <!-- วิดีโอแสดงกล้อง -->
+      <video id="video" autoplay playsinline style="display:none;"></video>
+    </div>
+  </div>
+
+  <!-- Popup แสดงการ์ดที่ได้รับ -->
+  <div id="cardPopup" class="popup">
+    <div class="popup-content">
+      <h3 id="popupTitle">New Card Unlocked!</h3>
+      <img id="popupCardImg" src="" alt="Card" />
+      <p id="popupCardName"></p>
+      <button id="popupClose">Close</button>
+    </div>
+  </div>
 
   <script>
-    if (!localStorage.getItem('token')) {
-      const currentPage = encodeURIComponent(window.location.pathname + window.location.search);
-      window.location.href = 'login.html?redirect=' + currentPage;
-      throw '';
-    }
+    const currentUser = localStorage.getItem('token');
+    document.getElementById('usernameDisplay').textContent = currentUser || '';
+    const userCardsKey = currentUser + '_cards';
+    let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
+    const allCards = ['card1', 'card2']; // การ์ดทั้งหมด
 
-    const params = new URLSearchParams(window.location.search);
-    const cardKey = params.get('key');
+    // เตรียมกล้องและการสแกน
+    const video = document.getElementById('video');
+    const cameraBtn = document.getElementById('cameraBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    let stream = null;
+    let scanInterval = null;
+    let detector = null;
+    // Note: การใช้กล้องจำเป็นต้องรันบน HTTPS หรือ localhost
 
-    function unlockCard(key) {
-      const currentUser = localStorage.getItem('token');
-      const userCardsKey = currentUser + '_cards';
-      let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
+    // เริ่มสแกนผ่านกล้อง
+    cameraBtn.addEventListener('click', async () => {
+      if (!('BarcodeDetector' in window)) {
+        alert('Browser not supported for scanning');
+        return;
+      }
+      detector = new BarcodeDetector({ formats: ['qr_code'] });
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      } catch (err) {
+        alert('Cannot access camera: ' + err);
+        return;
+      }
+      video.srcObject = stream;
+      video.style.display = 'block';
+      stopBtn.style.display = 'inline-block';
+      cameraBtn.style.display = 'none';
+      // เริ่ม loop การสแกนภาพจากวิดีโอ
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      scanInterval = setInterval(async () => {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          // กำหนดขนาด canvas ให้ตรงกับวิดีโอ
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          try {
+            const barcodes = await detector.detect(canvas);
+            if (barcodes.length > 0) {
+              const codeValue = barcodes[0].rawValue;
+              handleQRCode(codeValue);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      }, 500);
+    });
 
-      if (!unlocked[key]) {
-        unlocked[key] = 1;
-        alert('ปลดล็อคการ์ดสำเร็จ!');
-        new Audio('assets/sounds/unlock.mp3').play();
+    // หยุดการสแกนและปิดกล้อง
+    stopBtn.addEventListener('click', () => {
+      if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
+      }
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      video.style.display = 'none';
+      stopBtn.style.display = 'none';
+      cameraBtn.style.display = 'inline-block';
+    });
+
+    // สแกนจากการอัพโหลดรูปภาพ
+    document.getElementById('fileInput').addEventListener('change', event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!('BarcodeDetector' in window)) {
+        alert('Browser not supported for scanning');
+        return;
+      }
+      detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const img = new Image();
+      img.onload = async () => {
+        try {
+          const barcodes = await detector.detect(img);
+          if (barcodes.length > 0) {
+            const codeValue = barcodes[0].rawValue;
+            handleQRCode(codeValue);
+          } else {
+            alert('No QR code found in image.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error scanning image.');
+        }
+      };
+      const reader = new FileReader();
+      reader.onload = e => {
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ฟังก์ชันจัดการผลลัพธ์ QR code ที่สแกนได้
+    function handleQRCode(codeValue) {
+      // หยุดการสแกนกล้องถ้ายังเปิดอยู่
+      if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
+      }
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      video.style.display = 'none';
+      stopBtn.style.display = 'none';
+      cameraBtn.style.display = 'inline-block';
+
+      console.log("QR Data:", codeValue);
+      // ตรวจว่ารหัสที่สแกนตรงกับการ์ดหรือไม่ (เช่น "card1", "card2")
+      if (!codeValue) return;
+      let cardKey = null;
+      // ถ้ารหัส QR อยู่ในรูปแบบ cardX
+      if (allCards.includes(codeValue)) {
+        cardKey = codeValue;
+      } else if (codeValue.startsWith('card')) {
+        cardKey = codeValue;
+      }
+      if (!cardKey) {
+        alert('QR code นี้ไม่ตรงกับการ์ดในระบบ');
+        return;
+      }
+      // อัพเดตสถานะการ์ด
+      let titleText = 'New Card Unlocked!';
+      if (unlocked[cardKey]) {
+        // มีการ์ดนี้แล้ว -> เพิ่มจำนวน
+        unlocked[cardKey] += 1;
+        titleText = 'Card Already Collected';
       } else {
-        unlocked[key] += 1;
-        alert('คุณมีการ์ดนี้อยู่แล้ว! จำนวน +1');
+        // ยังไม่มี -> ปลดล็อกการ์ดใหม่
+        unlocked[cardKey] = 1;
       }
       localStorage.setItem(userCardsKey, JSON.stringify(unlocked));
+      // แสดง popup การ์ด
+      document.getElementById('popupTitle').innerText = titleText;
+      document.getElementById('popupCardImg').src = `assets/cards/${cardKey}.png`;
+      document.getElementById('popupCardName').innerText = cardKey;
+      document.getElementById('cardPopup').style.display = 'flex';
     }
 
-    if (cardKey) {
-      unlockCard(cardKey);
-      window.location.href = 'index.html';
-    } else {
-      function onScanSuccess(decodedText, decodedResult) {
-        html5QrcodeScanner.clear();
-        unlockCard(decodedText);
-        window.location.href = 'index.html';
-      }
-
-      function onScanFailure(error) {}
-
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        false
-      );
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    }
+    // Logout
+    document.getElementById('logoutLink').onclick = () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    };
+    document.getElementById('popupClose').onclick = () => {
+      document.getElementById('cardPopup').style.display = 'none';
+    };
   </script>
 </body>
 </html>
