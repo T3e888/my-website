@@ -1,32 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Card Collection</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stroke Hero - My Card Collection</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 200px;
+      background: #d32f2f;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar h2 {
+      color: #fff;
+      text-align: center;
+      margin: 20px 0 10px;
+    }
+    .sidebar .username {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex-grow: 1;
+    }
+    .sidebar li {
+      border-top: 1px solid #c62828;
+    }
+    .sidebar li:first-child {
+      border-top: none;
+    }
+    .sidebar li a {
+      display: block;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 16px;
+    }
+    .sidebar li:hover {
+      background: #c62828;
+    }
+    .sidebar li.active {
+      background: #b71c1c;
+    }
+    .sidebar li.active a {
+      font-weight: bold;
+    }
+    .sidebar .bottom a {
+      display: block;
+      text-align: center;
+      padding: 12px 16px;
+      color: #fff;
+      text-decoration: none;
+      border-top: 1px solid #c62828;
+    }
+    .sidebar .bottom a:hover {
+      background: #c62828;
+    }
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+    /* Card collection styles */
+    .card-slot {
+      display: inline-block;
+      position: relative;
+      margin: 10px;
+    }
+    .card-slot.locked img {
+      filter: grayscale(100%) brightness(80%);
+    }
+    .card-slot.locked::after {
+      content: "🔒";
+      font-size: 48px;
+      color: rgba(0, 0, 0, 0.5);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .count-label {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: #d32f2f;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    /* Popup styles */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-content {
+      background: #fff;
+      padding: 20px;
+      border: 2px solid #d32f2f;
+      border-radius: 8px;
+      text-align: center;
+      width: 300px;
+      max-width: 80%;
+    }
+    .popup-content h3 {
+      color: #d32f2f;
+      margin-top: 0;
+    }
+    .popup-content img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 10px auto;
+    }
+    .popup-content p {
+      font-weight: bold;
+    }
+    .popup-content button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .popup-content button:hover {
+      background: #b71c1c;
+    }
+  </style>
   <script>
+    // ตรวจสอบการล็อกอิน
     if (!localStorage.getItem('token')) {
       window.location.href = 'login.html?redirect=index.html';
-      throw '';
     }
   </script>
-
-  <h1>My Card Collection</h1>
-  <div id="collection"></div>
-  <div class="content-container">
-    <a href="scan.html">🔍 Scan a Card</a> |
-    <a href="#" onclick="logout()">🚪 Logout</a>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar เมนูด้านซ้าย -->
+    <div class="sidebar">
+      <div>
+        <h2>Stroke Hero</h2>
+        <div class="username">User: <span id="usernameDisplay"></span></div>
+        <ul class="menu">
+          <li class="active"><a href="index.html">List Card</a></li>
+          <li><a href="scan.html">Scan QR</a></li>
+          <li><a href="mission.html">Mission</a></li>
+          <li><a href="change.html">Change Card</a></li>
+        </ul>
+      </div>
+      <div class="bottom">
+        <a href="#" id="logoutLink">LOG OUT</a>
+      </div>
+    </div>
+    <!-- Main content -->
+    <div class="content">
+      <h1>My Card Collection</h1>
+      <div id="collection"></div>
+    </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Popup แสดงการ์ดที่ได้รับ -->
+  <div id="cardPopup" class="popup">
+    <div class="popup-content">
+      <h3 id="popupTitle">New Card Unlocked!</h3>
+      <img id="popupCardImg" src="" alt="Card" />
+      <p id="popupCardName"></p>
+      <button id="popupClose">Close</button>
+    </div>
+  </div>
+
   <script>
-    function logout() {
+    const currentUser = localStorage.getItem('token');
+    document.getElementById('usernameDisplay').textContent = currentUser || '';
+    const userCardsKey = currentUser + '_cards';
+    let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
+    const allCards = ['card1', 'card2']; // รายการการ์ดทั้งหมด (เพิ่มชื่อการ์ดได้ตามต้องการ)
+
+    const collectionDiv = document.getElementById('collection');
+    collectionDiv.innerHTML = '';
+    allCards.forEach(card => {
+      const cardSlot = document.createElement('div');
+      cardSlot.className = 'card-slot';
+      const img = document.createElement('img');
+      img.src = `assets/cards/${card}.png`;
+      img.style.width = '120px';
+      img.style.height = 'auto';
+      // ถ้ายังไม่ปลดล็อก
+      if (!unlocked[card] || unlocked[card] === 0) {
+        img.classList.add('locked');
+        cardSlot.classList.add('locked');
+      }
+      cardSlot.appendChild(img);
+      // ถ้ามีการ์ดใบนี้มากกว่า 1 (duplicate)
+      if (unlocked[card] && unlocked[card] > 1) {
+        const countLabel = document.createElement('span');
+        countLabel.className = 'count-label';
+        countLabel.textContent = `×${unlocked[card]}`;
+        cardSlot.appendChild(countLabel);
+      }
+      collectionDiv.appendChild(cardSlot);
+    });
+
+    // ฟังก์ชัน LOG OUT
+    document.getElementById('logoutLink').onclick = () => {
       localStorage.removeItem('token');
       window.location.href = 'login.html';
-    }
+    };
+
+    // ปิด popup การ์ด
+    document.getElementById('popupClose').onclick = () => {
+      document.getElementById('cardPopup').style.display = 'none';
+    };
   </script>
 </body>
 </html>
