@@ -1,59 +1,18 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>สมัครสมาชิก</title>
-  <style>
-    body {
-      background-color: white;
-      color: #cc0000;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .form-container {
-      border: 2px solid #cc0000;
-      padding: 30px;
-      border-radius: 12px;
-      background-color: #fff0f0;
-      box-shadow: 0 0 10px rgba(204, 0, 0, 0.2);
-      width: 300px;
-      text-align: center;
-    }
-    input, button {
-      margin: 10px 0;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #cc0000;
-      width: 100%;
-    }
-    button {
-      background-color: #cc0000;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: darkred;
-    }
-    a {
-      color: #cc0000;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="form-container">
-    <h2>สมัครสมาชิก</h2>
+    <h2>Create Account</h2>
     <input type="email" id="regEmail" placeholder="Email" required>
     <input type="password" id="regPassword" placeholder="Password" required>
     <button id="btnRegister">Register</button>
-    <p>มีบัญชีแล้ว? <a href="login.html">เข้าสู่ระบบ</a></p>
+    <p>Already have an account? <a href="login.html">Login here</a></p>
   </div>
 
   <script>
