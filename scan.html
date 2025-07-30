@@ -29,6 +29,7 @@
       if (!unlocked[key]) {
         unlocked[key] = 1;
         alert('ปลดล็อคการ์ดสำเร็จ!');
+        new Audio('assets/sounds/unlock.mp3').play();
       } else {
         unlocked[key] += 1;
         alert('คุณมีการ์ดนี้อยู่แล้ว! จำนวน +1');
