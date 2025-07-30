@@ -10,20 +10,22 @@ allCards.forEach(key => {
   cardSlot.className = 'card-slot';
 
   const img = document.createElement('img');
-  img.src = `assets/cards/${key}.png`;
+  const unlockedCount = unlocked[key] || 0;
+
+  img.src = `assets/cards/${key}${unlockedCount ? '' : '_bw'}.png`;
   img.style.width = '120px';
   img.style.margin = '8px';
 
-  if (!unlocked[key] || unlocked[key] === 0) {
+  if (!unlockedCount) {
     img.classList.add('locked');
   }
 
   cardSlot.appendChild(img);
 
-  if (unlocked[key] && unlocked[key] > 1) {
+  if (unlockedCount > 1) {
     const countLabel = document.createElement('span');
     countLabel.className = 'count-label';
-    countLabel.textContent = `×${unlocked[key]}`;
+    countLabel.textContent = `×${unlockedCount}`;
     cardSlot.appendChild(countLabel);
   }
 
