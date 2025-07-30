@@ -79,7 +79,6 @@
       if (!users[email] || users[email] !== password) {
         alert('Invalid email or password.');
       } else {
-        // บันทึก token (ชื่อผู้ใช้) และนำไปยังหน้าหลักหรือหน้าที่ระบุ
         localStorage.setItem('token', email);
         const params = new URLSearchParams(window.location.search);
         const redirect = params.get('redirect');
