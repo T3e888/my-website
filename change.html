@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stroke Hero - Exchange Card</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 200px;
+      background: #d32f2f;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar h2 {
+      color: #fff;
+      text-align: center;
+      margin: 20px 0 10px;
+    }
+    .sidebar .username {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex-grow: 1;
+    }
+    .sidebar li {
+      border-top: 1px solid #c62828;
+    }
+    .sidebar li:first-child {
+      border-top: none;
+    }
+    .sidebar li a {
+      display: block;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 16px;
+    }
+    .sidebar li:hover {
+      background: #c62828;
+    }
+    .sidebar li.active {
+      background: #b71c1c;
+    }
+    .sidebar li.active a {
+      font-weight: bold;
+    }
+    .sidebar .bottom a {
+      display: block;
+      text-align: center;
+      padding: 12px 16px;
+      color: #fff;
+      text-decoration: none;
+      border-top: 1px solid #c62828;
+    }
+    .sidebar .bottom a:hover {
+      background: #c62828;
+    }
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+    /* Popup styles */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-content {
+      background: #fff;
+      padding: 20px;
+      border: 2px solid #d32f2f;
+      border-radius: 8px;
+      text-align: center;
+      width: 300px;
+      max-width: 80%;
+    }
+    .popup-content h3 {
+      color: #d32f2f;
+      margin-top: 0;
+    }
+    .popup-content img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 10px auto;
+    }
+    .popup-content p {
+      font-weight: bold;
+    }
+    .popup-content button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .popup-content button:hover {
+      background: #b71c1c;
+    }
+  </style>
+  <script>
+    // ตรวจสอบการล็อกอิน
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'login.html?redirect=change.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar เมนู -->
+    <div class="sidebar">
+      <div>
+        <h2>Stroke Hero</h2>
+        <div class="username">User: <span id="usernameDisplay"></span></div>
+        <ul class="menu">
+          <li><a href="index.html">List Card</a></li>
+          <li><a href="scan.html">Scan QR</a></li>
+          <li><a href="mission.html">Mission</a></li>
+          <li class="active"><a href="change.html">Change Card</a></li>
+        </ul>
+      </div>
+      <div class="bottom">
+        <a href="#" id="logoutLink">LOG OUT</a>
+      </div>
+    </div>
+    <!-- Main content -->
+    <div class="content">
+      <h1>Exchange Card</h1>
+      <p>แลกเปลี่ยนการ์ดกับเพื่อน: เลือกการ์ดที่มีซ้ำเพื่อสุ่มรับการ์ดใหม่</p>
+      <div id="exchange-section">
+        <label for="duplicateSelect">เลือกการ์ดที่ต้องการแลก:</label>
+        <select id="duplicateSelect"></select>
+        <button id="exchangeBtn">Exchange</button>
+      </div>
+      <p id="exchangeMsg" style="font-weight:bold; margin-top: 10px;"></p>
+    </div>
+  </div>
+
+  <!-- Popup แสดงการ์ดใหม่ที่ได้รับจากการแลก -->
+  <div id="cardPopup" class="popup">
+    <div class="popup-content">
+      <h3>New Card Unlocked!</h3>
+      <img id="popupCardImg" src="" alt="Card" />
+      <p id="popupCardName"></p>
+      <button id="popupClose">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const currentUser = localStorage.getItem('token');
+    document.getElementById('usernameDisplay').textContent = currentUser || '';
+    const userCardsKey = currentUser + '_cards';
+    let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
+    const allCards = ['card1', 'card2'];
+    // คำนวณรายการการ์ดที่มีซ้ำ (count > 1) และการ์ดที่ยัง lock
+    let duplicates = Object.keys(unlocked).filter(card => unlocked[card] > 1);
+    const lockedCards = allCards.filter(card => !unlocked[card] || unlocked[card] === 0);
+    const duplicateSelect = document.getElementById('duplicateSelect');
+    const exchangeBtn = document.getElementById('exchangeBtn');
+    const exchangeMsg = document.getElementById('exchangeMsg');
+    // ตั้งค่า dropdown ตัวเลือกการ์ดซ้ำ
+    if (duplicates.length === 0 || duplicates === undefined) {
+      // ไม่มีการ์ดซ้ำ
+      document.getElementById('exchange-section').style.display = 'none';
+      exchangeMsg.innerText = "คุณไม่มีการ์ดที่ซ้ำกันสำหรับแลกเปลี่ยน";
+    } else if (lockedCards.length === 0) {
+      // มีการ์ดครบแล้ว ไม่มีอะไรให้แลก
+      document.getElementById('exchange-section').style.display = 'none';
+      exchangeMsg.innerText = "คุณมีการ์ดครบทุกใบแล้ว - ไม่มีการ์ดใหม่ให้แลก";
+    } else {
+      duplicateSelect.innerHTML = "";
+      duplicates.forEach(card => {
+        const opt = document.createElement('option');
+        opt.value = card;
+        opt.textContent = card + " (x" + unlocked[card] + ")";
+        duplicateSelect.appendChild(opt);
+      });
+    }
+    // เมื่อคลิกปุ่ม Exchange
+    exchangeBtn.addEventListener('click', () => {
+      if (duplicates.length === 0 || lockedCards.length === 0) {
+        return;
+      }
+      const selectedCard = duplicateSelect.value;
+      if (!selectedCard) return;
+      // ลดจำนวนการ์ดที่แลกเปลี่ยนลง 1
+      unlocked[selectedCard] -= 1;
+      if (unlocked[selectedCard] <= 1) {
+        // ถ้าเหลือ 1 หรือ 0 ให้นำออกจาก list duplicates
+        duplicates = duplicates.filter(card => card !== selectedCard);
+      }
+      // สุ่มเลือกการ์ดใหม่ที่ยัง lock
+      const lockedList = allCards.filter(card => !unlocked[card] || unlocked[card] === 0);
+      if (lockedList.length > 0) {
+        const newCard = lockedList[Math.floor(Math.random() * lockedList.length)];
+        unlocked[newCard] = 1;
+        // บันทึกการเปลี่ยนแปลง
+        localStorage.setItem(userCardsKey, JSON.stringify(unlocked));
+        // แสดง popup การ์ดใหม่ที่ได้รับ
+        document.getElementById('popupCardImg').src = `assets/cards/${newCard}.png`;
+        document.getElementById('popupCardName').innerText = newCard;
+        document.getElementById('cardPopup').style.display = 'flex';
+      }
+      // อัพเดต dropdown หลังแลก
+      if (duplicates.length === 0) {
+        document.getElementById('exchange-section').style.display = 'none';
+        exchangeMsg.innerText = lockedList.length === 0
+          ? "คุณแลกจนได้การ์ดครบทุกใบแล้ว!"
+          : "ไม่มีการ์ดซ้ำเหลือสำหรับแลก";
+      } else {
+        // อัพเดตรายการ select สำหรับรอบถัดไป
+        duplicateSelect.innerHTML = "";
+        duplicates.forEach(card => {
+          const opt = document.createElement('option');
+          opt.value = card;
+          opt.textContent = card + " (x" + unlocked[card] + ")";
+          duplicateSelect.appendChild(opt);
+        });
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutLink').onclick = () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    };
+    document.getElementById('popupClose').onclick = () => {
+      document.getElementById('cardPopup').style.display = 'none';
+    };
+  </script>
+</body>
+</html>
