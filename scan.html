@@ -85,6 +85,13 @@
   </div>
 
   <script>
+    <script>
+  // ✅ ดึงค่าจาก URL ถ้ามี ?card=xxx แล้วปลดล็อก
+  const params = new URLSearchParams(window.location.search);
+  const qrCardId = params.get('card');
+  if (qrCardId) {
+    handleQRCode(qrCardId); // เรียกฟังก์ชันเดิมที่มีอยู่
+  }
     function toggleSidebar() {
       document.querySelector('.sidebar').classList.toggle('open');
     }
