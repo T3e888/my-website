@@ -1,62 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <title>เข้าสู่ระบบ</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      background-image: url('https://i.imgur.com/o6WQevk.jpg');
-      background-size: cover;
-      background-position: center;
+      background-color: white;
+      color: #cc0000;
       font-family: sans-serif;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
-      filter: grayscale(100%);
-      color: white;
     }
-
     .login-box {
-      background-color: rgba(0, 0, 0, 0.7);
+      border: 2px solid #cc0000;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+      background-color: #fff0f0;
+      box-shadow: 0 0 10px rgba(204, 0, 0, 0.2);
+      width: 300px;
       text-align: center;
     }
-
     input, button {
       margin: 10px 0;
       padding: 10px;
       font-size: 16px;
-      border: none;
       border-radius: 6px;
-      width: 200px;
+      border: 1px solid #cc0000;
+      width: 100%;
     }
-
     button {
-      background-color: crimson;
+      background-color: #cc0000;
       color: white;
       cursor: pointer;
     }
-
     button:hover {
       background-color: darkred;
+    }
+    a {
+      color: #cc0000;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="login-box">
     <h2>เข้าสู่ระบบ</h2>
-    <input id="username" placeholder="อีเมลที่ลงทะเบียน">
-    <br>
-    <input id="password" type="password" placeholder="รหัสผ่าน">
-    <br>
+    <input id="username" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
     <button onclick="login()">เข้าสู่ระบบ</button>
-    <p style="margin-top: 10px;">ยังไม่มีบัญชี? <a href="register.html" style="color: pink;">สมัครที่นี่</a></p>
+    <p>ยังไม่มีบัญชี? <a href="register.html">สมัครสมาชิก</a></p>
   </div>
 
   <script>
@@ -68,7 +65,7 @@
 
       if (users[email] && users[email] === password) {
         localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("currentUser", email); // เก็บว่าใครล็อกอินอยู่
+        localStorage.setItem("currentUser", email);
         window.location.href = "index.html";
       } else {
         alert("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
