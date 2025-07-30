@@ -1,76 +1,35 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>เข้าสู่ระบบ</title>
-  <style>
-    body {
-      background-color: white;
-      color: #cc0000;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .login-box {
-      border: 2px solid #cc0000;
-      padding: 30px;
-      border-radius: 12px;
-      background-color: #fff0f0;
-      box-shadow: 0 0 10px rgba(204, 0, 0, 0.2);
-      width: 300px;
-      text-align: center;
-    }
-    input, button {
-      margin: 10px 0;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #cc0000;
-      width: 100%;
-    }
-    button {
-      background-color: #cc0000;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: darkred;
-    }
-    a {
-      color: #cc0000;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="login-box">
-    <h2>เข้าสู่ระบบ</h2>
-    <input id="username" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">เข้าสู่ระบบ</button>
-    <p>ยังไม่มีบัญชี? <a href="register.html">สมัครสมาชิก</a></p>
+  <div class="form-container">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email" required>
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <button id="btnLogin">Login</button>
+    <p>Don't have an account? <a href="register.html">Register here</a></p>
   </div>
 
   <script>
-    function login() {
-      const email = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectUrl = urlParams.get('redirect') || 'index.html';
 
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-
+    document.getElementById('btnLogin').addEventListener('click', () => {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const users = JSON.parse(localStorage.getItem('users')||'{}');
       if (users[email] && users[email] === password) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("currentUser", email);
-        window.location.href = "index.html";
+        localStorage.setItem('token', email);
+        window.location.href = redirectUrl;
       } else {
-        alert("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+        alert('Incorrect email or password.');
       }
-    }
+    });
   </script>
 </body>
 </html>
