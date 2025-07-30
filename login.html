@@ -1,33 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Stroke Hero</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #333;
+    }
+    .form-container {
+      max-width: 300px;
+      margin: 100px auto;
+      background: #fff;
+      border: 2px solid #d32f2f;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    .form-container h2 {
+      margin-top: 0;
+      color: #d32f2f;
+    }
+    .form-container input {
+      width: 90%;
+      padding: 8px;
+      margin: 6px 0;
+      box-sizing: border-box;
+    }
+    .form-container button {
+      width: 100%;
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-container button:hover {
+      background: #b71c1c;
+    }
+    .form-container p {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .form-container a {
+      color: #d32f2f;
+      text-decoration: none;
+    }
+  </style>
+  <script>
+    // หากล็อกอินอยู่แล้ว ให้ไปหน้า index ทันที
+    if (localStorage.getItem('token')) {
+      window.location.href = 'index.html';
+    }
+  </script>
 </head>
 <body>
   <div class="form-container">
     <h2>Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email" required>
-    <input type="password" id="loginPassword" placeholder="Password" required>
+    <input type="email" id="loginEmail" placeholder="Email" required />
+    <input type="password" id="loginPassword" placeholder="Password" required />
     <button id="btnLogin">Login</button>
-    <p>Don't have an account? <a href="register.html">Register here</a></p>
+    <p>No account? <a href="register.html">Register here</a></p>
   </div>
-
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const redirectUrl = urlParams.get('redirect') || 'index.html';
-
     document.getElementById('btnLogin').addEventListener('click', () => {
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
-      const users = JSON.parse(localStorage.getItem('users')||'{}');
-      if (users[email] && users[email] === password) {
-        localStorage.setItem('token', email);
-        window.location.href = redirectUrl;
+      if (!email || !password) {
+        alert('Please fill in all fields.');
+        return;
+      }
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      if (!users[email] || users[email] !== password) {
+        alert('Invalid email or password.');
       } else {
-        alert('Incorrect email or password.');
+        // บันทึก token (ชื่อผู้ใช้) และนำไปยังหน้าหลักหรือหน้าที่ระบุ
+        localStorage.setItem('token', email);
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+        window.location.href = redirect ? redirect : 'index.html';
       }
     });
   </script>
