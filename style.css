@@ -19,7 +19,7 @@ a {
 .form-container, .content-container {
   max-width: 360px;
   margin: 60px auto;
-  background: #ffe5e5; /* แดงอ่อน */
+  background: #ffe5e5;
   padding: 24px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(179,0,0,0.1);
