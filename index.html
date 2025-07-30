@@ -88,6 +88,14 @@
     .content {
       flex: 1;
       padding: 20px;
+      +     /* จัด h1 ในคอนเทนต์ให้อยู่ตรงกลาง */
++     text-align: center;
+    }
+
++   /* ถ้าใช้ h2 ในเนื้อหา ก็จัดกึ่งกลางด้วย */
++   .content h2 {
++     text-align: center;
++   }
     }
 
     /* Card collection styles */
@@ -252,7 +260,7 @@
 
     <!-- Main content -->
     <div class="content">
-      <h1>My Card Collection</h1>
+      <h1>คอลเลคชันการ์ดของฉัน</h1>
       <div id="collection"></div>
     </div>
   </div>
