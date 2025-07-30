@@ -11,10 +11,12 @@
       background: #fff;
       color: #333;
     }
+
     .container {
       display: flex;
       min-height: 100vh;
     }
+
     .sidebar {
       width: 200px;
       background: #d32f2f;
@@ -22,44 +24,54 @@
       flex-direction: column;
       justify-content: space-between;
     }
+
     .sidebar h2 {
       color: #fff;
       text-align: center;
       margin: 20px 0 10px;
     }
+
     .sidebar .username {
       color: #fff;
       text-align: center;
       margin-bottom: 10px;
       font-weight: bold;
     }
+
     .sidebar ul {
       list-style: none;
       padding: 0;
       margin: 0;
       flex-grow: 1;
     }
+
     .sidebar li {
       border-top: 1px solid #c62828;
     }
+
     .sidebar li:first-child {
       border-top: none;
     }
+
     .sidebar li a {
       display: block;
       color: #fff;
       text-decoration: none;
       padding: 12px 16px;
     }
+
     .sidebar li:hover {
       background: #c62828;
     }
+
     .sidebar li.active {
       background: #b71c1c;
     }
+
     .sidebar li.active a {
       font-weight: bold;
     }
+
     .sidebar .bottom a {
       display: block;
       text-align: center;
@@ -68,22 +80,27 @@
       text-decoration: none;
       border-top: 1px solid #c62828;
     }
+
     .sidebar .bottom a:hover {
       background: #c62828;
     }
+
     .content {
       flex: 1;
       padding: 20px;
     }
+
     /* Card collection styles */
     .card-slot {
       display: inline-block;
       position: relative;
       margin: 10px;
     }
+
     .card-slot.locked img {
       filter: grayscale(100%) brightness(80%);
     }
+
     .card-slot.locked::after {
       content: "🔒";
       font-size: 48px;
@@ -93,6 +110,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
+
     .count-label {
       position: absolute;
       bottom: 8px;
@@ -103,6 +121,7 @@
       border-radius: 4px;
       font-size: 14px;
     }
+
     /* Popup styles */
     .popup {
       position: fixed;
@@ -115,6 +134,7 @@
       align-items: center;
       justify-content: center;
     }
+
     .popup-content {
       background: #fff;
       padding: 20px;
@@ -124,19 +144,23 @@
       width: 300px;
       max-width: 80%;
     }
+
     .popup-content h3 {
       color: #d32f2f;
       margin-top: 0;
     }
+
     .popup-content img {
       max-width: 100%;
       height: auto;
       display: block;
       margin: 10px auto;
     }
+
     .popup-content p {
       font-weight: bold;
     }
+
     .popup-content button {
       margin-top: 10px;
       padding: 8px 16px;
@@ -146,10 +170,56 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
     .popup-content button:hover {
       background: #b71c1c;
     }
+
+    /* ✅ เพิ่ม: CSS เมนูพับได้ */
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      font-size: 24px;
+      background: #d32f2f;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      z-index: 1001;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: -220px;
+        width: 200px;
+        height: 100%;
+        background: #d32f2f;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        padding-top: 60px;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .content {
+        margin-left: 0 !important;
+        width: 100%;
+        padding: 16px;
+      }
+    }
   </style>
+
   <script>
     // ตรวจสอบการล็อกอิน
     if (!localStorage.getItem('token')) {
@@ -158,6 +228,10 @@
   </script>
 </head>
 <body>
+
+  <!-- ✅ เพิ่ม: ปุ่ม ☰ -->
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
   <div class="container">
     <!-- Sidebar เมนูด้านซ้าย -->
     <div class="sidebar">
@@ -175,6 +249,7 @@
         <a href="#" id="logoutLink">LOG OUT</a>
       </div>
     </div>
+
     <!-- Main content -->
     <div class="content">
       <h1>My Card Collection</h1>
@@ -192,12 +267,19 @@
     </div>
   </div>
 
+  <!-- ✅ เพิ่ม: ฟังก์ชัน toggleSidebar -->
   <script>
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    // โค้ดเดิมที่จัดการการ์ด
     const currentUser = localStorage.getItem('token');
     document.getElementById('usernameDisplay').textContent = currentUser || '';
     const userCardsKey = currentUser + '_cards';
     let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
-    const allCards = ['card1', 'card2']; // รายการการ์ดทั้งหมด (เพิ่มชื่อการ์ดได้ตามต้องการ)
+    const allCards = ['card1', 'card2'];
 
     const collectionDiv = document.getElementById('collection');
     collectionDiv.innerHTML = '';
@@ -208,29 +290,29 @@
       img.src = `assets/cards/${card}.png`;
       img.style.width = '120px';
       img.style.height = 'auto';
-      // ถ้ายังไม่ปลดล็อก
+
       if (!unlocked[card] || unlocked[card] === 0) {
         img.classList.add('locked');
         cardSlot.classList.add('locked');
       }
+
       cardSlot.appendChild(img);
-      // ถ้ามีการ์ดใบนี้มากกว่า 1 (duplicate)
+
       if (unlocked[card] && unlocked[card] > 1) {
         const countLabel = document.createElement('span');
         countLabel.className = 'count-label';
         countLabel.textContent = `×${unlocked[card]}`;
         cardSlot.appendChild(countLabel);
       }
+
       collectionDiv.appendChild(cardSlot);
     });
 
-    // ฟังก์ชัน LOG OUT
     document.getElementById('logoutLink').onclick = () => {
       localStorage.removeItem('token');
       window.location.href = 'login.html';
     };
 
-    // ปิด popup การ์ด
     document.getElementById('popupClose').onclick = () => {
       document.getElementById('cardPopup').style.display = 'none';
     };
