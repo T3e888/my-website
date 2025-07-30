@@ -1,189 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Stroke Hero - Daily Quiz</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #fff;
-      color: #333;
+    body { margin:0; font-family:Arial,sans-serif; background:#fff; color:#333; }
+    .container { display:flex; min-height:100vh; }
+    .sidebar { width:200px; background:#d32f2f; display:flex; flex-direction:column; justify-content:space-between; }
+    .sidebar h2, .sidebar .username { color:#fff; text-align:center; margin:20px 0 10px; }
+    .sidebar ul { list-style:none; padding:0; margin:0; flex-grow:1; }
+    .sidebar li { border-top:1px solid #c62828; }
+    .sidebar li:first-child { border-top:none; }
+    .sidebar li a { display:block; color:#fff; text-decoration:none; padding:12px 16px; }
+    .sidebar li:hover { background:#c62828; }
+    .sidebar li.active { background:#b71c1c; }
+    .sidebar li.active a { font-weight:bold; }
+    .sidebar .bottom a { display:block; text-align:center; padding:12px 16px; color:#fff; text-decoration:none; border-top:1px solid #c62828; }
+    .sidebar .bottom a:hover { background:#c62828; }
+    .content { flex:1; padding:20px; }
+    .options { margin:15px 0; }
+    .option-btn { display:block; width:100%; max-width:300px; margin:5px 0; padding:10px; font-size:16px; }
+    .option-btn.correct { background:#c8e6c9; }
+    .option-btn.wrong { background:#ffcdd2; }
+    .option-btn:disabled { opacity:0.6; }
+    .popup { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; }
+    .popup-content { background:#fff; padding:20px; border:2px solid #d32f2f; border-radius:8px; text-align:center; width:300px; max-width:80%; }
+    .popup-content h3 { color:#d32f2f; margin-top:0; }
+    .popup-content img { max-width:100%; height:auto; display:block; margin:10px auto; }
+    .popup-content p { font-weight:bold; }
+    .popup-content button { margin-top:10px; padding:8px 16px; background:#d32f2f; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    .popup-content button:hover { background:#b71c1c; }
+
+    /* Hamburger Menu */
+    .menu-toggle {
+      display:none; position:fixed; top:12px; left:12px;
+      font-size:24px; background:#d32f2f; color:#fff;
+      border:none; padding:6px 12px; z-index:1001;
+      border-radius:4px; cursor:pointer;
     }
-    .container {
-      display: flex;
-      min-height: 100vh;
-    }
-    .sidebar {
-      width: 200px;
-      background: #d32f2f;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .sidebar h2 {
-      color: #fff;
-      text-align: center;
-      margin: 20px 0 10px;
-    }
-    .sidebar .username {
-      color: #fff;
-      text-align: center;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      flex-grow: 1;
-    }
-    .sidebar li {
-      border-top: 1px solid #c62828;
-    }
-    .sidebar li:first-child {
-      border-top: none;
-    }
-    .sidebar li a {
-      display: block;
-      color: #fff;
-      text-decoration: none;
-      padding: 12px 16px;
-    }
-    .sidebar li:hover {
-      background: #c62828;
-    }
-    .sidebar li.active {
-      background: #b71c1c;
-    }
-    .sidebar li.active a {
-      font-weight: bold;
-    }
-    .sidebar .bottom a {
-      display: block;
-      text-align: center;
-      padding: 12px 16px;
-      color: #fff;
-      text-decoration: none;
-      border-top: 1px solid #c62828;
-    }
-    .sidebar .bottom a:hover {
-      background: #c62828;
-    }
-    .content {
-      flex: 1;
-      padding: 20px;
-    }
-    .options {
-      margin: 15px 0;
-    }
-    .option-btn {
-      display: block;
-      width: 100%;
-      max-width: 300px;
-      margin: 5px 0;
-      padding: 10px;
-      font-size: 16px;
-    }
-    .option-btn.correct {
-      background: #c8e6c9; /* light green */
-    }
-    .option-btn.wrong {
-      background: #ffcdd2; /* light red */
-    }
-    .option-btn:disabled {
-      opacity: 0.6;
-    }
-    /* Popup styles (สำหรับแสดงการ์ดที่ปลดล็อกเมื่อ答ถูก) */
-    .popup {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    .popup-content {
-      background: #fff;
-      padding: 20px;
-      border: 2px solid #d32f2f;
-      border-radius: 8px;
-      text-align: center;
-      width: 300px;
-      max-width: 80%;
-    }
-    .popup-content h3 {
-      color: #d32f2f;
-      margin-top: 0;
-    }
-    .popup-content img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 10px auto;
-    }
-    .popup-content p {
-      font-weight: bold;
-    }
-    .popup-content button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      background: #d32f2f;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .popup-content button:hover {
-      background: #b71c1c;
+    @media(max-width:768px){
+      .menu-toggle{display:block;}
+      .sidebar{position:fixed;top:0;left:-220px;width:200px;height:100%;background:#d32f2f;transition:left .3s ease;z-index:1000;padding-top:60px;}
+      .sidebar.open{left:0;}
+      .content{margin-left:0!important;width:100%;padding:16px;}
     }
   </style>
   <script>
-    // ตรวจสอบการล็อกอิน
-    if (!localStorage.getItem('token')) {
-      window.location.href = 'login.html?redirect=mission.html';
-    }
+    if(!localStorage.getItem('token')) window.location.href='login.html?redirect=mission.html';
   </script>
 </head>
 <body>
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
   <div class="container">
-    <!-- Sidebar เมนู -->
     <div class="sidebar">
-      <div>
-        <h2>Stroke Hero</h2>
-        <div class="username">User: <span id="usernameDisplay"></span></div>
-        <ul class="menu">
-          <li><a href="index.html">List Card</a></li>
-          <li><a href="scan.html">Scan QR</a></li>
-          <li class="active"><a href="mission.html">Mission</a></li>
-          <li><a href="change.html">Change Card</a></li>
-        </ul>
-      </div>
+      <h2>Stroke Hero</h2>
+      <div class="username">User: <span id="usernameDisplay"></span></div>
+      <ul class="menu">
+        <li><a href="index.html">List Card</a></li>
+        <li><a href="scan.html">Scan QR</a></li>
+        <li class="active"><a href="mission.html">Mission</a></li>
+        <li><a href="change.html">Change Card</a></li>
+      </ul>
       <div class="bottom">
         <a href="#" id="logoutLink">LOG OUT</a>
       </div>
     </div>
-    <!-- Main content -->
     <div class="content">
       <h1>Daily Quiz</h1>
-      <!-- ส่วนแสดงคำถาม -->
       <div id="quiz-section">
         <p id="question-text"></p>
         <div class="options" id="optionsContainer"></div>
-        <div id="resultMsg" style="display:none; font-weight:bold; margin-top:10px;"></div>
+        <div id="resultMsg" style="display:none;font-weight:bold;margin-top:10px;"></div>
       </div>
-      <!-- ข้อความกรณีต้องรอหรือไม่มีคำถาม -->
       <div id="wait-section" style="display:none;">
         <p id="waitMsg"></p>
       </div>
     </div>
   </div>
 
-  <!-- Popup แสดงการ์ดเมื่อ答ถูก -->
   <div id="cardPopup" class="popup">
     <div class="popup-content">
       <h3>New Card Unlocked!</h3>
@@ -194,106 +89,63 @@
   </div>
 
   <script>
-    const currentUser = localStorage.getItem('token');
-    document.getElementById('usernameDisplay').textContent = currentUser || '';
-    const userCardsKey = currentUser + '_cards';
-    let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
-    const allCards = ['card1', 'card2'];
-    // Quiz data (คำถามและคำตอบตัวอย่าง)
-    const quizData = {
-      question: "ตัวอักษร F ในหลักการ FAST สำหรับโรคหลอดเลือดสมอง ย่อมาจากอะไร?",
-      options: ["Finger", "Face", "Foot", "Food"],
-      answerIndex: 1  // "Face" เป็นคำตอบที่ถูก (index 1)
-    };
-    // ดึงประวัติการตอบล่าสุด
-    const lastTimeKey = currentUser + '_lastQuizTime';
-    const lastStatusKey = currentUser + '_lastQuizStatus';
-    const lastQuizTime = localStorage.getItem(lastTimeKey);
-    const lastQuizStatus = localStorage.getItem(lastStatusKey);
-    // ตรวจว่าปลดล็อกการ์ดครบหรือยัง
-    const lockedCards = allCards.filter(card => !unlocked[card] || unlocked[card] === 0);
-    if (lockedCards.length === 0) {
-      // มีการ์ดครบทุกใบแล้ว
-      document.getElementById('quiz-section').style.display = 'none';
-      document.getElementById('wait-section').style.display = 'block';
-      document.getElementById('waitMsg').innerText = "คุณได้สะสมการ์ดครบทั้งหมดแล้ว!";
-    } else if (lastQuizTime) {
-      // มีการตอบไปแล้ว
-      const timeDiff = Date.now() - parseInt(lastQuizTime);
-      if (timeDiff < 24 * 60 * 60 * 1000) {
-        // ยังไม่ครบ 24 ชั่วโมง
-        document.getElementById('quiz-section').style.display = 'none';
-        document.getElementById('wait-section').style.display = 'block';
-        if (lastQuizStatus === 'correct') {
-          document.getElementById('waitMsg').innerText = "คุณทำแบบทดสอบวันนี้แล้ว โปรดกลับมาใหม่พรุ่งนี้.";
-        } else {
-          document.getElementById('waitMsg').innerText = "คุณตอบผิดในวันนี้ โปรดลองใหม่อีกครั้งหลัง 24 ชั่วโมง.";
-        }
+    function toggleSidebar(){document.querySelector('.sidebar').classList.toggle('open');}
+    const user=localStorage.getItem('token');
+    document.getElementById('usernameDisplay').textContent=user||'';
+    const userCardsKey=user+'_cards';
+    let unlocked=JSON.parse(localStorage.getItem(userCardsKey)||'{}');
+    const allCards=['card1','card2'];
+    const quizData={question:"F ใน FAST ย่อมาจากอะไร?",options:["Finger","Face","Foot","Food"],answerIndex:1};
+    const lastTimeKey=user+'_lastQuizTime',lastStatusKey=user+'_lastQuizStatus';
+    const lastTime=localStorage.getItem(lastTimeKey),lastStatus=localStorage.getItem(lastStatusKey);
+    const lockedList=allCards.filter(c=>!unlocked[c]||unlocked[c]===0);
+    if(lockedList.length===0){
+      document.getElementById('quiz-section').style.display='none';
+      document.getElementById('wait-section').style.display='block';
+      document.getElementById('waitMsg').innerText="คุณสะสมครบแล้ว!";
+    } else if(lastTime){
+      const diff=Date.now()-parseInt(lastTime);
+      if(diff<24*60*60*1e3){
+        document.getElementById('quiz-section').style.display='none';
+        document.getElementById('wait-section').style.display='block';
+        document.getElementById('waitMsg').innerText= lastStatus==='correct'
+          ?"ทำแบบทดสอบแล้ว โปรดกลับมาใหม่พรุ่งนี้."
+          :"ตอบผิดวันนี้ ลองใหม่หลัง 24 ชม.";
       }
     }
-    // แสดงคำถามและตัวเลือก (ถ้าอนุญาตให้ทำแบบทดสอบ)
-    const questionText = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('optionsContainer');
-    questionText.textContent = quizData.question;
-    optionsContainer.innerHTML = "";
-    quizData.options.forEach((opt, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.textContent = opt;
-      btn.dataset.index = idx;
-      // event เมื่อคลิกตัวเลือก
-      btn.onclick = () => {
-        // ป้องกันการคลิกซ้ำ
-        const allOptionButtons = document.querySelectorAll('.option-btn');
-        allOptionButtons.forEach(b => b.disabled = true);
-        const chosenIndex = parseInt(btn.dataset.index);
-        if (chosenIndex === quizData.answerIndex) {
-          // ตอบถูก
-          btn.classList.add('correct');
-          // บันทึกเวลาตอบและสถานะ
-          localStorage.setItem(lastTimeKey, Date.now().toString());
-          localStorage.setItem(lastStatusKey, 'correct');
-          // ปลดล็อกการ์ดใหม่แบบสุ่ม 1 ใบ
-          const lockedList = allCards.filter(card => !unlocked[card] || unlocked[card] === 0);
-          if (lockedList.length > 0) {
-            const newCard = lockedList[Math.floor(Math.random() * lockedList.length)];
-            unlocked[newCard] = 1;
-            localStorage.setItem(userCardsKey, JSON.stringify(unlocked));
-            // แสดง popup การ์ดใหม่
-            document.getElementById('popupCardImg').src = `assets/cards/${newCard}.png`;
-            document.getElementById('popupCardName').innerText = newCard;
-            document.getElementById('cardPopup').style.display = 'flex';
+    document.getElementById('question-text').textContent=quizData.question;
+    const opts=document.getElementById('optionsContainer');opts.innerHTML='';
+    quizData.options.forEach((opt,i)=>{
+      const b=document.createElement('button');b.className='option-btn';b.textContent=opt;b.dataset.idx=i;
+      b.onclick=()=>{
+        document.querySelectorAll('.option-btn').forEach(x=>x.disabled=true);
+        if(i===quizData.answerIndex){
+          b.classList.add('correct');
+          localStorage.setItem(lastTimeKey,Date.now().toString());
+          localStorage.setItem(lastStatusKey,'correct');
+          const locked=allCards.filter(c=>!unlocked[c]||unlocked[c]===0);
+          if(locked.length){
+            const newC=locked[Math.floor(Math.random()*locked.length)];
+            unlocked[newC]=1;localStorage.setItem(userCardsKey,JSON.stringify(unlocked));
+            document.getElementById('popupCardImg').src=`assets/cards/${newC}.png`;
+            document.getElementById('popupCardName').innerText=newC;
+            document.getElementById('cardPopup').style.display='flex';
           }
         } else {
-          // ตอบผิด
-          btn.classList.add('wrong');
-          // ไฮไลท์คำตอบที่ถูกต้อง
-          allOptionButtons.forEach(b => {
-            if (parseInt(b.dataset.index) === quizData.answerIndex) {
-              b.classList.add('correct');
-            }
+          b.classList.add('wrong');
+          document.querySelectorAll('.option-btn').forEach(x=>{
+            if(parseInt(x.dataset.idx)===quizData.answerIndex)x.classList.add('correct');
           });
-          // แสดงข้อความผิด
-          const resultMsg = document.getElementById('resultMsg');
-          resultMsg.style.display = 'block';
-          resultMsg.style.color = 'red';
-          resultMsg.innerText = "ตอบไม่ถูก ต้องรอ 24 ชม. เพื่อลองใหม่";
-          // บันทึกเวลาตอบและสถานะ
-          localStorage.setItem(lastTimeKey, Date.now().toString());
-          localStorage.setItem(lastStatusKey, 'wrong');
+          const msg=document.getElementById('resultMsg');msg.style.display='block';msg.style.color='red';
+          msg.innerText="ตอบไม่ถูก ต้องรอ 24 ชม.";
+          localStorage.setItem(lastTimeKey,Date.now().toString());
+          localStorage.setItem(lastStatusKey,'wrong');
         }
       };
-      optionsContainer.appendChild(btn);
+      opts.appendChild(b);
     });
-
-    // Logout
-    document.getElementById('logoutLink').onclick = () => {
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    };
-    document.getElementById('popupClose').onclick = () => {
-      document.getElementById('cardPopup').style.display = 'none';
-    };
+    document.getElementById('logoutLink').onclick=()=>{localStorage.removeItem('token');location='login.html';};
+    document.getElementById('popupClose').onclick=()=>{document.getElementById('cardPopup').style.display='none';};
   </script>
 </body>
 </html>
