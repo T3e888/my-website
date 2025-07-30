@@ -1,130 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบสะสมการ์ดความรู้</title>
-
-  <!-- ธีมขาวดำ + พื้นหลังเลือด -->
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-image: url('https://i.imgur.com/o6WQevk.jpg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      font-family: 'Segoe UI', sans-serif;
-      filter: grayscale(100%);
-      color: white;
-    }
-
-    .container {
-      background-color: rgba(0, 0, 0, 0.7);
-      max-width: 800px;
-      margin: 50px auto;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 32px;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background-color: rgba(255, 255, 255, 0.1);
-      border: 1px solid white;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 8px;
-      font-size: 18px;
-    }
-
-    .button-group {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 30px;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      color: white;
-      background-color: crimson;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-      background-color: darkred;
-    }
-  </style>
-
-  <!-- เช็กล็อกอิน -->
-  <script>
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      window.location.href = "login.html";
-    }
-
-    // ปลดล็อกการ์ด
-    const params = new URLSearchParams(window.location.search);
-    const cardId = params.get('card');
-    if (cardId) {
-      let unlocked = JSON.parse(localStorage.getItem('unlockedCards') || '[]');
-      if (!unlocked.includes(cardId)) {
-        unlocked.push(cardId);
-        localStorage.setItem('unlockedCards', JSON.stringify(unlocked));
-        alert("ปลดล็อกการ์ด: " + cardId);
-      }
-    }
-  </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Card Collection</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>การ์ดที่คุณสะสม</h1>
-    <div id="card-container"></div>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'login.html?redirect=index.html';
+      throw '';
+    }
+  </script>
 
-    <div class="button-group">
-      <button onclick="goBack()">🔙 กลับหน้าหลัก</button>
-      <button onclick="logout()">🚪 ออกจากระบบ</button>
-    </div>
+  <h1>My Card Collection</h1>
+  <div id="collection"></div>
+  <div class="content-container">
+    <a href="scan.html">🔍 Scan a Card</a> |
+    <a href="#" onclick="logout()">🚪 Logout</a>
   </div>
 
+  <script src="script.js"></script>
   <script>
-    const cardContainer = document.getElementById('card-container');
-    const allCards = [
-      { id: 'card001', name: 'ไดโนเสาร์' },
-      { id: 'card002', name: 'แมลง' },
-      { id: 'card003', name: 'ดอกไม้' },
-    ];
-    const unlocked = JSON.parse(localStorage.getItem('unlockedCards') || '[]');
-
-    allCards.forEach(card => {
-      const div = document.createElement('div');
-      div.className = 'card';
-      div.innerText = `${card.name} (${card.id})`;
-
-      if (unlocked.includes(card.id)) {
-        div.innerText += ' ✅ ปลดล็อกแล้ว';
-      } else {
-        div.innerText += ' 🔒 ยังไม่ปลดล็อก';
-      }
-
-      cardContainer.appendChild(div);
-    });
-
     function logout() {
-      localStorage.removeItem("isLoggedIn");
-      window.location.href = "login.html";
-    }
-
-    function goBack() {
-      window.location.href = "index.html"; // กลับหน้าหลัก (ถ้าหน้านี้ไม่ใช่ index.html เปลี่ยนได้)
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
     }
   </script>
 </body>
