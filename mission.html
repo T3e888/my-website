@@ -1,41 +1,31 @@
+<!-- mission.html -->
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mission</title>
-  <link rel="stylesheet" href="style.css"/>
+  <title>Stroke Hero - Mission</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button class="openbtn">☰</button>
-  <div class="sidebar">
-    <h2>Stroke Hero</h2>
-    <ul>
-      <li><a href="index.html">List Card</a></li>
-      <li><a href="scan.html">Scan QR</a></li>
-      <li><a href="mission.html">Mission</a></li>
-      <li><a href="#" id="logoutLink">Logout</a></li>
-    </ul>
+  <div class="container">
+    <aside class="sidebar">
+      <h2>Stroke Hero</h2>
+      <p class="username">User: <span id="usernameDisplay"></span></p>
+      <ul>
+        <li><a href="index.html">List Card</a></li>
+        <li><a href="scan.html">Scan QR</a></li>
+        <li class="active"><a href="mission.html">Mission</a></li>
+      </ul>
+      <a href="#" id="logoutLink" class="logout">Logout</a>
+    </aside>
+    <main class="content">
+      <h1>ภารกิจรายวัน</h1>
+      <div id="missionBox"></div>
+      <div id="timer" style="margin-top: 1rem;"></div>
+    </main>
   </div>
-  <div class="content">
-    <h1>Daily Quiz</h1>
-    <div id="quiz-section">
-      <p id="question-text"></p>
-      <div id="optionsContainer" class="options"></div>
-      <div id="resultMsg" style="display:none;color:red;margin-top:10px;"></div>
-    </div>
-    <div id="wait-section" style="display:none;">
-      <p id="waitMsg"></p>
-    </div>
-  </div>
-  <div class="popup">
-    <div class="popup-content">
-      <h3>New Card Unlocked!</h3>
-      <img id="popupCardImg" src="" alt="Card"/>
-      <p id="popupCardName"></p>
-      <button id="popupClose">Close</button>
-    </div>
-  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
