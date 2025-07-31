@@ -1,38 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stroke Hero - Login</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+  <button class="openbtn">☰</button>
   <div class="sidebar">
     <h2>Stroke Hero</h2>
-    <a href="#" id="closeSidebarBtn" class="closebtn">&times;</a>
     <ul>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="scan.html">Scan</a></li>
-      <li><a href="mission.html">Missions</a></li>
-      <li><a href="login.html">Login</a></li>
+      <li><a href="index.html">List Card</a></li>
+      <li><a href="scan.html">Scan QR</a></li>
+      <li><a href="mission.html">Mission</a></li>
+      <li><a href="#" id="logoutLink">Logout</a></li>
     </ul>
   </div>
-
   <div class="content">
-    <button id="openSidebarBtn" class="openbtn">☰ Menu</button>
     <h1>Login</h1>
-    <form>
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required />
-
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required />
-
-      <button type="submit">Login</button>
-      <p>Don't have an account? <a href="register.html">Register</a></p>
-    </form>
+    <input type="email" id="loginEmail" placeholder="Email"/><br/>
+    <input type="password" id="loginPassword" placeholder="Password"/><br/>
+    <button id="btnLogin">Login</button>
+    <p>No account? <a href="register.html">Register here</a></p>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
