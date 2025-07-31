@@ -28,7 +28,6 @@
     .popup-content button { margin-top:10px; padding:8px 16px; background:#d32f2f; color:#fff; border:none; border-radius:4px; cursor:pointer; }
     .popup-content button:hover { background:#b71c1c; }
 
-    /* Hamburger Menu */
     .menu-toggle {
       display:none; position:fixed; top:12px; left:12px;
       font-size:24px; background:#d32f2f; color:#fff;
@@ -43,8 +42,8 @@
     }
   </style>
   <script>
-    if(!localStorage.getItem('token')){
-      window.location.href='login.html?redirect=scan.html';
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'login.html?redirect=scan.html';
     }
   </script>
 </head>
@@ -85,21 +84,45 @@
   </div>
 
   <script>
-    // ✅ ฟังก์ชันเมนูพับได้
     function toggleSidebar() {
       document.querySelector('.sidebar').classList.toggle('open');
     }
-
-    // ✅ QR จากลิงก์
-    const params = new URLSearchParams(window.location.search);
-    const qrCardId = params.get('card');
-    if (qrCardId) handleQRCode(qrCardId);
 
     const currentUser = localStorage.getItem('token');
     document.getElementById('usernameDisplay').textContent = currentUser || '';
     const userCardsKey = currentUser + '_cards';
     let unlocked = JSON.parse(localStorage.getItem(userCardsKey) || '{}');
-    const allCards = ['card1', 'card2']; // เพิ่มชื่อการ์ดของคุณตรงนี้
+    const allCards = ['card1', 'card2']; // ✅ เพิ่มชื่อการ์ดที่ใช้จริงที่นี่
+
+    function handleQRCode(codeValue) {
+      clearInterval(scanInterval);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      video.style.display = 'none';
+      stopBtn.style.display = 'none';
+      cameraBtn.style.display = 'inline-block';
+
+      let cardKey = allCards.includes(codeValue) ? codeValue : codeValue.startsWith('card') ? codeValue : null;
+      if (!cardKey) { alert('Invalid QR'); return; }
+
+      let title = 'New Card Unlocked!';
+      if (unlocked[cardKey]) {
+        unlocked[cardKey]++;
+        title = 'Card Already Collected';
+      } else {
+        unlocked[cardKey] = 1;
+      }
+
+      localStorage.setItem(userCardsKey, JSON.stringify(unlocked));
+      document.getElementById('popupTitle').innerText = title;
+      document.getElementById('popupCardImg').src = `assets/cards/${cardKey}.png`;
+      document.getElementById('popupCardName').innerText = cardKey;
+      document.getElementById('cardPopup').style.display = 'flex';
+    }
+
+    // ✅ รองรับ QR ผ่าน URL ?card=card1
+    const params = new URLSearchParams(window.location.search);
+    const qrCardId = params.get('card');
+    if (qrCardId) handleQRCode(qrCardId);
 
     const video = document.getElementById('video');
     const cameraBtn = document.getElementById('cameraBtn');
@@ -112,6 +135,7 @@
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       } catch (e) { alert('Cannot access camera'); return; }
+
       video.srcObject = stream;
       video.style.display = 'block';
       stopBtn.style.display = 'inline-block';
@@ -119,3 +143,48 @@
 
       const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
       scanInterval = setInterval(async () => {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const barcodes = await detector.detect(canvas);
+          if (barcodes.length > 0) handleQRCode(barcodes[0].rawValue);
+        }
+      }, 500);
+    });
+
+    stopBtn.addEventListener('click', () => {
+      clearInterval(scanInterval);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      video.style.display = 'none';
+      stopBtn.style.display = 'none';
+      cameraBtn.style.display = 'inline-block';
+    });
+
+    document.getElementById('fileInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file || !('BarcodeDetector' in window)) { alert('Cannot scan'); return; }
+
+      detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const img = new Image();
+      img.onload = async () => {
+        const barcodes = await detector.detect(img);
+        if (barcodes.length) handleQRCode(barcodes[0].rawValue);
+        else alert('No QR found');
+      };
+      const reader = new FileReader();
+      reader.onload = e2 => img.src = e2.target.result;
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('logoutLink').onclick = () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    };
+
+    document.getElementById('popupClose').onclick = () => {
+      document.getElementById('cardPopup').style.display = 'none';
+    };
+  </script>
+</body>
+</html>
