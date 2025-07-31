@@ -1,29 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stroke Hero - Home</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>คอลเลคชันการ์ดของฉัน</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+  <button class="openbtn">☰</button>
   <div class="sidebar">
     <h2>Stroke Hero</h2>
-    <a href="#" id="closeSidebarBtn" class="closebtn">&times;</a>
     <ul>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="scan.html">Scan</a></li>
-      <li><a href="mission.html">Missions</a></li>
-      <li><a href="login.html">Login</a></li>
+      <li><a href="index.html">List Card</a></li>
+      <li><a href="scan.html">Scan QR</a></li>
+      <li><a href="mission.html">Mission</a></li>
+      <li><a href="#" id="logoutLink">Logout</a></li>
     </ul>
   </div>
-
   <div class="content">
-    <button id="openSidebarBtn" class="openbtn">☰ Menu</button>
-    <h1>Welcome to Stroke Hero</h1>
-    <p>This is the main page of the application. Use the sidebar to navigate between different sections like scanning and missions.</p>
+    <h1>My Collection Card</h1>
+    <div id="collection" class="collection-grid"></div>
   </div>
-
+  <div class="popup">
+    <div class="popup-content">
+      <h3 id="popupTitle">New Card Unlocked!</h3>
+      <img id="popupCardImg" src="" alt="Card"/>
+      <p id="popupCardName"></p>
+      <button id="popupClose">Close</button>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
