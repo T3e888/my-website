@@ -1,1 +1,158 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #333;
+  margin: 0;
+  line-height: 1.6;
+}
 
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 220px;
+  height: 100%;
+  background: #cc0000;
+  color: #fff;
+  overflow-x: hidden;
+  padding-top: 60px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+.sidebar.active {
+  transform: translateX(0);
+}
+.sidebar h2 {
+  color: #fff;
+  text-align: center;
+  margin: 10px 0;
+}
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar a {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+}
+.sidebar a:hover {
+  background: #a00000;
+}
+.closebtn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 30px;
+  text-decoration: none;
+  color: #fff;
+}
+
+/* Main content area */
+.content {
+  padding: 20px;
+  margin-left: 0; /* updated in media query for large screens */
+}
+
+/* Open button for sidebar (small screens) */
+.openbtn {
+  background-color: #cc0000;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.openbtn:hover {
+  background-color: #a00000;
+}
+
+/* Popup styles */
+.popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  align-items: center;
+  justify-content: center;
+}
+.popup.active {
+  display: flex;
+}
+.popup .popup-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 500px;
+  width: 80%;
+}
+.popup .close {
+  background: #cc0000;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Form elements */
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+input[type=text],
+input[type=password],
+input[type=email] {
+  width: 100%;
+  padding: 8px;
+  margin: 4px 0 12px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+button,
+input[type=button],
+input[type=submit] {
+  background: #cc0000;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:hover,
+input[type=button]:hover,
+input[type=submit]:hover {
+  background: #a00000;
+}
+
+/* Links in content (not sidebar) */
+.content a {
+  color: #cc0000;
+  text-decoration: none;
+}
+.content a:hover {
+  text-decoration: underline;
+}
+
+/* Large screen adjustments */
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+  .closebtn {
+    display: none;
+  }
+  .openbtn {
+    display: none;
+  }
+  .content {
+    margin-left: 220px;
+  }
+}
