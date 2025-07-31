@@ -1,19 +1,25 @@
+<!-- register.html -->
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>สมัครบัญชี - Stroke Hero</title>
-  <link rel="stylesheet" href="style.css"/>
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="form-container" style="max-width:320px; margin:100px auto; text-align:center;">
-    <h2 style="color:#d32f2f; margin-bottom:20px;">Create Account</h2>
-    <input type="email" id="regEmail" placeholder="Email" required style="width:100%;"/>
-    <input type="password" id="regPassword" placeholder="Password" required style="width:100%;"/>
-    <button id="btnRegister" style="width:100%; margin-top:12px;">Register</button>
-    <p style="margin-top:12px;">Already have an account? <a href="login.html">Log in</a></p>
+<body class="centered">
+  <div class="form-box">
+    <h2>สมัครสมาชิก</h2>
+    <input type="email" id="regEmail" placeholder="Email">
+    <div class="password-wrapper">
+      <input type="password" id="regPassword" placeholder="Password">
+      <span class="toggle-password" onclick="togglePassword('regPassword')">👁️</span>
+    </div>
+    <button onclick="register()">สมัคร</button>
+    <p>มีบัญชีแล้ว? <a href="login.html">เข้าสู่ระบบ</a></p>
   </div>
+
+  <div id="modal" class="modal"><div class="modal-content" id="modalMsg"></div></div>
 
   <script src="script.js"></script>
 </body>
