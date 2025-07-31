@@ -3,88 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>สมัครบัญชี - Stroke Hero</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      color: #333;
-    }
-    .form-container {
-      max-width: 300px;
-      margin: 100px auto;
-      background: #fff;
-      border: 2px solid #d32f2f;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-    }
-    .form-container h2 {
-      margin-top: 0;
-      color: #d32f2f;
-    }
-    .form-container input {
-      width: 90%;
-      padding: 8px;
-      margin: 6px 0;
-      box-sizing: border-box;
-    }
-    .form-container button {
-      width: 100%;
-      background: #d32f2f;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .form-container button:hover {
-      background: #b71c1c;
-    }
-    .form-container p {
-      margin-top: 10px;
-      font-size: 14px;
-    }
-    .form-container a {
-      color: #d32f2f;
-      text-decoration: none;
-    }
-  </style>
-  <script>
-    // หากล็อกอินอยู่แล้ว ให้ไปหน้า index
-    if (localStorage.getItem('token')) {
-      window.location.href = 'index.html';
-    }
-  </script>
+  <title>Stroke Hero - Register</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="form-container">
-    <h2>Create Account</h2>
-    <input type="email" id="regEmail" placeholder="Email" required />
-    <input type="password" id="regPassword" placeholder="Password" required />
-    <button id="btnRegister">Register</button>
-    <p>Already have an account? <a href="login.html">Login here</a></p>
+  <div class="sidebar">
+    <h2>Stroke Hero</h2>
+    <a href="#" id="closeSidebarBtn" class="closebtn">&times;</a>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="scan.html">Scan</a></li>
+      <li><a href="mission.html">Missions</a></li>
+      <li><a href="login.html">Login</a></li>
+    </ul>
   </div>
-  <script>
-    document.getElementById('btnRegister').addEventListener('click', () => {
-      const email = document.getElementById('regEmail').value;
-      const password = document.getElementById('regPassword').value;
-      if (!email || !password) {
-        alert('Please fill in all fields.');
-        return;
-      }
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      if (users[email]) {
-        alert('Email already registered.');
-      } else {
-        users[email] = password;
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('Registration successful! Please login.');
-        window.location.href = 'login.html';
-      }
-    });
-  </script>
+
+  <div class="content">
+    <button id="openSidebarBtn" class="openbtn">☰ Menu</button>
+    <h1>Register</h1>
+    <form>
+      <label for="username">Username</label>
+      <input type="text" id="reg-username" name="username" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="reg-password" name="password" required />
+
+      <label for="confirm">Confirm Password</label>
+      <input type="password" id="confirm" name="confirm" required />
+
+      <button type="submit">Register</button>
+      <p>Already have an account? <a href="login.html">Login</a></p>
+    </form>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
