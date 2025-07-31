@@ -1,158 +1,148 @@
+/* Base */
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
   background: #fff;
   color: #333;
-  margin: 0;
-  line-height: 1.6;
+}
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-/* Sidebar styles */
+/* Sidebar */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   width: 220px;
-  height: 100%;
-  background: #cc0000;
+  height: 100vh;
+  background: #d32f2f;
   color: #fff;
-  overflow-x: hidden;
   padding-top: 60px;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-}
-.sidebar.active {
-  transform: translateX(0);
 }
 .sidebar h2 {
-  color: #fff;
   text-align: center;
-  margin: 10px 0;
+  margin-bottom: 20px;
 }
 .sidebar ul {
-  list-style-type: none;
+  list-style: none;
   padding: 0;
-  margin: 0;
 }
-.sidebar a {
+.sidebar li {
+  border-top: 1px solid #c62828;
+}
+.sidebar li:first-child {
+  border-top: none;
+}
+.sidebar li a {
   display: block;
+  padding: 12px 20px;
   color: #fff;
-  text-decoration: none;
-  padding: 10px 20px;
 }
-.sidebar a:hover {
-  background: #a00000;
+.sidebar li a:hover {
+  background: #c62828;
 }
-.closebtn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 30px;
-  text-decoration: none;
+
+/* Logout as menu item */
+#logoutLink {
   color: #fff;
 }
 
-/* Main content area */
-.content {
-  padding: 20px;
-  margin-left: 0; /* updated in media query for large screens */
-}
-
-/* Open button for sidebar (small screens) */
+/* Open button */
 .openbtn {
-  background-color: #cc0000;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  background: #d32f2f;
   color: #fff;
   border: none;
-  padding: 10px 15px;
-  font-size: 16px;
+  padding: 8px 12px;
+  font-size: 20px;
   cursor: pointer;
+  z-index: 1001;
 }
 .openbtn:hover {
-  background-color: #a00000;
+  background: #b71c1c;
 }
 
-/* Popup styles */
+/* Content area */
+.content {
+  margin-left: 220px;
+  padding: 20px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Collection grid in index.html */
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.card-slot {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.card-slot img {
+  width: 100%;
+  display: block;
+}
+.card-slot.locked {
+  filter: brightness(40%);
+  background: #333;
+}
+
+/* Popup */
 .popup {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background: rgba(0,0,0,0.5);
-  align-items: center;
-  justify-content: center;
+  align-items: center; justify-content: center;
 }
 .popup.active {
   display: flex;
 }
-.popup .popup-content {
+.popup-content {
   background: #fff;
   padding: 20px;
-  border-radius: 5px;
-  max-width: 500px;
-  width: 80%;
+  border: 2px solid #d32f2f;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 90%;
 }
-.popup .close {
-  background: #cc0000;
+.popup-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+}
+.popup-content button {
+  background: #d32f2f;
   color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 8px 16px;
   cursor: pointer;
-}
-
-/* Form elements */
-label {
-  display: block;
-  margin-bottom: 4px;
-  font-weight: bold;
-}
-input[type=text],
-input[type=password],
-input[type=email] {
-  width: 100%;
-  padding: 8px;
-  margin: 4px 0 12px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
   border-radius: 4px;
 }
-button,
-input[type=button],
-input[type=submit] {
-  background: #cc0000;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-}
-button:hover,
-input[type=button]:hover,
-input[type=submit]:hover {
-  background: #a00000;
+.popup-content button:hover {
+  background: #b71c1c;
 }
 
-/* Links in content (not sidebar) */
-.content a {
-  color: #cc0000;
-  text-decoration: none;
-}
-.content a:hover {
-  text-decoration: underline;
-}
-
-/* Large screen adjustments */
-@media (min-width: 768px) {
+/* Responsive */
+@media(max-width:768px) {
   .sidebar {
+    transform: translateX(-220px);
+    transition: transform .3s ease;
+  }
+  .sidebar.open {
     transform: translateX(0);
   }
-  .closebtn {
-    display: none;
-  }
-  .openbtn {
-    display: none;
-  }
   .content {
-    margin-left: 220px;
+    margin-left: 0;
   }
 }
