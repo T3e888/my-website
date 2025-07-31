@@ -1,34 +1,30 @@
+<!-- index.html -->
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>คอลเลคชันการ์ดของฉัน</title>
-  <link rel="stylesheet" href="style.css"/>
+  <title>Stroke Hero - การ์ดของฉัน</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button class="openbtn">☰</button>
-  <div class="sidebar">
-    <h2>Stroke Hero</h2>
-    <ul>
-      <li><a href="index.html">List Card</a></li>
-      <li><a href="scan.html">Scan QR</a></li>
-      <li><a href="mission.html">Mission</a></li>
-      <li><a href="#" id="logoutLink">Logout</a></li>
-    </ul>
+  <div class="container">
+    <aside class="sidebar">
+      <h2>Stroke Hero</h2>
+      <p class="username">User: <span id="usernameDisplay"></span></p>
+      <ul>
+        <li class="active"><a href="index.html">List Card</a></li>
+        <li><a href="scan.html">Scan QR</a></li>
+        <li><a href="mission.html">Mission</a></li>
+      </ul>
+      <a href="#" id="logoutLink" class="logout">Logout</a>
+    </aside>
+    <main class="content">
+      <h1>คอลเลคชันการ์ดของฉัน</h1>
+      <div id="collection" class="card-grid"></div>
+    </main>
   </div>
-  <div class="content">
-    <h1>My Collection Card</h1>
-    <div id="collection" class="collection-grid"></div>
-  </div>
-  <div class="popup">
-    <div class="popup-content">
-      <h3 id="popupTitle">New Card Unlocked!</h3>
-      <img id="popupCardImg" src="" alt="Card"/>
-      <p id="popupCardName"></p>
-      <button id="popupClose">Close</button>
-    </div>
-  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
