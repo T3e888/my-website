@@ -3,27 +3,18 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login</title>
+  <title>ล็อกอิน - Stroke Hero</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <button class="openbtn">☰</button>
-  <div class="sidebar">
-    <h2>Stroke Hero</h2>
-    <ul>
-      <li><a href="index.html">List Card</a></li>
-      <li><a href="scan.html">Scan QR</a></li>
-      <li><a href="mission.html">Mission</a></li>
-      <li><a href="#" id="logoutLink">Logout</a></li>
-    </ul>
+  <div class="form-container" style="max-width:320px; margin:100px auto; text-align:center;">
+    <h2 style="color:#d32f2f; margin-bottom:20px;">Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email" required style="width:100%;"/>
+    <input type="password" id="loginPassword" placeholder="Password" required style="width:100%;"/>
+    <button id="btnLogin" style="width:100%; margin-top:12px;">Login</button>
+    <p style="margin-top:12px;">No account? <a href="register.html">Register here</a></p>
   </div>
-  <div class="content">
-    <h1>Login</h1>
-    <input type="email" id="loginEmail" placeholder="Email"/><br/>
-    <input type="password" id="loginPassword" placeholder="Password"/><br/>
-    <button id="btnLogin">Login</button>
-    <p>No account? <a href="register.html">Register here</a></p>
-  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
