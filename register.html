@@ -1,30 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stroke Hero – Register</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stroke Hero - สมัครสมาชิก</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="login-page">
-  <div class="form-box">
-    <h2>Register</h2>
-    <input type="email" id="regEmail" placeholder="Email" />
-    <div class="password-wrapper">
-      <input type="password" id="regPassword" placeholder="Password" />
-      <span class="toggle-password" onclick="togglePassword('regPassword')">👁️</span>
-    </div>
-    <button id="btnRegister">Register</button>
-    <p class="alt-link">
-      Have an account? <a href="login.html">Login here</a>
+<body class="auth-page">
+  <!-- Centered Registration Form -->
+  <div class="form-container">
+    <h1 class="brand">Stroke Hero</h1>
+    <h2>สมัครสมาชิก</h2>
+    <form id="register-form">
+      <input type="text" id="register-username" placeholder="ชื่อผู้ใช้" required />
+      <div class="password-field">
+        <input type="password" id="register-password" placeholder="รหัสผ่าน" required />
+        <span class="toggle-password" data-target="register-password">แสดง</span>
+      </div>
+      <div class="password-field">
+        <input type="password" id="register-confirm-password" placeholder="ยืนยันรหัสผ่าน" required />
+        <span class="toggle-password" data-target="register-confirm-password">แสดง</span>
+      </div>
+      <button type="submit" class="btn">สมัครสมาชิก</button>
+    </form>
+    <p class="form-switch">
+      มีบัญชีอยู่แล้ว? <a href="login.html">เข้าสู่ระบบ</a>
     </p>
   </div>
 
-  <!-- Modal -->
-  <div id="modal" class="modal">
+  <!-- Modal for alerts -->
+  <div id="modal" class="modal hidden">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <p id="modalMsg"></p>
+      <p id="modal-message"></p>
+      <button id="modal-close" class="btn">ตกลง</button>
     </div>
   </div>
 
