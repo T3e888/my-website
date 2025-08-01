@@ -1,40 +1,218 @@
-// ✅ ตรวจสอบล็อกอิน
-if (!localStorage.getItem('token') && !window.location.href.includes('login.html') && !window.location.href.includes('register.html')) {
-  window.location.href = 'login.html';
-}
+// script.js
+document.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('token');
+  const path = window.location.pathname.split('/').pop();
+  const isAuthPage = path === 'login.html' || path === 'register.html';
 
-// ✅ Toggle รหัสผ่าน
-function togglePassword(inputId) {
-  const input = document.getElementById(inputId);
-  input.type = input.type === 'password' ? 'text' : 'password';
-}
+  // 1. ถ้าไม่ได้ล็อกอิน และไม่ใช่หน้า auth ให้พาไป login.html พร้อมพารามิเตอร์
+  if (!token && !isAuthPage) {
+    const params = new URLSearchParams(window.location.search);
+    const card = params.get('card');
+    let target = 'login.html?redirect=' + encodeURIComponent(path);
+    if (card) target += '&card=' + encodeURIComponent(card);
+    window.location.href = target;
+    return;
+  }
 
-// ✅ Modal แจ้งเตือน
-function showModal(msg, delay = 1500) {
+  // 2. ถ้ายังไม่ล็อกอิน ดักทุกลิงก์ใน sidebar ให้ไป login.html แทน
+  if (!token) {
+    document.querySelectorAll('.sidebar a').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (href.includes('login.html') || href.includes('register.html')) {
+          return window.location.href = href;
+        }
+        const params = new URLSearchParams(window.location.search);
+        const card = params.get('card');
+        let target = 'login.html?redirect=' + encodeURIComponent(href);
+        if (card) target += '&card=' + encodeURIComponent(card);
+        window.location.href = target;
+      });
+    });
+  }
+
+  // 3. Toggle password visibility
+  window.togglePassword = id => {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  };
+
+  // 4. Modal utility
   const modal = document.getElementById('modal');
   const modalMsg = document.getElementById('modalMsg');
-  modalMsg.textContent = msg;
-  modal.style.display = 'flex';
-  setTimeout(() => modal.style.display = 'none', delay);
-}
-
-// ✅ ล็อกอิน
-function login() {
-  const email = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPassword').value;
-  const users = JSON.parse(localStorage.getItem('users') || '{}');
-  if (users[email] === password) {
-    localStorage.setItem('token', email);
-    showModal('เข้าสู่ระบบสำเร็จ!');
-    setTimeout(() => window.location.href = 'index.html', 1000);
-  } else {
-    showModal('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+  function showModal(msg, time = 1500) {
+    if (!modal || !modalMsg) return;
+    modalMsg.textContent = msg;
+    modal.style.display = 'flex';
+    setTimeout(() => modal.style.display = 'none', time);
   }
-}
+  if (modal) {
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
 
-// ✅ สมัครสมาชิก
-function register() {
-  const email = document.getElementById('regEmail').value;
+  // 5. Login function
+  window.login = () => {
+    const email = document.getElementById('loginEmail').value;
+    const pwd = document.getElementById('loginPassword').value;
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    if (users[email] === pwd) {
+      localStorage.setItem('token', email);
+      showModal('เข้าสู่ระบบสำเร็จ!');
+      setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect') || 'index.html';
+        const card = params.get('card');
+        let dest = redirect;
+        if (card) dest += '?card=' + encodeURIComponent(card);
+        window.location.href = dest;
+      }, 1000);
+    } else {
+      showModal('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    }
+  };
+
+  // 6. Register function
+  window.register = () => {
+    const email = document.getElementById('regEmail').value;
+    const pwd = document.getElementById('regPassword').value;
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    if (users[email]) {
+      showModal('อีเมลนี้ถูกใช้ไปแล้ว');
+    } else {
+      users[email] = pwd;
+      localStorage.setItem('users', JSON.stringify(users));
+      showModal('สมัครสมาชิกสำเร็จ!');
+      setTimeout(() => window.location.href = 'login.html', 1000);
+    }
+  };
+
+  // 7. แสดงชื่อผู้ใช้
+  if (token && document.getElementById('usernameDisplay')) {
+    document.getElementById('usernameDisplay').textContent = token;
+  }
+
+  // 8. Logout
+  const logoutLink = document.getElementById('logoutLink');
+  if (logoutLink) {
+    logoutLink.addEventListener('click', e => {
+      e.preventDefault();
+      localStorage.removeItem('token');
+      showModal('ออกจากระบบแล้ว');
+      setTimeout(() => window.location.href = 'login.html', 1000);
+    });
+  }
+
+  // 9. Render cards (index)
+  if (document.getElementById('collection')) {
+    const uc = JSON.parse(localStorage.getItem(token + '_cards') || '{}');
+    const col = document.getElementById('collection');
+    col.innerHTML = '';
+    for (let i = 1; i <= 25; i++) {
+      const key = 'card' + i;
+      const div = document.createElement('div');
+      div.className = 'card-slot';
+      const img = document.createElement('img');
+      img.src = `assets/cards/${key}.png`;
+      img.className = 'card-img';
+      if (!uc[key]) img.style.filter = 'brightness(0.3) grayscale(100%)';
+      div.appendChild(img);
+      col.appendChild(div);
+    }
+  }
+
+  // 10. QR scanner (scan.html)
+  if (document.getElementById('cameraBtn')) {
+    const video = document.getElementById('video');
+    const camBtn = document.getElementById('cameraBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const fileI = document.getElementById('fileInput');
+    let detector, streamId, scanInt;
+
+    async function handleCode(val) {
+      stopCam();
+      if (!Array.from({length:25},(_,i)=>`card${i+1}`).includes(val))
+        return showModal('QR ไม่ถูกต้อง');
+      const um = JSON.parse(localStorage.getItem(token + '_cards') || '{}');
+      let msg = 'ปลดล็อก ' + val + ' สำเร็จ!';
+      if (um[val]) { um[val]++; msg = 'ได้ซ้ำ ' + val; }
+      localStorage.setItem(token + '_cards', JSON.stringify(um));
+      document.getElementById('popupTitle').innerText = msg;
+      document.getElementById('popupCardImg').src = `assets/cards/${val}.png`;
+      document.getElementById('popupCardName').innerText = val;
+      document.getElementById('cardPopup').style.display = 'flex';
+    }
+    function stopCam() {
+      clearInterval(scanInt);
+      streamId && streamId.getTracks().forEach(t=>t.stop());
+      video.style.display = 'none';
+      stopBtn.style.display = 'none';
+      camBtn.style.display = 'inline-block';
+    }
+    camBtn.addEventListener('click', async () => {
+      if (!('BarcodeDetector' in window)) return showModal('เบราว์เซอร์ไม่รองรับ');
+      detector = new BarcodeDetector({formats:['qr_code']});
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        streamId = s;
+        video.srcObject = s;
+        video.style.display = 'block';
+        camBtn.style.display = 'none';
+        stopBtn.style.display = 'inline-block';
+        scanInt = setInterval(async () => {
+          if (video.readyState===video.HAVE_ENOUGH_DATA) {
+            const c=document.createElement('canvas');
+            c.width=video.videoWidth; c.height=video.videoHeight;
+            c.getContext('2d').drawImage(video,0,0);
+            const bc=await detector.detect(c);
+            if (bc.length) handleCode(bc[0].rawValue);
+          }
+        },500);
+      } catch {
+        showModal('ไม่สามารถเข้ากล้องได้');
+      }
+    });
+    stopBtn.addEventListener('click', stopCam);
+    fileI.addEventListener('change', e => {
+      const f=e.target.files[0];
+      if (!f||!('BarcodeDetector'in window)) return;
+      detector=new BarcodeDetector({formats:['qr_code']});
+      const img=new Image();
+      img.onload=async()=>{
+        const bc=await detector.detect(img);
+        bc.length?handleCode(bc[0].rawValue):showModal('ไม่พบ QR');
+      };
+      const fr=new FileReader();
+      fr.onload=ev=>img.src=ev.target.result;
+      fr.readAsDataURL(f);
+    });
+    document.getElementById('popupClose').onclick = () => {
+      document.getElementById('cardPopup').style.display = 'none';
+    };
+  }
+
+  // 11. Daily mission (mission.html)
+  if (document.getElementById('missionBox')) {
+    const mb = document.getElementById('missionBox');
+    const tm = document.getElementById('timer');
+    const key = 'last_mission_' + token;
+    const now = Date.now();
+    const day = 24*3600*1000;
+    const last = +localStorage.getItem(key);
+    if (!last || now - last >= day) {
+      localStorage.setItem(key, now);
+      mb.innerHTML = '<p><strong>ภารกิจ:</strong> ตอบคำถามให้ถูกต้อง!</p>';
+    } else {
+      const left = day - (now - last);
+      const h = Math.floor(left/3600000),
+            m = Math.floor((left%3600000)/60000),
+            s = Math.floor((left%60000)/1000);
+      tm.textContent = `รออีก ${h} ชม. ${m} นาที ${s} วินาที`;
+    }
+  }
+});  const email = document.getElementById('regEmail').value;
   const password = document.getElementById('regPassword').value;
   const users = JSON.parse(localStorage.getItem('users') || '{}');
   if (users[email]) return showModal('อีเมลนี้ถูกใช้ไปแล้ว');
