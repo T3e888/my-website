@@ -1,28 +1,42 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stroke Hero - การ์ดของฉัน</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stroke Hero - การ์ดสะสม</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <aside class="sidebar">
-      <h2>Stroke Hero</h2>
-      <p class="username">User: <span id="usernameDisplay"></span></p>
-      <ul>
-        <li class="active"><a href="index.html">List Card</a></li>
-        <li><a href="scan.html">Scan QR</a></li>
-        <li><a href="mission.html">Mission</a></li>
-      </ul>
-      <a href="#" id="logoutLink" class="logout">Logout</a>
-    </aside>
-    <main class="content">
-      <h1>คอลเลคชันการ์ดของฉัน</h1>
-      <div id="collection" class="card-grid"></div>
-    </main>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="logo">Stroke Hero</div>
+    <div class="nav-right">
+      <span id="user-greeting">สวัสดี, <span id="display-name"></span></span>
+      <a href="index.html">การ์ด</a>
+      <a href="scan.html">สแกน</a>
+      <a href="mission.html">ภารกิจ</a>
+      <a href="#" id="logout-link">ออกจากระบบ</a>
+    </div>
+  </nav>
+
+  <!-- Card Collection Section -->
+  <div class="page-header">
+    <h2>การ์ดสะสม</h2>
+    <div class="toggle-unlocked">
+      <input type="checkbox" id="filter-unlocked" />
+      <label for="filter-unlocked">แสดงเฉพาะที่ปลดล็อก</label>
+    </div>
+  </div>
+  <div id="card-container" class="card-grid">
+    <!-- Cards will be generated here by script.js -->
+  </div>
+
+  <!-- Modal for notifications -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button id="modal-close" class="btn">ตกลง</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
