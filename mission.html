@@ -1,29 +1,34 @@
-<!-- mission.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stroke Hero - Mission</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stroke Hero - ภารกิจรายวัน</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <aside class="sidebar">
-      <h2>Stroke Hero</h2>
-      <p class="username">User: <span id="usernameDisplay"></span></p>
-      <ul>
-        <li><a href="index.html">List Card</a></li>
-        <li><a href="scan.html">Scan QR</a></li>
-        <li class="active"><a href="mission.html">Mission</a></li>
-      </ul>
-      <a href="#" id="logoutLink" class="logout">Logout</a>
-    </aside>
-    <main class="content">
-      <h1>ภารกิจรายวัน</h1>
-      <div id="missionBox"></div>
-      <div id="timer" style="margin-top: 1rem;"></div>
-    </main>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="logo">Stroke Hero</div>
+    <div class="nav-right">
+      <span id="user-greeting">สวัสดี, <span id="display-name"></span></span>
+      <a href="index.html">การ์ด</a>
+      <a href="scan.html">สแกน</a>
+      <a href="mission.html">ภารกิจ</a>
+      <a href="#" id="logout-link">ออกจากระบบ</a>
+    </div>
+  </nav>
+
+  <!-- Daily Mission Section -->
+  <h2>ภารกิจรายวัน</h2>
+  <p>เวลาที่เหลือ: <span id="countdown">00:00:00</span></p>
+
+  <!-- Modal (not commonly needed on this page, but included for consistency) -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button id="modal-close" class="btn">ตกลง</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
