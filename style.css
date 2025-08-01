@@ -1,40 +1,210 @@
-/* Global Styles */
-* {
-    box-sizing: border-box;
-}
+/* General Styles */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #ffffff;
-    background-image: radial-gradient(circle at top right, rgba(244, 67, 54, 0.1) 20%, transparent 21%),
-                      radial-gradient(circle at bottom left, rgba(244, 67, 54, 0.1) 15%, transparent 16%);
-    background-repeat: no-repeat, no-repeat;
-    background-attachment: fixed, fixed;
-    background-position: top right, bottom left;
-    color: #333;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #000;
 }
-/* Sidebar layout */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 200px;
-    height: 100%;
-    background: #f44336;
-    color: #fff;
-    padding: 1rem;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+h1 {
+  margin: 0 0 15px;
 }
-.sidebar h2, .sidebar p, .sidebar span {
-    color: #fff;
-    margin: 0 0 1rem;
+h2 {
+  margin: 0 0 10px;
 }
-.sidebar a {
-    color: #ffe;
-    text-decoration: none;
-    display: block;
-    margin: 0.5rem 0;
+/* Navigation Bar */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #c62828;  /* red theme */
+  color: #fff;
+  padding: 10px;
+  margin-bottom: 20px;
 }
+.navbar .logo {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+.navbar .nav-right a {
+  color: #fff;
+  text-decoration: none;
+}
+.navbar .nav-right a:hover {
+  text-decoration: underline;
+}
+/* space between greeting and links */
+.navbar .nav-right > *:not(:first-child) {
+  margin-left: 15px;
+}
+
+/* Auth Pages (Login & Register) */
+body.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.form-container {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  width: 100%;
+  max-width: 320px;
+}
+.form-container h1,
+.form-container h2 {
+  text-align: center;
+}
+.form-container .form-switch {
+  text-align: center;
+  font-size: 0.9em;
+}
+.form-container input,
+.form-container button {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  font-size: 1em;
+}
+.form-container input {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+.form-container input:focus {
+  outline: none;
+  border-color: #c62828;
+}
+.form-container button.btn {
+  margin-top: 10px;
+}
+
+/* Toggle Password */
+.password-field {
+  position: relative;
+}
+.password-field .toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+  color: #007bff; /* clickable link color */
+  font-size: 0.9em;
+}
+
+/* Button style (general) */
+.btn {
+  background: #c62828;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 10px;
+  font-size: 1em;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none; /* allow using .btn on anchor/label */
+  display: inline-block;
+}
+.btn:hover {
+  background: #b71c1c;
+}
+.btn:focus {
+  outline: none;
+}
+
+/* Card Collection Page */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 10px 10px;
+}
+.page-header h2 {
+  margin: 0;
+}
+.toggle-unlocked label {
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+
+/* Card Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 10px;
+  background: #f5f5f5;
+}
+.card {
+  background: #fff;
+  color: #000;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  font-weight: bold;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+}
+.card.locked {
+  background: #555;
+  color: #fff;
+}
+/* Hide locked cards when toggled */
+#card-container.show-only-unlocked .card.locked {
+  display: none;
+}
+
+/* Scan Page */
+.scan-actions .btn {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+#camera-stream {
+  display: block;
+  margin: 10px 0;
+  max-width: 100%;
+  border: 2px solid #c62828;
+  border-radius: 4px;
+}
+
+/* Mission Page */
+#countdown {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+/* Modal (alert/notification) */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+.modal-content {
+  background: #fff;
+  color: #000;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+  width: 300px;
+  max-width: 80%;
+}
+.modal-content p {
+  margin: 0 0 15px;
+}
+.hidden {
+  display: none !important;
+}}
 .sidebar a:hover {
     text-decoration: underline;
 }
