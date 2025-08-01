@@ -1,40 +1,315 @@
-// เรียกก่อน: ถ้าไม่มี token ให้ไป login.html
-window.addEventListener('DOMContentLoaded', () => {
-  const path = location.pathname.split('/').pop();
-  const isAuthPage = path === 'login.html' || path === 'register.html';
-  if (!localStorage.getItem('token') && !isAuthPage) {
-    location.href = 'login.html';
+// Script for Stroke Hero Web Application
+document.addEventListener('DOMContentLoaded', () => {
+  // Authentication Guard
+  const currentUser = localStorage.getItem('currentUser');
+  const onLoginPage = location.pathname.endsWith('login.html');
+  const onRegisterPage = location.pathname.endsWith('register.html');
+  if (!currentUser && !onLoginPage && !onRegisterPage) {
+    // Not logged in, redirect to login
+    location.replace('login.html');
+    return;
   }
-  if (localStorage.getItem('token') && isAuthPage) {
-    location.href = 'index.html';
+  if (currentUser && (onLoginPage || onRegisterPage)) {
+    // Already logged in, redirect to main page
+    location.replace('index.html');
+    return;
   }
-});
 
-// Toggle password visibility
-function togglePassword(id) {
-  const inp = document.getElementById(id);
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-}
+  // Display logged-in user's name in navbar (if applicable)
+  if (currentUser) {
+    const nameSpan = document.getElementById('display-name');
+    if (nameSpan) {
+      nameSpan.textContent = currentUser;
+    }
+  }
 
-// Show modal with message
-function showModal(msg) {
-  const m = document.getElementById('modal');
-  document.getElementById('modalMsg').textContent = msg;
-  m.classList.add('open');
-}
+  // Modal dialog functions
+  const modal = document.getElementById('modal');
+  const modalMsg = document.getElementById('modal-message');
+  const modalCloseBtn = document.getElementById('modal-close');
+  if (modal && modalCloseBtn) {
+    // Close modal on clicking "OK" or outside the content
+    modalCloseBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    modal.addEventListener('click', (e) => {
+      if (e.target.id === 'modal') {
+        modal.classList.add('hidden');
+      }
+    });
+  }
+  function showModal(message) {
+    if (modal && modalMsg) {
+      modalMsg.textContent = message;
+      modal.classList.remove('hidden');
+    } else {
+      alert(message);
+    }
+  }
 
-// Close modal immediately
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
+  // Login Form Handler
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!username || !password) {
+        showModal('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+        return;
+      }
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.username === username);
+      if (!user || user.password !== password) {
+        showModal('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        return;
+      }
+      // Successful login
+      localStorage.setItem('currentUser', user.username);
+      location.replace('index.html');
+    });
+  }
 
-// Login handler
-document.getElementById('btnLogin')?.addEventListener('click', () => {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pwd   = document.getElementById('loginPassword').value;
-  const users = JSON.parse(localStorage.getItem('users') || '{}');
-  if (!email || !pwd) {
-    showModal('กรุณากรอกทั้ง Email และ Password');
+  // Register Form Handler
+  const registerForm = document.getElementById('register-form');
+  if (registerForm) {
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('register-username').value.trim();
+      const password = document.getElementById('register-password').value;
+      const confirmPassword = document.getElementById('register-confirm-password').value;
+      if (!username || !password || !confirmPassword) {
+        showModal('กรุณากรอกข้อมูลให้ครบ');
+        return;
+      }
+      if (password !== confirmPassword) {
+        showModal('รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน');
+        return;
+      }
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.find(u => u.username === username)) {
+        showModal('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
+        return;
+      }
+      // Save new user
+      users.push({ username: username, password: password });
+      localStorage.setItem('users', JSON.stringify(users));
+      // Initialize this user's card collection (25 cards, all locked)
+      const initialCards = Array(25).fill(false);
+      localStorage.setItem('cards_' + username, JSON.stringify(initialCards));
+      // Auto-login after registration
+      localStorage.setItem('currentUser', username);
+      location.replace('index.html');
+    });
+  }
+
+  // Card Collection Page (index.html)
+  const cardContainer = document.getElementById('card-container');
+  if (cardContainer) {
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+      const cardList = JSON.parse(localStorage.getItem('cards_' + user) || '[]');
+      // Render 25 cards
+      cardContainer.innerHTML = '';
+      for (let i = 1; i <= 25; i++) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card';
+        if (!cardList[i - 1]) {
+          cardDiv.classList.add('locked');
+        }
+        cardDiv.textContent = i;
+        cardContainer.appendChild(cardDiv);
+      }
+    }
+    // Toggle filter to show only unlocked cards
+    const filterCheckbox = document.getElementById('filter-unlocked');
+    if (filterCheckbox) {
+      filterCheckbox.addEventListener('change', () => {
+        if (filterCheckbox.checked) {
+          cardContainer.classList.add('show-only-unlocked');
+        } else {
+          cardContainer.classList.remove('show-only-unlocked');
+        }
+      });
+    }
+  }
+
+  // Scan Page (scan.html)
+  const openCamBtn = document.getElementById('open-camera-btn');
+  const fileInput = document.getElementById('file-input');
+  const videoEl = document.getElementById('camera-stream');
+  let videoStream = null;
+  let scanningInterval = null;
+  if (openCamBtn) {
+    openCamBtn.addEventListener('click', async () => {
+      if (!('BarcodeDetector' in window)) {
+        showModal('เบราเซอร์นี้ไม่รองรับการสแกนโค้ด');
+        return;
+      }
+      if (videoStream) {
+        // If camera is already on, stop it (toggle off)
+        openCamBtn.textContent = 'เปิดกล้อง';
+        clearInterval(scanningInterval);
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+        if (videoEl) videoEl.style.display = 'none';
+      } else {
+        // Start camera stream and scanning
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        } catch (err) {
+          showModal('ไม่สามารถเข้าถึงกล้องได้');
+          return;
+        }
+        if (videoEl) {
+          videoEl.srcObject = videoStream;
+          videoEl.style.display = 'block';
+          await videoEl.play().catch(e => { /* autoplay might not be allowed without user gesture */ });
+        }
+        openCamBtn.textContent = 'ปิดกล้อง';
+        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+        scanningInterval = setInterval(async () => {
+          try {
+            const barcodes = await detector.detect(videoEl);
+            if (barcodes.length > 0) {
+              // Found a code
+              const codeValue = barcodes[0].rawValue;
+              handleCodeScanned(codeValue);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }, 1000);
+      }
+    });
+  }
+  if (fileInput) {
+    fileInput.addEventListener('change', async () => {
+      if (!('BarcodeDetector' in window)) {
+        showModal('เบราเซอร์นี้ไม่รองรับการสแกนโค้ด');
+        return;
+      }
+      const file = fileInput.files[0];
+      if (file) {
+        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+        try {
+          const imageBitmap = await createImageBitmap(file);
+          const barcodes = await detector.detect(imageBitmap);
+          if (barcodes.length === 0) {
+            showModal('ไม่พบรหัสใดๆ ในรูปนี้');
+          } else {
+            const codeValue = barcodes[0].rawValue;
+            handleCodeScanned(codeValue);
+          }
+        } catch (err) {
+          console.error(err);
+          showModal('ไม่สามารถสแกนรูปนี้ได้');
+        }
+        // Reset file input to allow re-uploading the same file if needed
+        fileInput.value = '';
+      }
+    });
+  }
+  // Handle scanned code (from camera or file)
+  function handleCodeScanned(code) {
+    const user = localStorage.getItem('currentUser');
+    if (!user) return;
+    let cardList = JSON.parse(localStorage.getItem('cards_' + user) || '[]');
+    // Assume the QR code value is a number 1-25 corresponding to a card
+    const cardNum = parseInt(code);
+    if (!isNaN(cardNum) && cardNum >= 1 && cardNum <= 25) {
+      if (cardList[cardNum - 1]) {
+        showModal('การ์ดหมายเลข ' + cardNum + ' ถูกปลดล็อกแล้ว');
+      } else {
+        // Unlock the card
+        cardList[cardNum - 1] = true;
+        localStorage.setItem('cards_' + user, JSON.stringify(cardList));
+        showModal('ปลดล็อกการ์ดหมายเลข ' + cardNum + ' แล้ว!');
+        // Update card display if on the collection page
+        const cardElements = document.querySelectorAll('.card');
+        if (cardElements.length === 25) {
+          const cardEl = cardElements[cardNum - 1];
+          if (cardEl) {
+            cardEl.classList.remove('locked');
+          }
+        }
+      }
+    } else {
+      showModal('โค้ดที่สแกนไม่ถูกต้อง');
+    }
+    // Stop camera after scanning one code
+    if (videoStream) {
+      openCamBtn.textContent = 'เปิดกล้อง';
+      videoStream.getTracks().forEach(track => track.stop());
+      videoStream = null;
+    }
+    if (videoEl) videoEl.style.display = 'none';
+    if (scanningInterval) clearInterval(scanningInterval);
+  }
+
+  // Mission Page (mission.html) - 24h Countdown
+  const countdownEl = document.getElementById('countdown');
+  if (countdownEl) {
+    const user = localStorage.getItem('currentUser');
+    const missionKey = 'missionStart_' + user;
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    let startTime = parseInt(localStorage.getItem(missionKey) || '0');
+    if (!startTime || Date.now() - startTime >= DAY_MS) {
+      // No mission timer or 24h passed, reset the mission start time to now
+      startTime = Date.now();
+      localStorage.setItem(missionKey, startTime.toString());
+    }
+    // Update countdown every second
+    function updateCountdown() {
+      const now = Date.now();
+      let diff = DAY_MS - (now - startTime);
+      if (diff < 0) diff = 0;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      // Format HH:MM:SS with leading zeros
+      const hh = hours.toString().padStart(2, '0');
+      const mm = mins.toString().padStart(2, '0');
+      const ss = secs.toString().padStart(2, '0');
+      countdownEl.textContent = `${hh}:${mm}:${ss}`;
+      if (diff <= 0) {
+        clearInterval(timer);
+        // Optionally, reset start time for next mission cycle
+        localStorage.setItem(missionKey, Date.now().toString());
+      }
+    }
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+  }
+
+  // Toggle password visibility for all password fields
+  document.querySelectorAll('.toggle-password').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const targetId = toggle.getAttribute('data-target');
+      const pwdInput = targetId ? document.getElementById(targetId) : null;
+      if (pwdInput) {
+        if (pwdInput.type === 'password') {
+          pwdInput.type = 'text';
+          toggle.textContent = 'ซ่อน';
+        } else {
+          pwdInput.type = 'password';
+          toggle.textContent = 'แสดง';
+        }
+      }
+    });
+  });
+
+  // Logout functionality
+  const logoutLink = document.getElementById('logout-link');
+  if (logoutLink) {
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('currentUser');
+      // (Keeping users and cards data in localStorage to allow re-login)
+      location.href = 'login.html';
+    });
+  }
+});    showModal('กรุณากรอกทั้ง Email และ Password');
   } else if (users[email] && users[email] === pwd) {
     localStorage.setItem('token', email);
     showModal('Login สำเร็จ');
