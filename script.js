@@ -1,40 +1,65 @@
-// script.js
-document.addEventListener('DOMContentLoaded', () => {
-  const token = localStorage.getItem('token');
-  const path = window.location.pathname.split('/').pop();
+// เรียกก่อน: ถ้าไม่มี token ให้ไป login.html
+window.addEventListener('DOMContentLoaded', () => {
+  const path = location.pathname.split('/').pop();
   const isAuthPage = path === 'login.html' || path === 'register.html';
-
-  // 1. ถ้าไม่ได้ล็อกอิน และไม่ใช่หน้า auth ให้พาไป login.html พร้อมพารามิเตอร์
-  if (!token && !isAuthPage) {
-    const params = new URLSearchParams(window.location.search);
-    const card = params.get('card');
-    let target = 'login.html?redirect=' + encodeURIComponent(path);
-    if (card) target += '&card=' + encodeURIComponent(card);
-    window.location.href = target;
-    return;
+  if (!localStorage.getItem('token') && !isAuthPage) {
+    location.href = 'login.html';
   }
-
-  // 2. ถ้ายังไม่ล็อกอิน ดักทุกลิงก์ใน sidebar ให้ไป login.html แทน
-  if (!token) {
-    document.querySelectorAll('.sidebar a').forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const href = link.getAttribute('href');
-        if (href.includes('login.html') || href.includes('register.html')) {
-          return window.location.href = href;
-        }
-        const params = new URLSearchParams(window.location.search);
-        const card = params.get('card');
-        let target = 'login.html?redirect=' + encodeURIComponent(href);
-        if (card) target += '&card=' + encodeURIComponent(card);
-        window.location.href = target;
-      });
-    });
+  if (localStorage.getItem('token') && isAuthPage) {
+    location.href = 'index.html';
   }
+});
 
-  // 3. Toggle password visibility
-  window.togglePassword = id => {
-    const inp = document.getElementById(id);
+// Toggle password visibility
+function togglePassword(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// Show modal with message
+function showModal(msg) {
+  const m = document.getElementById('modal');
+  document.getElementById('modalMsg').textContent = msg;
+  m.classList.add('open');
+}
+
+// Close modal immediately
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// Login handler
+document.getElementById('btnLogin')?.addEventListener('click', () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPassword').value;
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  if (!email || !pwd) {
+    showModal('กรุณากรอกทั้ง Email และ Password');
+  } else if (users[email] && users[email] === pwd) {
+    localStorage.setItem('token', email);
+    showModal('Login สำเร็จ');
+    setTimeout(() => location.href = 'index.html', 800);
+  } else {
+    showModal('Email หรือ Password ไม่ถูกต้อง');
+  }
+});
+
+// Register handler
+document.getElementById('btnRegister')?.addEventListener('click', () => {
+  const email = document.getElementById('regEmail').value.trim();
+  const pwd   = document.getElementById('regPassword').value;
+  let users    = JSON.parse(localStorage.getItem('users') || '{}');
+  if (!email || !pwd) {
+    showModal('กรุณากรอกทั้ง Email และ Password');
+  } else if (users[email]) {
+    showModal('Email นี้ถูกใช้งานแล้ว');
+  } else {
+    users[email] = pwd;
+    localStorage.setItem('users', JSON.stringify(users));
+    showModal('Register สำเร็จ');
+    setTimeout(() => location.href = 'login.html', 800);
+  }
+});    const inp = document.getElementById(id);
     inp.type = inp.type === 'password' ? 'text' : 'password';
   };
 
