@@ -1,25 +1,32 @@
-<!-- register.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Register</title>
+  <title>Stroke Hero – Register</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="centered">
+<body class="login-page">
   <div class="form-box">
-    <h2>สมัครสมาชิก</h2>
-    <input type="email" id="regEmail" placeholder="Email">
+    <h2>Register</h2>
+    <input type="email" id="regEmail" placeholder="Email" />
     <div class="password-wrapper">
-      <input type="password" id="regPassword" placeholder="Password">
+      <input type="password" id="regPassword" placeholder="Password" />
       <span class="toggle-password" onclick="togglePassword('regPassword')">👁️</span>
     </div>
-    <button onclick="register()">สมัคร</button>
-    <p>มีบัญชีแล้ว? <a href="login.html">เข้าสู่ระบบ</a></p>
+    <button id="btnRegister">Register</button>
+    <p class="alt-link">
+      Have an account? <a href="login.html">Login here</a>
+    </p>
   </div>
 
-  <div id="modal" class="modal"><div class="modal-content" id="modalMsg"></div></div>
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <p id="modalMsg"></p>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
