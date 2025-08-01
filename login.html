@@ -1,30 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stroke Hero – Login</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stroke Hero - เข้าสู่ระบบ</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="login-page">
-  <div class="form-box">
-    <h2>Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email" />
-    <div class="password-wrapper">
-      <input type="password" id="loginPassword" placeholder="Password" />
-      <span class="toggle-password" onclick="togglePassword('loginPassword')">👁️</span>
-    </div>
-    <button id="btnLogin">Login</button>
-    <p class="alt-link">
-      No account? <a href="register.html">Register here</a>
+<body class="auth-page">
+  <!-- Centered Login Form -->
+  <div class="form-container">
+    <h1 class="brand">Stroke Hero</h1>
+    <h2>เข้าสู่ระบบ</h2>
+    <form id="login-form">
+      <input type="text" id="login-username" placeholder="ชื่อผู้ใช้" required />
+      <div class="password-field">
+        <input type="password" id="login-password" placeholder="รหัสผ่าน" required />
+        <span class="toggle-password" data-target="login-password">แสดง</span>
+      </div>
+      <button type="submit" class="btn">เข้าสู่ระบบ</button>
+    </form>
+    <p class="form-switch">
+      ยังไม่มีบัญชี? <a href="register.html">สมัครสมาชิก</a>
     </p>
   </div>
 
-  <!-- Modal -->
-  <div id="modal" class="modal">
+  <!-- Modal for alerts -->
+  <div id="modal" class="modal hidden">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <p id="modalMsg"></p>
+      <p id="modal-message"></p>
+      <button id="modal-close" class="btn">ตกลง</button>
     </div>
   </div>
 
