@@ -1,40 +1,187 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Insert modal HTML into page
-    const modalHtml = '<div class="modal" id="modal"><div class="modal-content"><div id="modal-message"></div><button id="modal-close">ตกลง</button></div></div>';
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modal = document.getElementById('modal');
-    const modalMessage = document.getElementById('modal-message');
-    let modalClose = document.getElementById('modal-close');
-    
-    // Close modal when clicking outside the modal content
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            modal.classList.remove('show');
+// ✅ ตรวจสอบล็อกอิน
+if (!localStorage.getItem('token') && !window.location.href.includes('login.html') && !window.location.href.includes('register.html')) {
+  window.location.href = 'login.html';
+}
+
+// ✅ Toggle รหัสผ่าน
+function togglePassword(inputId) {
+  const input = document.getElementById(inputId);
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// ✅ Modal แจ้งเตือน
+function showModal(msg, delay = 1500) {
+  const modal = document.getElementById('modal');
+  const modalMsg = document.getElementById('modalMsg');
+  modalMsg.textContent = msg;
+  modal.style.display = 'flex';
+  setTimeout(() => modal.style.display = 'none', delay);
+}
+
+// ✅ ล็อกอิน
+function login() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  if (users[email] === password) {
+    localStorage.setItem('token', email);
+    showModal('เข้าสู่ระบบสำเร็จ!');
+    setTimeout(() => window.location.href = 'index.html', 1000);
+  } else {
+    showModal('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+  }
+}
+
+// ✅ สมัครสมาชิก
+function register() {
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  if (users[email]) return showModal('อีเมลนี้ถูกใช้ไปแล้ว');
+  users[email] = password;
+  localStorage.setItem('users', JSON.stringify(users));
+  showModal('สมัครสมาชิกสำเร็จ!');
+  setTimeout(() => window.location.href = 'login.html', 1000);
+}
+
+// ✅ แสดงชื่อผู้ใช้
+const token = localStorage.getItem('token');
+if (token && document.getElementById('usernameDisplay')) {
+  document.getElementById('usernameDisplay').textContent = token;
+}
+
+// ✅ Logout
+const logoutBtn = document.getElementById('logoutLink');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    showModal('ออกจากระบบแล้ว');
+    setTimeout(() => window.location.href = 'login.html', 1000);
+  });
+}
+
+// ✅ การ์ดทั้งหมด
+const allCards = Array.from({ length: 25 }, (_, i) => `card${i + 1}`);
+if (document.getElementById('collection')) {
+  const unlocked = JSON.parse(localStorage.getItem(token + '_cards') || '{}');
+  const container = document.getElementById('collection');
+  container.innerHTML = '';
+  allCards.forEach(card => {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'card-slot';
+    const img = document.createElement('img');
+    img.src = `assets/cards/${card}.png`;
+    img.classList.add('card-img');
+    if (!unlocked[card]) {
+      img.style.filter = 'brightness(0.3) grayscale(100%)';
+    }
+    cardDiv.appendChild(img);
+    container.appendChild(cardDiv);
+  });
+}
+
+// ✅ QR Code Scanner
+if (document.getElementById('cameraBtn')) {
+  let video = document.getElementById('video');
+  let cameraBtn = document.getElementById('cameraBtn');
+  let stopBtn = document.getElementById('stopBtn');
+  let fileInput = document.getElementById('fileInput');
+  let stream, scanInterval, detector;
+
+  async function handleQRCode(value) {
+    stopCamera();
+    const key = allCards.includes(value) ? value : null;
+    if (!key) return showModal('QR ไม่ถูกต้อง');
+
+    const userKey = token + '_cards';
+    let unlocked = JSON.parse(localStorage.getItem(userKey) || '{}');
+    let title = 'New Card Unlocked!';
+    if (unlocked[key]) {
+      unlocked[key]++;
+      title = 'ได้การ์ดซ้ำ!';
+    } else {
+      unlocked[key] = 1;
+    }
+    localStorage.setItem(userKey, JSON.stringify(unlocked));
+    document.getElementById('popupTitle').innerText = title;
+    document.getElementById('popupCardImg').src = `assets/cards/${key}.png`;
+    document.getElementById('popupCardName').innerText = key;
+    document.getElementById('cardPopup').style.display = 'flex';
+  }
+
+  function stopCamera() {
+    if (scanInterval) clearInterval(scanInterval);
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    video.style.display = 'none';
+    stopBtn.style.display = 'none';
+    cameraBtn.style.display = 'inline-block';
+  }
+
+  cameraBtn.addEventListener('click', async () => {
+    if (!('BarcodeDetector' in window)) return alert('Browser ไม่รองรับ');
+    detector = new BarcodeDetector({ formats: ['qr_code'] });
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = stream;
+    video.style.display = 'block';
+    cameraBtn.style.display = 'none';
+    stopBtn.style.display = 'inline-block';
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    scanInterval = setInterval(async () => {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const codes = await detector.detect(canvas);
+        if (codes.length) {
+          handleQRCode(codes[0].rawValue);
         }
-    });
-    
-    // Utility function: show modal with message and optional callback on close
-    function showModal(message, onClose) {
-        modalMessage.textContent = message;
-        modal.classList.add('show');
-        // Remove any existing click handlers on close button by replacing it
-        modalClose.replaceWith(modalClose.cloneNode(true));
-        modalClose = document.getElementById('modal-close');
-        modalClose.addEventListener('click', function() {
-            modal.classList.remove('show');
-            if (onClose) onClose();
-        });
-    }
-    
-    // Utility: get URL query parameter
-    function getQueryParam(name) {
-        const params = new URLSearchParams(window.location.search);
-        return params.get(name);
-    }
-    
-    // Check if user is logged in
-    const currentUser = localStorage.getItem('currentUser');
-    const cardParam = getQueryParam('card');
+      }
+    }, 500);
+  });
+
+  stopBtn.addEventListener('click', stopCamera);
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file || !('BarcodeDetector' in window)) return;
+    detector = new BarcodeDetector({ formats: ['qr_code'] });
+    const img = new Image();
+    img.onload = async () => {
+      const codes = await detector.detect(img);
+      if (codes.length) handleQRCode(codes[0].rawValue);
+      else showModal('ไม่พบ QR');
+    };
+    const reader = new FileReader();
+    reader.onload = e => img.src = e.target.result;
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('popupClose').onclick = () => {
+    document.getElementById('cardPopup').style.display = 'none';
+  };
+}
+
+// ✅ ภารกิจรายวัน
+if (document.getElementById('missionBox')) {
+  const missionBox = document.getElementById('missionBox');
+  const timerDiv = document.getElementById('timer');
+  const key = 'last_mission_time_' + token;
+  const last = localStorage.getItem(key);
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  if (!last || now - Number(last) >= dayMs) {
+    localStorage.setItem(key, now);
+    missionBox.innerHTML = `<p><strong>ภารกิจวันนี้:</strong> ตอบคำถามให้ถูกต้อง!</p>`;
+  } else {
+    const remaining = dayMs - (now - Number(last));
+    const h = Math.floor(remaining / 3600000);
+    const m = Math.floor((remaining % 3600000) / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    timerDiv.innerText = `กรุณารออีก ${h} ชม. ${m} นาที ${s} วินาที เพื่อรีเฟรชภารกิจ`;
+  }
+}    const cardParam = getQueryParam('card');
     const onLoginPage = window.location.href.includes('login.html');
     const onRegisterPage = window.location.href.includes('register.html');
     
