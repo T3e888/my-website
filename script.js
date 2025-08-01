@@ -1,40 +1,368 @@
-document.addEventListener("DOMContentLoaded", function() {
-  // Sidebar toggle
-  document.querySelectorAll(".openbtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelector(".sidebar").classList.toggle("open");
+document.addEventListener('DOMContentLoaded', function() {
+    // Insert modal HTML into page
+    const modalHtml = '<div class="modal" id="modal"><div class="modal-content"><div id="modal-message"></div><button id="modal-close">ตกลง</button></div></div>';
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = document.getElementById('modal');
+    const modalMessage = document.getElementById('modal-message');
+    let modalClose = document.getElementById('modal-close');
+    
+    // Close modal when clicking outside the modal content
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
     });
-  });
-
-  // Show username
-  const user = localStorage.getItem("token");
-  if (user) {
-    const disp = document.getElementById("usernameDisplay");
-    if (disp) disp.textContent = user;
-  }
-
-  // Logout
-  const logoutLink = document.getElementById("logoutLink");
-  if (logoutLink) {
-    logoutLink.addEventListener("click", e => {
-      e.preventDefault();
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-    });
-  }
-
-  // Close popup
-  document.querySelectorAll(".popup").forEach(p => {
-    const closeBtn = p.querySelector("button");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        p.classList.remove("active");
-      });
+    
+    // Utility function: show modal with message and optional callback on close
+    function showModal(message, onClose) {
+        modalMessage.textContent = message;
+        modal.classList.add('show');
+        // Remove any existing click handlers on close button by replacing it
+        modalClose.replaceWith(modalClose.cloneNode(true));
+        modalClose = document.getElementById('modal-close');
+        modalClose.addEventListener('click', function() {
+            modal.classList.remove('show');
+            if (onClose) onClose();
+        });
     }
-  });
-
-  // Protected pages redirect to login
-  const path = window.location.pathname.split("/").pop();
+    
+    // Utility: get URL query parameter
+    function getQueryParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+    }
+    
+    // Check if user is logged in
+    const currentUser = localStorage.getItem('currentUser');
+    const cardParam = getQueryParam('card');
+    const onLoginPage = window.location.href.includes('login.html');
+    const onRegisterPage = window.location.href.includes('register.html');
+    
+    // Redirect to login page if not logged in (unless on login or register page)
+    if (!currentUser && !onLoginPage && !onRegisterPage) {
+        if (cardParam) {
+            // If a card unlock link was opened while not logged in
+            showModal('กรุณาเข้าสู่ระบบก่อนปลดล็อกการ์ด', function() {
+                window.location = 'login.html';
+            });
+        } else {
+            window.location = 'login.html';
+        }
+        return;
+    }
+    
+    // Load user data from localStorage
+    let usersData = JSON.parse(localStorage.getItem('users') || '{}');
+    let userData = null;
+    if (currentUser) {
+        userData = usersData[currentUser] || {};
+        if (!userData.unlocked) {
+            userData.unlocked = [];
+        }
+    }
+    
+    // Function to unlock a card for the logged-in user
+    function unlockCard(cardId) {
+        if (!currentUser || !userData) return false;
+        if (!userData.unlocked.includes(cardId)) {
+            userData.unlocked.push(cardId);
+            usersData[currentUser] = userData;
+            localStorage.setItem('users', JSON.stringify(usersData));
+            return true;
+        }
+        return false;
+    }
+    
+    // If URL has card param and user is logged in, unlock that card
+    if (cardParam && currentUser) {
+        const newUnlocked = unlockCard(cardParam);
+        const cardNumber = cardParam.replace('card', '');
+        if (window.location.href.includes('scan.html')) {
+            // On scan page: show modal then redirect to index
+            if (newUnlocked) {
+                showModal('การ์ด ' + cardNumber + ' ถูกปลดล็อกแล้ว!', function() {
+                    window.location = 'index.html';
+                });
+            } else {
+                showModal('การ์ด ' + cardNumber + ' ได้ปลดล็อกไปแล้ว', function() {
+                    window.location = 'index.html';
+                });
+            }
+        } else {
+            if (newUnlocked) {
+                showModal('การ์ด ' + cardNumber + ' ถูกปลดล็อกแล้ว!');
+            } else {
+                showModal('การ์ด ' + cardNumber + ' ได้ปลดล็อกไปแล้ว');
+            }
+        }
+    }
+    
+    // Display logged-in username in UI
+    const userDisplayEl = document.getElementById('usernameDisplay');
+    if (userDisplayEl && currentUser) {
+        userDisplayEl.textContent = currentUser;
+    }
+    
+    // Toggle password visibility in forms
+    document.querySelectorAll('.toggle-password').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+            let targetInput = null;
+            const selector = toggle.getAttribute('data-target') || toggle.getAttribute('toggle');
+            if (selector) {
+                targetInput = document.querySelector(selector);
+            }
+            if (!targetInput) {
+                targetInput = toggle.previousElementSibling;
+            }
+            if (targetInput && targetInput.type === 'password') {
+                targetInput.type = 'text';
+            } else if (targetInput && targetInput.type === 'text') {
+                targetInput.type = 'password';
+            }
+        });
+    });
+    
+    // Logout button action
+    const logoutBtn = document.getElementById('logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            showModal('ออกจากระบบสำเร็จ', function() {
+                window.location = 'login.html';
+            });
+        });
+    }
+    
+    // Login form submission
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const usernameField = document.getElementById('username');
+            const passwordField = document.getElementById('password');
+            const username = usernameField ? usernameField.value.trim() : '';
+            const password = passwordField ? passwordField.value : '';
+            if (!username || !password) {
+                showModal('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            if (users[username] && users[username].password === password) {
+                localStorage.setItem('currentUser', username);
+                showModal('เข้าสู่ระบบสำเร็จ!', function() {
+                    window.location = 'index.html';
+                });
+            } else {
+                showModal('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+            }
+        });
+    }
+    
+    // Register form submission
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const usernameField = document.getElementById('regUsername') || document.getElementById('username');
+            const passwordField = document.getElementById('regPassword') || document.getElementById('password');
+            const username = usernameField ? usernameField.value.trim() : '';
+            const password = passwordField ? passwordField.value : '';
+            if (!username || !password) {
+                showModal('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
+            let users = JSON.parse(localStorage.getItem('users') || '{}');
+            if (users[username]) {
+                showModal('ชื่อผู้ใช้นี้มีอยู่แล้ว');
+            } else {
+                users[username] = {
+                    password: password,
+                    unlocked: []
+                };
+                localStorage.setItem('users', JSON.stringify(users));
+                showModal('ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบ', function() {
+                    window.location = 'login.html';
+                });
+            }
+        });
+    }
+    
+    // Index page: display all cards
+    if (window.location.href.includes('index.html') && currentUser) {
+        const cardGrid = document.getElementById('cardGrid');
+        if (cardGrid) {
+            for (let i = 1; i <= 25; i++) {
+                const cardId = 'card' + i;
+                const img = document.createElement('img');
+                img.src = 'assets/cards/' + cardId + '.png';
+                img.alt = cardId;
+                img.classList.add('card');
+                if (!userData.unlocked.includes(cardId)) {
+                    img.classList.add('locked');
+                }
+                cardGrid.appendChild(img);
+            }
+        }
+    }
+    
+    // Mission page: question and answer logic
+    if (window.location.href.includes('mission.html') && currentUser) {
+        const questions = [
+            { q: '2 + 2 เท่ากับเท่าไหร่?', a: '4', card: 'card21' },
+            { q: 'สีของท้องฟ้าในวันที่อากาศแจ่มใสคือสีอะไร?', a: 'สีฟ้า', card: 'card22' }
+        ];
+        const questionTextEl = document.getElementById('questionText') || document.getElementById('question');
+        const answerInput = document.getElementById('answerInput') || document.getElementById('answer');
+        const submitBtn = document.getElementById('submitAnswer') || document.getElementById('submit');
+        
+        let currentQuestion = null;
+        function loadQuestion() {
+            if (questions.length === 0) return;
+            currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+            if (questionTextEl) {
+                questionTextEl.textContent = currentQuestion.q;
+            }
+            if (answerInput) {
+                answerInput.value = '';
+                answerInput.disabled = false;
+                answerInput.style.display = '';
+            }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.display = '';
+            }
+        }
+        
+        // Check if user is in 24h cooldown
+        if (userData.missionLockTime) {
+            const now = Date.now();
+            if (now < userData.missionLockTime) {
+                // Still locked
+                if (answerInput) answerInput.style.display = 'none';
+                if (submitBtn) submitBtn.style.display = 'none';
+                // Display initial countdown immediately
+                let diff = userData.missionLockTime - now;
+                let totalSec = Math.floor(diff / 1000);
+                let hours = Math.floor(totalSec / 3600);
+                let minutes = Math.floor((totalSec % 3600) / 60);
+                let seconds = totalSec % 60;
+                let hh = hours.toString().padStart(2, '0');
+                let mm = minutes.toString().padStart(2, '0');
+                let ss = seconds.toString().padStart(2, '0');
+                if (questionTextEl) {
+                    questionTextEl.textContent = 'กรุณารออีก ' + hh + ':' + mm + ':' + ss + ' ก่อนเล่นได้อีกครั้ง';
+                }
+                // Update countdown every second
+                const countdownInterval = setInterval(function() {
+                    diff = userData.missionLockTime - Date.now();
+                    if (diff <= 0) {
+                        clearInterval(countdownInterval);
+                        delete userData.missionLockTime;
+                        usersData[currentUser] = userData;
+                        localStorage.setItem('users', JSON.stringify(usersData));
+                        loadQuestion();
+                        return;
+                    }
+                    totalSec = Math.floor(diff / 1000);
+                    hours = Math.floor(totalSec / 3600);
+                    minutes = Math.floor((totalSec % 3600) / 60);
+                    seconds = totalSec % 60;
+                    hh = hours.toString().padStart(2, '0');
+                    mm = minutes.toString().padStart(2, '0');
+                    ss = seconds.toString().padStart(2, '0');
+                    if (questionTextEl) {
+                        questionTextEl.textContent = 'กรุณารออีก ' + hh + ':' + mm + ':' + ss + ' ก่อนเล่นได้อีกครั้ง';
+                    }
+                }, 1000);
+            } else {
+                // Lock period passed
+                delete userData.missionLockTime;
+                usersData[currentUser] = userData;
+                localStorage.setItem('users', JSON.stringify(usersData));
+                loadQuestion();
+            }
+        } else {
+            // No lock, load a new question
+            loadQuestion();
+        }
+        
+        // Handle answer submission
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function() {
+                if (!currentQuestion || !answerInput) return;
+                const answer = answerInput.value.trim();
+                if (!answer) return;
+                let correct = false;
+                if (typeof currentQuestion.a === 'string') {
+                    correct = currentQuestion.a.toLowerCase() === answer.toLowerCase();
+                } else if (Array.isArray(currentQuestion.a)) {
+                    // In case an array of acceptable answers is provided
+                    correct = currentQuestion.a.map(x => x.toLowerCase()).includes(answer.toLowerCase());
+                }
+                if (correct) {
+                    let msg = 'ตอบถูกต้อง!';
+                    if (currentQuestion.card) {
+                        const newUnlock = unlockCard(currentQuestion.card);
+                        const cardNum = currentQuestion.card.replace('card', '');
+                        if (newUnlock) {
+                            msg += ' ปลดล็อกการ์ด ' + cardNum + ' แล้ว!';
+                        } else {
+                            msg += ' แต่การ์ด ' + cardNum + ' ได้ปลดล็อกไปแล้ว';
+                        }
+                    }
+                    showModal(msg);
+                    // Disable further input after success
+                    if (answerInput) answerInput.disabled = true;
+                    if (submitBtn) submitBtn.disabled = true;
+                } else {
+                    // Wrong answer: start 24h cooldown
+                    const lockUntil = Date.now() + 24 * 60 * 60 * 1000;
+                    userData.missionLockTime = lockUntil;
+                    usersData[currentUser] = userData;
+                    localStorage.setItem('users', JSON.stringify(usersData));
+                    // Set initial countdown display
+                    let diff = lockUntil - Date.now();
+                    let totalSec = Math.floor(diff / 1000);
+                    let hours = Math.floor(totalSec / 3600);
+                    let minutes = Math.floor((totalSec % 3600) / 60);
+                    let seconds = totalSec % 60;
+                    let hh = hours.toString().padStart(2, '0');
+                    let mm = minutes.toString().padStart(2, '0');
+                    let ss = seconds.toString().padStart(2, '0');
+                    if (questionTextEl) {
+                        questionTextEl.textContent = 'กรุณารออีก ' + hh + ':' + mm + ':' + ss + ' ก่อนเล่นได้อีกครั้ง';
+                    }
+                    if (answerInput) answerInput.style.display = 'none';
+                    if (submitBtn) submitBtn.style.display = 'none';
+                    showModal('ตอบผิด! กรุณารอ 24 ชั่วโมงเพื่อเล่นอีกครั้ง');
+                    // Update countdown every second
+                    const countdownInterval = setInterval(function() {
+                        diff = lockUntil - Date.now();
+                        if (diff <= 0) {
+                            clearInterval(countdownInterval);
+                            delete userData.missionLockTime;
+                            usersData[currentUser] = userData;
+                            localStorage.setItem('users', JSON.stringify(usersData));
+                            loadQuestion();
+                            return;
+                        }
+                        totalSec = Math.floor(diff / 1000);
+                        hours = Math.floor(totalSec / 3600);
+                        minutes = Math.floor((totalSec % 3600) / 60);
+                        seconds = totalSec % 60;
+                        hh = hours.toString().padStart(2, '0');
+                        mm = minutes.toString().padStart(2, '0');
+                        ss = seconds.toString().padStart(2, '0');
+                        if (questionTextEl) {
+                            questionTextEl.textContent = 'กรุณารออีก ' + hh + ':' + mm + ':' + ss + ' ก่อนเล่นได้อีกครั้ง';
+                        }
+                    }, 1000);
+                }
+            });
+        }
+    }
+});  const path = window.location.pathname.split("/").pop();
   const protectedPages = ["index.html", "scan.html", "mission.html"];
   if (protectedPages.includes(path) && !user) {
     window.location.href = `login.html?redirect=${path}`;
