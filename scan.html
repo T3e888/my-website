@@ -1,42 +1,32 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stroke Hero - สแกนโค้ด</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stroke Hero Unocker - Scan</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="logo">Stroke Hero</div>
-    <div class="nav-right">
-      <span id="user-greeting">สวัสดี, <span id="display-name"></span></span>
-      <a href="index.html">การ์ด</a>
-      <a href="scan.html">สแกน</a>
-      <a href="mission.html">ภารกิจ</a>
-      <a href="#" id="logout-link">ออกจากระบบ</a>
+<body class="inner-page">
+    <div class="top-bar">
+        <button id="menuBtn">☰</button>
+        <h1>Stroke Hero Unocker</h1>
     </div>
-  </nav>
-
-  <!-- Scan Section -->
-  <h2>สแกนโค้ด</h2>
-  <div class="scan-actions">
-    <button type="button" id="open-camera-btn" class="btn">เปิดกล้อง</button>
-    <label for="file-input" class="btn">อัปโหลดรูป</label>
-    <input type="file" id="file-input" accept="image/*" hidden />
-  </div>
-  <!-- Video element for camera preview -->
-  <video id="camera-stream" playsinline autoplay muted style="display:none;"></video>
-
-  <!-- Modal for scan results/alerts -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <p id="modal-message"></p>
-      <button id="modal-close" class="btn">ตกลง</button>
+    <div id="sidebar">
+        <a href="scan.html">Scan</a>
+        <a href="mission.html">Mission</a>
+        <a href="card.html">Cards</a>
+        <div class="user-panel">
+            <span id="usernameDisplay"></span>
+            <button id="logoutBtn">Logout</button>
+        </div>
     </div>
-  </div>
-
-  <script src="script.js"></script>
+    <div class="scan-container">
+        <h2>Scan an Image</h2>
+        <div class="scan-actions">
+            <button id="openCameraBtn">Open Camera</button>
+            <button id="uploadImgBtn">Upload Image</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
