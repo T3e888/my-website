@@ -3,39 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stroke Hero - สมัครสมาชิก</title>
+  <title>Register</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://unpkg.com/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet" />
+  <script src="script.js" defer></script>
 </head>
-<body class="auth-page">
-  <!-- Centered Registration Form -->
-  <div class="form-container">
-    <h1 class="brand">Stroke Hero</h1>
-    <h2>สมัครสมาชิก</h2>
-    <form id="register-form">
-      <input type="text" id="register-username" placeholder="ชื่อผู้ใช้" required />
-      <div class="password-field">
-        <input type="password" id="register-password" placeholder="รหัสผ่าน" required />
-        <span class="toggle-password" data-target="register-password">แสดง</span>
-      </div>
-      <div class="password-field">
-        <input type="password" id="register-confirm-password" placeholder="ยืนยันรหัสผ่าน" required />
-        <span class="toggle-password" data-target="register-confirm-password">แสดง</span>
-      </div>
-      <button type="submit" class="btn">สมัครสมาชิก</button>
-    </form>
-    <p class="form-switch">
-      มีบัญชีอยู่แล้ว? <a href="login.html">เข้าสู่ระบบ</a>
-    </p>
+<body>
+  <div class="auth-container">
+    <h1>Register</h1>
+    <input type="email" id="email" placeholder="Email" />
+    
+    <div class="password-field">
+      <input type="password" id="password" placeholder="Password" />
+      <button type="button" onclick="togglePassword(this)">
+        <i class="ti ti-eye"></i>
+      </button>
+    </div>
+
+    <button onclick="register()">Register</button>
+    <p>Already have an account? <a href="login.html">Login</a></p>
   </div>
 
-  <!-- Modal for alerts -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <p id="modal-message"></p>
-      <button id="modal-close" class="btn">ตกลง</button>
+  <!-- Modal -->
+  <div id="modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-box">
+      <p id="modal-text"></p>
+      <button onclick="closeModal()">OK</button>
     </div>
   </div>
-
-  <script src="script.js"></script>
 </body>
 </html>
