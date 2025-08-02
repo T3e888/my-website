@@ -3,34 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stroke Hero - เข้าสู่ระบบ</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>เข้าสู่ระบบ</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="auth-page">
-  <!-- Centered Login Form -->
-  <div class="form-container">
-    <h1 class="brand">Stroke Hero</h1>
-    <h2>เข้าสู่ระบบ</h2>
-    <form id="login-form">
-      <input type="text" id="login-username" placeholder="ชื่อผู้ใช้" required />
-      <div class="password-field">
-        <input type="password" id="login-password" placeholder="รหัสผ่าน" required />
-        <span class="toggle-password" data-target="login-password">แสดง</span>
-      </div>
-      <button type="submit" class="btn">เข้าสู่ระบบ</button>
-    </form>
-    <p class="form-switch">
-      ยังไม่มีบัญชี? <a href="register.html">สมัครสมาชิก</a>
-    </p>
-  </div>
-
-  <!-- Modal for alerts -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <p id="modal-message"></p>
-      <button id="modal-close" class="btn">ตกลง</button>
+<body>
+  <h1>เข้าสู่ระบบ</h1>
+  <!-- ฟอร์มล็อกอิน -->
+  <form id="login-form">
+    <div>
+      <label for="username">ชื่อผู้ใช้:</label>
+      <input type="text" id="username" required />
     </div>
-  </div>
+    <div>
+      <label for="password">รหัสผ่าน:</label>
+      <input type="password" id="password" required />
+    </div>
+    <button type="submit">เข้าสู่ระบบ</button>
+  </form>
 
   <script src="script.js"></script>
 </body>
