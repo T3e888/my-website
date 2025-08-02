@@ -1,40 +1,141 @@
-(() => {
-  // **Login Guard**: ถ้าไม่ใช่หน้า login และยังไม่ล็อกอิน -> redirect ไปหน้า login
-  if (!window.location.pathname.endsWith('login.html') && !localStorage.getItem('loggedIn')) {
-    // แนบ param next เพื่อจำหน้าที่ผู้ใช้ตั้งใจจะเข้า
-    window.location.href = 'login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
-    return;  // หยุด execution หน้านั้น (รอ redirect)
-  }
+// Common JavaScript for Stroke Hero Unocker website
 
-  // **Sidebar Toggle**: เปิด/ปิดเมนูด้านข้าง
-  const sidebar = document.getElementById('sidebar');
-  const menuBtn = document.getElementById('menu-btn');
-  if (menuBtn && sidebar) {
-    menuBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      if (sidebar.classList.contains('open')) {
-        menuBtn.textContent = '✖';   // เปลี่ยนเป็นกากบาทเมื่อเมนูเปิด
-      } else {
-        menuBtn.textContent = '☰';   // เปลี่ยนกลับสามขีดเมื่อเมนูปิด
-      }
-    });
-  }
+// Helper: get stored users array from localStorage
+function getUsers() {
+    let users = localStorage.getItem('users');
+    return users ? JSON.parse(users) : [];
+}
+// Helper: save users array to localStorage
+function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+}
 
-  // **Logout**: ปุ่มออกจากระบบในเมนู
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      localStorage.removeItem('loggedIn');
-      // (ถ้าต้องการ reset ข้อมูลการ์ด/ภารกิจด้วย กรณีเปลี่ยนผู้ใช้ สามารถลบ key อื่นเพิ่มที่นี่)
-      window.location.href = 'login.html';
-    });
-  }
+// Determine current page from URL (filename)
+const page = window.location.pathname.split('/').pop();
 
-  // **Login Page Logic**: จัดการฟอร์มเข้าสู่ระบบ
-  if (window.location.pathname.endsWith('login.html')) {
-    const form = document.getElementById('login-form');
-    if (form) {
+// 1. Access Control: Redirect to login if not logged in and on a protected page
+if (page !== 'login.html' && page !== 'register.html') {
+    const loggedIn = localStorage.getItem('loggedIn');
+    if (!loggedIn) {
+        // Not logged in – save target and redirect to login
+        localStorage.setItem('redirectTo', window.location.pathname + window.location.search);
+        window.location.href = 'login.html';
+    }
+} else {
+    // If already logged in, redirect away from login/register (optional improvement)
+    if (localStorage.getItem('loggedIn')) {
+        window.location.href = 'scan.html';
+    }
+}
+
+// 2. On DOM ready, set up UI event handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Sidebar toggle button
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    if (menuBtn && sidebar) {
+        menuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+    }
+    // Display username in sidebar if logged in
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    if (usernameDisplay) {
+        usernameDisplay.textContent = localStorage.getItem('username') || '';
+    }
+    // Logout button handler
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+    }
+
+    // Login form submission handler
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const users = getUsers();
+            const user = users.find(u => u.username === username && u.password === password);
+            const errorMsg = document.getElementById('loginError');
+            if (user) {
+                // Successful login
+                localStorage.setItem('loggedIn', 'true');
+                localStorage.setItem('username', username);
+                // Redirect to target page if any, otherwise to scan.html
+                const redirectTo = localStorage.getItem('redirectTo');
+                if (redirectTo) {
+                    localStorage.removeItem('redirectTo');
+                    window.location.href = redirectTo;
+                } else {
+                    window.location.href = 'scan.html';
+                }
+            } else {
+                if (errorMsg) {
+                    errorMsg.textContent = 'Invalid username or password';
+                }
+            }
+        });
+    }
+
+    // Register form submission handler
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirm = document.getElementById('registerConfirm').value;
+            const errorMsg = document.getElementById('registerError');
+            if (password !== confirm) {
+                if (errorMsg) {
+                    errorMsg.textContent = 'Passwords do not match';
+                }
+                return;
+            }
+            let users = getUsers();
+            if (users.find(u => u.username === username)) {
+                // Username already taken
+                if (errorMsg) {
+                    errorMsg.textContent = 'Username already exists';
+                }
+            } else {
+                // Save new user and redirect to login
+                users.push({username: username, password: password});
+                saveUsers(users);
+                alert('Registration successful! Please login.');
+                window.location.href = 'login.html';
+            }
+        });
+    }
+
+    // Scan page: check if a card unlock code is present in URL
+    if (page === 'scan.html') {
+        const params = new URLSearchParams(window.location.search);
+        const cardParam = params.get('card');
+        if (cardParam) {
+            // Mark the specified card as unlocked
+            localStorage.setItem(cardParam, 'unlocked');
+            alert('You have unlocked ' + cardParam + '!');
+            // (Remain on scan page; user can navigate to Cards to view)
+        }
+    }
+
+    // Cards page: replace locked cards with images for unlocked ones
+    if (page === 'card.html') {
+        document.querySelectorAll('.card-slot').forEach(slot => {
+            const cardId = slot.getAttribute('data-card');
+            if (localStorage.getItem(cardId) === 'unlocked') {
+                // Show the unlocked card image
+                slot.innerHTML = '<img src="' + cardId + '.png" alt="' + cardId + '">';
+            }
+        });
+    }
+});    if (form) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         // บันทึกสถานะล็อกอิน (ในที่นี้ถือว่า success ทันที ไม่ตรวจสอบรหัสเพื่อความง่าย)
@@ -1354,4 +1455,5 @@ if (document.getElementById('missionBox')) {
     });
   }
 });
+
 
