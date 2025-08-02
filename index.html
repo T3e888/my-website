@@ -3,42 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stroke Hero - การ์ดสะสม</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>รายการการ์ด</title>
+  <!-- อ้างอิงไฟล์ CSS สำหรับสไตล์ทั้งหมด -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="logo">Stroke Hero</div>
-    <div class="nav-right">
-      <span id="user-greeting">สวัสดี, <span id="display-name"></span></span>
-      <a href="index.html">การ์ด</a>
-      <a href="scan.html">สแกน</a>
+  <!-- ปุ่ม Hamburger และ Sidebar เมนูนำทาง -->
+  <button id="menu-btn" class="hamburger">&#9776;</button>
+  <div id="sidebar" class="sidebar">
+    <nav class="menu">
+      <a href="index.html">หน้าแรก</a>
       <a href="mission.html">ภารกิจ</a>
-      <a href="#" id="logout-link">ออกจากระบบ</a>
-    </div>
-  </nav>
-
-  <!-- Card Collection Section -->
-  <div class="page-header">
-    <h2>การ์ดสะสม</h2>
-    <div class="toggle-unlocked">
-      <input type="checkbox" id="filter-unlocked" />
-      <label for="filter-unlocked">แสดงเฉพาะที่ปลดล็อก</label>
-    </div>
-  </div>
-  <div id="card-container" class="card-grid">
-    <!-- Cards will be generated here by script.js -->
+      <a href="#" id="logout-btn">ออกจากระบบ</a>
+    </nav>
   </div>
 
-  <!-- Modal for notifications -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <p id="modal-message"></p>
-      <button id="modal-close" class="btn">ตกลง</button>
-    </div>
+  <!-- หัวข้อหน้า -->
+  <h1>การ์ดทั้งหมด</h1>
+
+  <!-- Grid แสดงรายการการ์ด -->
+  <div class="cards-grid">
+    <!-- การ์ดแต่ละใบ: เริ่มต้นใส่ class "locked" ไว้ทั้งหมด 
+         data-card ระบุรหัสการ์ด แต่ละการ์ดจะถูก JS อัปเดต class/รูปภาพตามสถานะ -->
+    <div class="card locked" data-card="card1"></div>
+    <div class="card locked" data-card="card2"></div>
+    <div class="card locked" data-card="card3"></div>
+    <div class="card locked" data-card="card4"></div>
+    <div class="card locked" data-card="card5"></div>
+    <div class="card locked" data-card="card6"></div>
+    <div class="card locked" data-card="card7"></div>
+    <div class="card locked" data-card="card8"></div>
+    <div class="card locked" data-card="card9"></div>
+    <div class="card locked" data-card="card10"></div>
+    <!-- หากมีจำนวนการ์ดมากกว่านี้ สามารถเพิ่ม div.card ต่อไปใน grid ได้ -->
   </div>
 
+  <!-- อ้างอิงไฟล์ JS ก่อนปิด body -->
   <script src="script.js"></script>
 </body>
 </html>
