@@ -1,40 +1,232 @@
-/* กำหนด box-sizing ให้รวม padding, border ในขนาด เพื่อจัด layout ง่ายขึ้น */
-* {
-  box-sizing: border-box;
+/* Common Styles for Stroke Hero Unocker pages */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: sans-serif;
+}
+body.inner-page {
+    /* Swirl-like light radial background for inner pages */
+    background: radial-gradient(circle at center, #FFFFFF 0%, #FFECEC 80%, #FFDADA 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+h1, h2, h3 {
+    margin: 0;
+    padding: 0;
+}
+a {
+    color: #337ab7;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
 }
 
-body {
-  font-family: sans-serif;
-  margin: 0;
-  background: #fff;
-  color: #000;
+/* Style for login/register pages background wave */
+.bottom-wave {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: auto;
 }
 
-/* สไตล์หัวข้อหลัก */
-h1 {
-  text-align: center;
-  color: #e74c3c;
-  margin: 20px 0;
+/* Containers for login/register form */
+.auth-container {
+    position: relative;
+    max-width: 400px;
+    margin: 100px auto 0 auto;
+    background: #FFFFFFEE; /* slightly transparent white */
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.auth-container h2 {
+    margin-bottom: 1.5rem;
+    color: #d9534f;
+}
+.auth-container input[type=text],
+.auth-container input[type=password] {
+    width: 100%;
+    padding: 10px;
+    margin: 0.5rem 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.auth-container button {
+    width: 100%;
+    padding: 10px;
+    background: #d9534f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+.auth-container button:hover {
+    background: #c9302c;
+}
+.auth-container .alt-link {
+    display: block;
+    margin-top: 1rem;
+    font-size: 14px;
 }
 
-/* ===== Sidebar & Hamburger Menu ===== */
-.hamburger {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  background: #e74c3c;
-  color: #fff;
-  font-size: 2em;
-  padding: 5px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  z-index: 1001;
+/* Top bar with title and menu button on inner pages */
+.top-bar {
+    background: #d9534f;
+    color: white;
+    padding: 10px;
+    position: relative;
 }
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
+.top-bar #menuBtn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+}
+.top-bar h1 {
+    display: inline-block;
+    font-size: 1.8rem;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+/* Sidebar menu */
+#sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 200px;
+    height: 100%;
+    background: #d9534f;
+    color: #fff;
+    overflow: hidden;
+    transition: left 0.3s;
+    padding-top: 60px;
+    z-index: 1000;
+}
+#sidebar.open {
+    left: 0;
+}
+#sidebar a {
+    display: block;
+    padding: 10px 20px;
+    color: #fff;
+    text-decoration: none;
+}
+#sidebar a:hover {
+    background: #c9302c;
+}
+.user-panel {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+}
+.user-panel #usernameDisplay {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.user-panel #logoutBtn {
+    background: #fff;
+    color: #d9534f;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.user-panel #logoutBtn:hover {
+    background: #f7f7f7;
+}
+
+/* Content specific styles */
+.scan-container {
+    max-width: 500px;
+    margin: 80px auto;
+    text-align: center;
+}
+.scan-container h2 {
+    color: #d9534f;
+    margin-bottom: 1rem;
+}
+.scan-actions {
+    background: #fff;
+    border: 2px solid #d9534f33;
+    border-radius: 8px;
+    padding: 1rem;
+    display: inline-block;
+    margin-top: 1rem;
+}
+.scan-actions button {
+    display: block;
+    width: 200px;
+    max-width: 100%;
+    margin: 0.5rem auto;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    background: #d9534f;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+}
+.scan-actions button:hover {
+    background: #c9302c;
+}
+
+/* Mission page (game map) */
+.mission-map-container {
+    position: relative;
+    max-width: 400px;
+    height: 1000px;
+    margin: 50px auto;
+}
+.mission-map-container svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.stage {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Card collection page */
+.cards-container {
+    max-width: 600px;
+    margin: 30px auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+}
+.card-slot {
+    background: #000;
+    border-radius: 8px;
+    width: 100%;
+    aspect-ratio: 2/3;
+    position: relative;
+}
+.card-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}  left: 0;
   width: 250px;
   height: 100%;
   background: #e74c3c;
@@ -618,4 +810,5 @@ button:disabled, .btn:disabled {
     margin-left: 0;
   }
 }
+
 
