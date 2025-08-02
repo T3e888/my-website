@@ -1,40 +1,242 @@
-// Script for Stroke Hero Web Application
-document.addEventListener('DOMContentLoaded', () => {
-  // Authentication Guard
-  const currentUser = localStorage.getItem('currentUser');
-  const onLoginPage = location.pathname.endsWith('login.html');
-  const onRegisterPage = location.pathname.endsWith('register.html');
-  if (!currentUser && !onLoginPage && !onRegisterPage) {
-    // Not logged in, redirect to login
-    location.replace('login.html');
-    return;
-  }
-  if (currentUser && (onLoginPage || onRegisterPage)) {
-    // Already logged in, redirect to main page
-    location.replace('index.html');
-    return;
+(() => {
+  // **Login Guard**: ถ้าไม่ใช่หน้า login และยังไม่ล็อกอิน -> redirect ไปหน้า login
+  if (!window.location.pathname.endsWith('login.html') && !localStorage.getItem('loggedIn')) {
+    // แนบ param next เพื่อจำหน้าที่ผู้ใช้ตั้งใจจะเข้า
+    window.location.href = 'login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+    return;  // หยุด execution หน้านั้น (รอ redirect)
   }
 
-  // Display logged-in user's name in navbar (if applicable)
-  if (currentUser) {
-    const nameSpan = document.getElementById('display-name');
-    if (nameSpan) {
-      nameSpan.textContent = currentUser;
+  // **Sidebar Toggle**: เปิด/ปิดเมนูด้านข้าง
+  const sidebar = document.getElementById('sidebar');
+  const menuBtn = document.getElementById('menu-btn');
+  if (menuBtn && sidebar) {
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      if (sidebar.classList.contains('open')) {
+        menuBtn.textContent = '✖';   // เปลี่ยนเป็นกากบาทเมื่อเมนูเปิด
+      } else {
+        menuBtn.textContent = '☰';   // เปลี่ยนกลับสามขีดเมื่อเมนูปิด
+      }
+    });
+  }
+
+  // **Logout**: ปุ่มออกจากระบบในเมนู
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('loggedIn');
+      // (ถ้าต้องการ reset ข้อมูลการ์ด/ภารกิจด้วย กรณีเปลี่ยนผู้ใช้ สามารถลบ key อื่นเพิ่มที่นี่)
+      window.location.href = 'login.html';
+    });
+  }
+
+  // **Login Page Logic**: จัดการฟอร์มเข้าสู่ระบบ
+  if (window.location.pathname.endsWith('login.html')) {
+    const form = document.getElementById('login-form');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // บันทึกสถานะล็อกอิน (ในที่นี้ถือว่า success ทันที ไม่ตรวจสอบรหัสเพื่อความง่าย)
+        localStorage.setItem('loggedIn', 'true');
+        // ดึงพารามิเตอร์ next และ code (ถ้ามี)
+        const params = new URLSearchParams(window.location.search);
+        const nextParam = params.get('next');
+        let redirectUrl = nextParam ? decodeURIComponent(nextParam) : 'index.html';
+        // ตรวจสอบ code param ใน next (หรือใน URL ตรงๆ หาก next ไม่มี)
+        let code = null;
+        if (nextParam) {
+          try {
+            const targetUrl = new URL(nextParam, window.location.origin);
+            code = targetUrl.searchParams.get('code');
+          } catch (err) { /* ไม่ต้องทำอะไรหาก next ไม่ใช่ URL ที่เป็น path */ }
+        } else {
+          code = params.get('code');
+        }
+        if (code) {
+          // ปลดล็อกการ์ดที่ได้จาก code
+          let unlocked = JSON.parse(localStorage.getItem('unlockedCards') || '[]');
+          if (!unlocked.includes(code)) {
+            unlocked.push(code);
+            localStorage.setItem('unlockedCards', JSON.stringify(unlocked));
+          }
+          // ลบพารามิเตอร์ code ออกจาก redirect URL (เพื่อไม่ให้ alert ซ้ำ)
+          try {
+            const targetUrl = new URL(redirectUrl, window.location.origin);
+            targetUrl.searchParams.delete('code');
+            redirectUrl = targetUrl.pathname + targetUrl.search;
+          } catch (err) { /* กรณี redirectUrl เป็น path ธรรมดา */ }
+        }
+        // ไปยังหน้าที่ระบุไว้
+        window.location.href = redirectUrl;
+      });
     }
   }
 
-  // Modal dialog functions
-  const modal = document.getElementById('modal');
-  const modalMsg = document.getElementById('modal-message');
-  const modalCloseBtn = document.getElementById('modal-close');
-  if (modal && modalCloseBtn) {
-    // Close modal on clicking "OK" or outside the content
-    modalCloseBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
+  // **Card List Page Logic** (index.html): อัปเดตการ์ดล็อก/ปลดล็อก และจัดการ code param
+  if (window.location.pathname.endsWith('index.html')) {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      // ปลดล็อกการ์ดตาม code (กรณีผู้ใช้ล็อกอินแล้วมาจากลิงก์ QR)
+      let unlocked = JSON.parse(localStorage.getItem('unlockedCards') || '[]');
+      if (!unlocked.includes(code)) {
+        unlocked.push(code);
+        localStorage.setItem('unlockedCards', JSON.stringify(unlocked));
+        alert(`ปลดล็อกการ์ด ${code.replace('card', '')} แล้ว!`);
+      } else {
+        alert("การ์ดนี้ถูกปลดล็อกแล้ว!");
+      }
+      // ลบ '?code=...' จาก URL เพื่อไม่ให้ปลดล็อกหรือแจ้งเตือนซ้ำเมื่อ refresh
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    // แสดงผลการ์ดตามสถานะ unlockedCards ใน localStorage
+    const unlockedList = JSON.parse(localStorage.getItem('unlockedCards') || '[]');
+    document.querySelectorAll('.cards-grid .card').forEach(card => {
+      const cardCode = card.dataset.card;
+      if (unlockedList.includes(cardCode)) {
+        // การ์ดถูกปลดล็อกแล้ว -> แสดงภาพ
+        card.classList.remove('locked');
+        card.classList.add('unlocked');
+        // เพิ่มรูปภาพการ์ด
+        const img = document.createElement('img');
+        img.src = `images/${cardCode}.png`;
+        img.alt = cardCode;
+        // ลบเนื้อหาเก่าก่อน (เช่น ไอคอนกุญแจจาก pseudo จะไม่อยู่ใน DOM จริงอยู่แล้ว)
+        card.innerHTML = "";
+        card.appendChild(img);
+      } else {
+        // การ์ดยังล็อก -> เป็นกล่องดำ
+        card.classList.remove('unlocked');
+        card.classList.add('locked');
+        card.innerHTML = "";  // เผื่อเคยมีรูปค้าง ก็ลบออก
+      }
     });
-    modal.addEventListener('click', (e) => {
-      if (e.target.id === 'modal') {
-        modal.classList.add('hidden');
+  }
+
+  // **Missions Page Logic** (mission.html): จัดการระบบภารกิจ 10 ด่านและ countdown 24 ชม.
+  if (window.location.pathname.endsWith('mission.html')) {
+    const MISSION_COOLDOWN = 24 * 60 * 60 * 1000;  // 24 ชั่วโมง (ms)
+    // โหลดข้อมูลภารกิจจาก localStorage หรือสร้างใหม่หากยังไม่มี
+    let missionData = JSON.parse(localStorage.getItem('missions') || '[]');
+    if (!Array.isArray(missionData)) missionData = [];
+    // ให้แน่ใจว่า array มี 10 ช่อง (null หากว่าง)
+    for (let j = 0; j < 10; j++) {
+      if (typeof missionData[j] === 'undefined') {
+        missionData[j] = null;
+      }
+    }
+
+    let countdownInterval = null;
+    function updateMissionUI() {
+      // เคลียร์ interval เดิม (ถ้ามี) เพื่อป้องกันซ้อนทับหลายตัว
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+      const now = Date.now();
+      // อัปเดตแต่ละภารกิจ (1-10)
+      for (let i = 1; i <= 10; i++) {
+        const li = document.getElementById('mission' + i);
+        const circle = li.querySelector('.circle');
+        const prevDoneTime = (i > 1) ? missionData[i - 2] : null;
+        const doneTime = missionData[i - 1];
+        // เริ่มต้น: ลบคลาสสถานะทั้งหมดก่อน แล้วค่อยเติมตามเงื่อนไข
+        li.classList.remove('locked', 'available', 'completed');
+
+        if (i > 1 && prevDoneTime === null) {
+          // ยังไม่ได้ทำด่านก่อนหน้า -> ด่านนี้ยังล็อก
+          li.classList.add('locked');
+          circle.textContent = i;
+        } else if (doneTime !== null) {
+          // ทำด่านนี้เสร็จแล้ว
+          li.classList.add('completed');
+          circle.textContent = '✓';
+        } else {
+          // ยังไม่ทำด่านนี้ (และถ้า i==1 หรือมี prevDoneTime != null)
+          if (i === 1 || prevDoneTime !== null) {
+            if (i === 1 || now >= prevDoneTime + MISSION_COOLDOWN) {
+              // ปลดล็อกให้เล่นได้
+              li.classList.add('available');
+              circle.textContent = i;
+            } else {
+              // ล็อกเพราะยังไม่ครบเวลารอ 24 ชม.
+              li.classList.add('locked');
+              circle.textContent = i;
+              // คำนวณเวลาที่เหลือแล้วแสดง countdown
+              const unlockTime = prevDoneTime + MISSION_COOLDOWN;
+              let remaining = unlockTime - now;
+              // สร้างหรือเลือก element แสดงเวลาที่เหลือ
+              let countdownElem = li.querySelector('.countdown');
+              if (!countdownElem) {
+                countdownElem = document.createElement('div');
+                countdownElem.className = 'countdown';
+                li.insertBefore(countdownElem, li.querySelector('.connector'));
+              }
+              // ฟังก์ชันช่วยรูปแบบเวลา HH:MM:SS
+              function formatTime(ms) {
+                const totalSec = Math.floor(ms / 1000);
+                const hrs = Math.floor(totalSec / 3600);
+                const mins = Math.floor((totalSec % 3600) / 60);
+                const secs = totalSec % 60;
+                return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+              }
+              countdownElem.textContent = 'ปลดล็อกใน ' + formatTime(remaining);
+              // อัปเดตตัวเลข countdown ทุกวินาที
+              countdownInterval = setInterval(() => {
+                const now2 = Date.now();
+                const remaining2 = unlockTime - now2;
+                if (remaining2 <= 0) {
+                  clearInterval(countdownInterval);
+                  countdownInterval = null;
+                  updateMissionUI();  // อัปเดตสถานะใหม่ (ด่านนี้จะเปลี่ยนเป็น available)
+                } else {
+                  countdownElem.textContent = 'ปลดล็อกใน ' + formatTime(remaining2);
+                }
+              }, 1000);
+            }
+          } else {
+            // กรณีไม่ควรเกิด: ถ้า prevDoneTime เป็น null แต่ i > 1 ก็ควรเข้าบล็อกแรกไปแล้ว
+            li.classList.add('locked');
+            circle.textContent = i;
+          }
+        }
+
+        // ถ้ามี countdown element อยู่ แต่สถานะปัจจุบันไม่ต้องนับถอยหลังแล้ว ให้ลบทิ้ง
+        const existingCountdown = li.querySelector('.countdown');
+        if (existingCountdown) {
+          // เงื่อนไขที่ไม่ต้องมี countdown: 
+          // - ถ้า li ไม่ได้เป็น locked (แปลว่า available หรือ completed แล้ว) 
+          // หรือ (ด่านก่อนหน้าไม่มี (i>1 && prevDoneTime === null)) 
+          // หรือ (ด่านนี้ทำเสร็จแล้ว) 
+          // หรือ (เป็นด่านแรก i===1) 
+          // หรือ (มี prevDoneTime และเวลารอครบแล้ว)
+          if (!li.classList.contains('locked') ||
+              (i > 1 && prevDoneTime === null) ||
+              doneTime !== null ||
+              i === 1 ||
+              (prevDoneTime !== null && now >= prevDoneTime + MISSION_COOLDOWN)) {
+            existingCountdown.remove();
+          }
+        }
+      } // end for
+    } // end function updateMissionUI
+
+    // เรียกครั้งแรกเมื่อโหลดหน้า
+    updateMissionUI();
+
+    // ผูก event ให้ด่านทุกอัน (จะทำงานเมื่อคลิกถ้าด่านนั้น available)
+    document.querySelectorAll('.mission-list .mission').forEach(li => {
+      li.addEventListener('click', () => {
+        if (!li.classList.contains('available')) return;  // กดเฉพาะด่านที่พร้อมเล่น
+        const i = parseInt(li.id.replace('mission', ''));
+        missionData[i - 1] = Date.now();  // บันทึกเวลาทำภารกิจ (ถือว่าทำเสร็จทันที)
+        localStorage.setItem('missions', JSON.stringify(missionData));
+        updateMissionUI();
+      });
+    });
+  }
+})();        modal.classList.add('hidden');
       }
     });
   }
@@ -1152,3 +1354,4 @@ if (document.getElementById('missionBox')) {
     });
   }
 });
+
