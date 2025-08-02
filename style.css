@@ -1,40 +1,200 @@
-/* General Styles */
+/* กำหนด box-sizing ให้รวม padding, border ในขนาด เพื่อจัด layout ง่ายขึ้น */
+* {
+  box-sizing: border-box;
+}
+
 body {
+  font-family: sans-serif;
   margin: 0;
-  font-family: Arial, sans-serif;
   background: #fff;
   color: #000;
 }
+
+/* สไตล์หัวข้อหลัก */
 h1 {
-  margin: 0 0 15px;
+  text-align: center;
+  color: #e74c3c;
+  margin: 20px 0;
 }
-h2 {
-  margin: 0 0 10px;
-}
-/* Navigation Bar */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #c62828;  /* red theme */
+
+/* ===== Sidebar & Hamburger Menu ===== */
+.hamburger {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: #e74c3c;
   color: #fff;
-  padding: 10px;
-  margin-bottom: 20px;
+  font-size: 2em;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 1001;
 }
-.navbar .logo {
-  font-size: 1.2em;
-  font-weight: bold;
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  background: #e74c3c;
+  color: #fff;
+  padding: 60px 20px 20px;
+  /* เผื่อให้เนื้อหาเมนูไม่ชนขอบบน (60px) */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+  transform: translateX(-100%);   /* ซ่อนนอกจอซ้าย */
+  transition: transform 0.3s ease;
+  z-index: 1000;
 }
-.navbar .nav-right a {
+.sidebar.open {
+  transform: translateX(0);      /* เลื่อนเข้ามาให้เห็น */
+}
+.menu a {
+  display: block;
   color: #fff;
   text-decoration: none;
+  font-size: 1.1em;
+  margin: 15px 0;
 }
-.navbar .nav-right a:hover {
+.menu a:hover {
   text-decoration: underline;
 }
-/* space between greeting and links */
-.navbar .nav-right > *:not(:first-child) {
-  margin-left: 15px;
+
+/* ===== Card Grid (หน้า index) ===== */
+.cards-grid {
+  display: grid;
+  /* auto-fit คอลัมน์ความกว้าง 120px, จัดหลายคอลัมน์ตามพื้นที่หน้าจอ */
+  grid-template-columns: repeat(auto-fit, minmax(120px, 120px));
+  gap: 10px;
+  justify-content: center;  /* จัดกลางแนวนอนเมื่อมีพื้นที่เหลือ */
+  padding: 10px;
+}
+.card {
+  width: 120px;
+  /* ไม่กำหนด height ตายตัว เพื่อให้ขนาดปรับตามภาพเมื่อปลดล็อก 
+     (การ์ด locked จะใช้ height ด้านล่าง) */
+  background: #000;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  position: relative;
+  text-align: center;
+}
+/* การ์ดที่ล็อก: พื้นดำ, แสดงไอคอนกุญแจ */
+.card.locked {
+  height: 150px;                 /* กำหนดความสูงประมาณการ์ด เพื่อให้กล่องไม่แบน */
+  background: #000;
+}
+.card.locked::after {
+  content: "🔒";
+  color: #fff;
+  font-size: 2em;
+  /* จัดให้อยู่กลางกล่อง (ใช้ flexbox) */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.card.unlocked {
+  background: #fff;
+}
+/* รูปภาพการ์ดที่ปลดล็อกให้แสดงพอดีขนาดกล่อง */
+.card.unlocked img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
+
+/* ===== Missions Track (หน้า mission) ===== */
+.mission-list {
+  list-style: none;
+  margin: 0;
+  padding: 20px 0;
+  text-align: center;
+}
+.mission-list li {
+  position: relative;
+  display: block;
+  margin: 20px auto;
+  /* ความกว้างโดยประมาณของ track (เพื่อให้ข้อความ countdown ไม่ตัดบรรทัด) */
+  width: 180px;
+}
+.circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid #ccc;
+  background: #fff;
+  color: #ccc;
+  font-weight: bold;
+  line-height: 50px;   /* จัดข้อความกลางวงกลม (vertical center) */
+  text-align: center;
+  margin: 0 auto;
+}
+/* สถานะของวงกลมแต่ละแบบ */
+.mission.locked .circle {
+  background: #999;
+  border-color: #999;
+  color: #fff;
+}
+.mission.available .circle {
+  background: #fff;
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+.mission.completed .circle {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: #fff;
+}
+/* เส้นเชื่อมระหว่างวงกลม */
+.connector {
+  width: 2px;
+  height: 40px;
+  background: #ccc;
+  margin: 0 auto;
+}
+.mission-list li:last-child .connector {
+  display: none;  /* ซ่อน connector ของด่านสุดท้าย */
+}
+/* ข้อความนับถอยหลัง (เวลาที่เหลือก่อนปลดล็อก) */
+.countdown {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 5px;
+}
+
+/* ===== Login Form (หน้า login) ===== */
+#login-form {
+  max-width: 300px;
+  margin: 50px auto;
+}
+#login-form div {
+  margin-bottom: 15px;
+}
+#login-form label {
+  display: inline-block;
+  width: 80px;
+}
+#login-form input {
+  padding: 6px;
+  width: 180px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+#login-form button {
+  width: 100%;
+  padding: 8px;
+  font-size: 1em;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#login-form button:hover {
+  background: #cf4436;
+}  margin-left: 15px;
 }
 
 /* Auth Pages (Login & Register) */
@@ -458,3 +618,4 @@ button:disabled, .btn:disabled {
     margin-left: 0;
   }
 }
+
