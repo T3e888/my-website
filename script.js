@@ -1,3 +1,10 @@
+// 🔒 ถ้ายังไม่มี token (ยังไม่ล็อกอิน) ให้ redirect ไป login.html
+const currentToken = localStorage.getItem('current_token');
+if (!currentToken) {
+  window.location.href = 'login.html';
+}
+
+
 // Common JavaScript for Stroke Hero Unocker website
 
 // Helper: get stored users array from localStorage
@@ -1455,5 +1462,6 @@ if (document.getElementById('missionBox')) {
     });
   }
 });
+
 
 
