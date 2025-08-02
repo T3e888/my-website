@@ -3,33 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stroke Hero - ภารกิจรายวัน</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>ภารกิจ</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="logo">Stroke Hero</div>
-    <div class="nav-right">
-      <span id="user-greeting">สวัสดี, <span id="display-name"></span></span>
-      <a href="index.html">การ์ด</a>
-      <a href="scan.html">สแกน</a>
+  <!-- Hamburger Menu และ Sidebar -->
+  <button id="menu-btn" class="hamburger">&#9776;</button>
+  <div id="sidebar" class="sidebar">
+    <nav class="menu">
+      <a href="index.html">หน้าแรก</a>
       <a href="mission.html">ภารกิจ</a>
-      <a href="#" id="logout-link">ออกจากระบบ</a>
-    </div>
-  </nav>
-
-  <!-- Daily Mission Section -->
-  <h2>ภารกิจรายวัน</h2>
-  <p>เวลาที่เหลือ: <span id="countdown">00:00:00</span></p>
-
-  <!-- Modal (not commonly needed on this page, but included for consistency) -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <p id="modal-message"></p>
-      <button id="modal-close" class="btn">ตกลง</button>
-    </div>
+      <a href="#" id="logout-btn">ออกจากระบบ</a>
+    </nav>
   </div>
+
+  <!-- หัวข้อหน้า -->
+  <h1>ภารกิจ</h1>
+
+  <!-- รายการด่านภารกิจแบบขั้น (10 ด่าน) -->
+  <ul class="mission-list">
+    <li id="mission1" class="mission locked">
+      <div class="circle">1</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission2" class="mission locked">
+      <div class="circle">2</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission3" class="mission locked">
+      <div class="circle">3</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission4" class="mission locked">
+      <div class="circle">4</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission5" class="mission locked">
+      <div class="circle">5</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission6" class="mission locked">
+      <div class="circle">6</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission7" class="mission locked">
+      <div class="circle">7</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission8" class="mission locked">
+      <div class="circle">8</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission9" class="mission locked">
+      <div class="circle">9</div>
+      <div class="connector"></div>
+    </li>
+    <li id="mission10" class="mission locked">
+      <div class="circle">10</div>
+      <!-- ด่านสุดท้าย ไม่ต้องมี connector (จะซ่อนด้วย CSS) -->
+      <div class="connector"></div>
+    </li>
+  </ul>
 
   <script src="script.js"></script>
 </body>
