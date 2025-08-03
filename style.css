@@ -1,40 +1,43 @@
-/* Common Styles for Stroke Hero Unocker pages */
-html, body {
-    height: 100%;
-    margin: 0;
-    font-family: sans-serif;
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: radial-gradient(circle at 30% 20%, #ffe5e5 30%, #fff 100%);
+  margin: 0;
 }
-body.inner-page {
-    /* Swirl-like light radial background for inner pages */
-    background: radial-gradient(circle at center, #FFFFFF 0%, #FFECEC 80%, #FFDADA 100%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+.center-form {
+  width: 90%;
+  max-width: 400px;
+  margin: 80px auto;
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px 24px 24px 24px;
+  box-shadow: 0 2px 16px #fbb7b780;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-h1, h2, h3 {
-    margin: 0;
-    padding: 0;
+.center-form h1 { color: #db3d3d; margin-bottom: 20px; }
+input { width: 100%; margin: 8px 0; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 1rem;}
+.btn-primary { background: #db3d3d; color: #fff; padding: 12px 0; width: 100%; border: none; border-radius: 10px; font-size: 1.1rem; margin-top: 14px;}
+.card-list { max-width: 600px; margin: 40px auto; }
+#cardGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card-box {
+  background: #111;
+  color: #fff;
+  border-radius: 15px;
+  padding: 48px 0;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  box-shadow: 0 2px 6px #a2a2a244;
 }
-a {
-    color: #337ab7;
-    text-decoration: none;
-}
-a:hover {
-    text-decoration: underline;
-}
-
-/* Style for login/register pages background wave */
-.bottom-wave {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: auto;
-}
-
-/* Containers for login/register form */
-.auth-container {
-    position: relative;
-    max-width: 400px;
-    margin: 100px auto 0 auto;
+.card-box.locked { background: #222; color: #fff0; border: 2px dashed #ccc;}
+/* Modal */
+.modal { display: none; position: fixed; z-index: 10; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); }
+.modal-content { background: #fff; border-radius: 18px; margin: 20% auto; padding: 28px 18px; width: 90%; max-width: 350px; box-shadow: 0 4px 18px #fbb7b799; text-align: center;}
+.close { float:right; font-size: 1.4em; cursor: pointer;}
+@media (max-width: 650px) {
+  #cardGrid { grid-template-columns: repeat(2, 1fr);}
+}    margin: 100px auto 0 auto;
     background: #FFFFFFEE; /* slightly transparent white */
     border-radius: 8px;
     padding: 2rem;
@@ -810,5 +813,6 @@ button:disabled, .btn:disabled {
     margin-left: 0;
   }
 }
+
 
 
