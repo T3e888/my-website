@@ -1,25 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Login - Stroke Hero Unocker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ - Knowledge Card Collection</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="center-form">
-    <h1>Login</h1>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button id="loginBtn" class="btn-primary">Login</button>
-    <p>No account? <a id="toRegister" href="#">Register here</a></p>
+<body class="login-page">
+  <div class="login-container">
+    <h1>เข้าสู่ระบบ</h1>
+    <form id="loginForm">
+      <input type="text" id="loginUsername" placeholder="ชื่อผู้ใช้" required>
+      <input type="password" id="loginPassword" placeholder="รหัสผ่าน" required>
+      <button type="submit">Login</button>
+    </form>
+    <p>ยังไม่เคยลงทะเบียน? <a href="register.html">สมัครสมาชิก</a></p>
+  </div>
+  <!-- Modal for messages (e.g., login error, logged out notification) -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button id="modal-close">OK</button>
+    </div>
   </div>
   <script src="script.js"></script>
-  <script>
-    // รับ param card เพื่อส่งต่อ (กรณีสมัครสมาชิก)
-    const params = new URLSearchParams(window.location.search);
-    const card = params.get('card');
-    document.getElementById('toRegister').href = card ? `register.html?card=${card}` : 'register.html';
-  </script>
 </body>
 </html>
