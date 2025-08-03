@@ -1,32 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroke Hero Unocker - Scan</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Scan Card - Stroke Hero Unocker</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="inner-page">
-    <div class="top-bar">
-        <button id="menuBtn">☰</button>
-        <h1>Stroke Hero Unocker</h1>
-    </div>
-    <div id="sidebar">
-        <a href="scan.html">Scan</a>
-        <a href="mission.html">Mission</a>
-        <a href="card.html">Cards</a>
-        <div class="user-panel">
-            <span id="usernameDisplay"></span>
-            <button id="logoutBtn">Logout</button>
-        </div>
-    </div>
-    <div class="scan-container">
-        <h2>Scan an Image</h2>
-        <div class="scan-actions">
-            <button id="openCameraBtn">Open Camera</button>
-            <button id="uploadImgBtn">Upload Image</button>
-        </div>
-    </div>
-    <script src="script.js"></script>
+<body>
+  <div class="center-form">
+    <h1>Scan QR Card</h1>
+    <div id="scanInfo"></div>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    // 🔑 QR LOGIN FLOW
+    const params = new URLSearchParams(window.location.search);
+    const card = params.get('card');
+    // ต้องมีพารามิเตอร์ card
+    if (!card) {
+      document.getElementById('scanInfo').textContent = "Invalid QR Code";
+    } else {
+      // ถ้ายังไม่ได้ login ให้ไปหน้า login ก่อน (แนบ card param)
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        window.location.href = `login.html?card=${card}`;
+      } else {
+        // ถ้า login แล้ว ปลดล็อกการ์ดให้เลย
+        unlockCardForUser(currentUser, card, true); // true: redirect ไป card.html พร้อมแจ้งเตือน
+      }
+    }
+  </script>
 </body>
 </html>
