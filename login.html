@@ -1,28 +1,38 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login</title>
+  <!-- เชื่อมต่อไฟล์ CSS และ Font Awesome CDN -->
   <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
   <div class="container">
-    <h2>Login</h2>
-    <input type="text" id="login-username" placeholder="Username" />
-    <div class="password-container">
-      <input type="password" id="login-password" placeholder="Password" />
-      <span class="toggle-password" onclick="togglePassword('login-password')">👁️</span>
-    </div>
-    <button onclick="login()">Login</button>
-    <p>No account? <a href="register.html">Register here</a></p>
+    <h2>เข้าสู่ระบบ</h2>
+    <form>
+      <label for="loginUsername">ชื่อผู้ใช้</label>
+      <input type="text" id="loginUsername" required />
+
+      <label for="loginPassword">รหัสผ่าน</label>
+      <div class="password-container">
+        <input type="password" id="loginPassword" required />
+        <i class="fa fa-eye toggle-password" id="toggleLoginPassword" title="แสดง/ซ่อนรหัสผ่าน"></i>
+      </div>
+
+      <button type="button" id="loginBtn">เข้าสู่ระบบ</button>
+    </form>
+    <p class="switch-page">
+      หากยังไม่มีบัญชี? <a href="register.html">สมัครสมาชิก</a>
+    </p>
   </div>
 
-  <div id="login-modal" class="modal">
+  <!-- Modal สำหรับแจ้งเตือนข้อความต่าง ๆ -->
+  <div id="modal" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal('login-modal')">&times;</span>
-      <p id="login-modal-message"></p>
+      <p id="modalMessage"></p>
+      <button id="modalOk">ตกลง</button>
     </div>
   </div>
 
