@@ -1,40 +1,331 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Get modal elements for reuse in multiple functions/pages
+(() => {
+  // Modal utility functions
   const modal = document.getElementById('modal');
   const modalMessage = document.getElementById('modal-message');
-  const modalClose = document.getElementById('modal-close');
-  let redirectAfterClose = null;  // ใช้สำหรับบางกรณีที่ต้อง redirect หลังปิด modal
-
-  // Modal management: ฟังก์ชันแสดง modal พร้อมข้อความ และกำหนดการทำงานเมื่อปิด
-  function showModal(msg, redirectUrl = null) {
-    modalMessage.textContent = msg;
-    modal.classList.add('show');
-    redirectAfterClose = redirectUrl;
+  const closeBtn = document.querySelector('.close');
+  function showModal(msg) {
+    modalMessage.innerHTML = msg;
+    modal.style.display = 'block';
   }
-  // กำหนดการทำงานปุ่มปิด modal (OK)
-  if (modalClose) {
-    modalClose.onclick = () => {
-      modal.classList.remove('show');
-      // ถ้ามี redirectAfterClose กรณีพิเศษ (เช่น หลังสมัครสมาชิก) ให้เปลี่ยนหน้า
-      if (redirectAfterClose) {
-        window.location.href = redirectAfterClose;
-        redirectAfterClose = null;
-      }
-    };
-  }
-
-  // ดึงชื่อผู้ใช้ที่ล็อกอินปัจจุบัน (ถ้ามี) จาก localStorage
-  const loggedInUser = localStorage.getItem('loggedInUser');
-  // Login guard: หากยังไม่ได้ล็อกอิน แต่กำลังจะเข้าหน้าหลัก (card/scan/mission) ให้ย้อนกลับไปหน้า login
-  if (document.body.classList.contains('card-page') ||
-      document.body.classList.contains('scan-page') ||
-      document.body.classList.contains('mission-page')) {
-    if (!loggedInUser) {
-      window.location.href = 'login.html';
-      return;  // ยกเลิกการทำงานสคริปต์หน้าปัจจุบัน
+  closeBtn.onclick = () => {
+    modal.style.display = 'none';
+  };
+  window.onclick = (event) => {
+    if (event.target == modal) {
+      modal.style.display = 'none';
     }
-    // ถ้าล็อกอินแล้ว เตรียมโหลดข้อมูลผู้ใช้ปัจจุบันจาก localStorage
-    var userData = JSON.parse(localStorage.getItem('user-' + loggedInUser)) || {};
+  };
+
+  // Load user data from localStorage
+  let users = JSON.parse(localStorage.getItem('users') || '{}');
+
+  // Login guard for protected pages
+  const page = location.pathname.split('/').pop();
+  if (page !== 'login.html' && page !== 'register.html') {
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    if (!loggedInUser) {
+      // Save pending unlock card if present in URL
+      const params = new URLSearchParams(location.search);
+      if (params.has('unlock')) {
+        localStorage.setItem('pendingUnlock', params.get('unlock'));
+      }
+      location.href = 'login.html';
+      return;
+    }
+  }
+
+  // Login page logic
+  if (page === 'login.html') {
+    // Show logout success message if returned from logout
+    if (localStorage.getItem('loggedOut')) {
+      showModal('ออกจากระบบเรียบร้อย');
+      localStorage.removeItem('loggedOut');
+    }
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      if (users[username] && users[username].password === password) {
+        // Login successful
+        localStorage.setItem('loggedInUser', username);
+        location.href = 'card.html';  // proceed to card collection
+      } else {
+        showModal('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      }
+    });
+  }
+
+  // Register page logic
+  if (page === 'register.html') {
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
+      if (users[username]) {
+        showModal('ชื่อผู้ใช้นี้ถูกใช้ไปแล้ว กรุณาเปลี่ยนชื่อใหม่');
+      } else {
+        // Create new user record
+        users[username] = {
+          password: password,
+          cards: Array(25).fill(false),
+          missions: { completed: 0, lastDayPlayed: '', missionsToday: 0 }
+        };
+        localStorage.setItem('users', JSON.stringify(users));
+        showModal('สมัครสมาชิกเสร็จสิ้น');
+        // Auto-login and redirect to card collection after a short delay
+        setTimeout(() => {
+          localStorage.setItem('loggedInUser', username);
+          location.href = 'card.html';
+        }, 2000);
+      }
+    });
+  }
+
+  // Card collection page logic
+  if (page === 'card.html') {
+    const username = localStorage.getItem('loggedInUser');
+    if (username) {
+      users = JSON.parse(localStorage.getItem('users') || '{}');
+      const userData = users[username];
+      // Unlock card if coming from QR link or pending unlock
+      let justUnlocked = null;
+      if (localStorage.getItem('pendingUnlock')) {
+        justUnlocked = localStorage.getItem('pendingUnlock');
+        localStorage.removeItem('pendingUnlock');
+      }
+      const params = new URLSearchParams(location.search);
+      if (params.has('unlock')) {
+        justUnlocked = params.get('unlock');
+      }
+      if (justUnlocked) {
+        const cardId = parseInt(justUnlocked);
+        if (cardId && cardId >= 1 && cardId <= 25) {
+          if (!userData.cards[cardId - 1]) {
+            userData.cards[cardId - 1] = true;
+            users[username] = userData;
+            localStorage.setItem('users', JSON.stringify(users));
+            showModal('ปลดล็อกการ์ดหมายเลข ' + cardId + ' สำเร็จ!');
+          }
+        }
+      }
+      // Display card grid (25 cards)
+      const grid = document.getElementById('card-grid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= 25; i++) {
+        const cardSlot = document.createElement('div');
+        cardSlot.className = 'card-slot';
+        if (userData.cards[i - 1]) {
+          // Card unlocked: show image
+          const img = document.createElement('img');
+          img.src = 'assets/cards/card' + i + '.png';
+          img.alt = 'Card ' + i;
+          cardSlot.appendChild(img);
+        } else {
+          // Card locked: keep placeholder
+          cardSlot.classList.add('locked');
+        }
+        grid.appendChild(cardSlot);
+      }
+    }
+  }
+
+  // Scan QR code page logic
+  if (page === 'scan.html') {
+    const username = localStorage.getItem('loggedInUser');
+    if (username) {
+      users = JSON.parse(localStorage.getItem('users') || '{}');
+      const userData = users[username];
+      const fileInput = document.getElementById('qr-input');
+      const scanBtn = document.getElementById('scan-btn');
+      scanBtn.addEventListener('click', () => {
+        fileInput.click();
+      });
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.getElementById('qr-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            if (code) {
+              const data = code.data;
+              const match = data.match(/card(\d+)/i);
+              if (match) {
+                const cardNum = parseInt(match[1]);
+                if (cardNum && cardNum >= 1 && cardNum <= 25) {
+                  if (!userData.cards[cardNum - 1]) {
+                    userData.cards[cardNum - 1] = true;
+                    users[username] = userData;
+                    localStorage.setItem('users', JSON.stringify(users));
+                    showModal('ปลดล็อกการ์ดหมายเลข ' + cardNum + ' สำเร็จ! <a href="card.html">ดูคอลเลกชัน</a>');
+                  } else {
+                    showModal('การ์ดนี้ถูกปลดล็อกแล้ว');
+                  }
+                } else {
+                  showModal('QR Code ไม่ถูกต้อง');
+                }
+              } else {
+                showModal('QR Code ไม่ถูกต้อง');
+              }
+            } else {
+              showModal('QR Code ไม่ถูกต้อง');
+            }
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+
+  // Mission page logic
+  if (page === 'mission.html') {
+    const username = localStorage.getItem('loggedInUser');
+    if (username) {
+      users = JSON.parse(localStorage.getItem('users') || '{}');
+      const userData = users[username];
+      // Reset daily mission count if it's a new day
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (userData.missions.lastDayPlayed !== todayStr) {
+        userData.missions.lastDayPlayed = todayStr;
+        userData.missions.missionsToday = 0;
+      }
+      // Update mission circles status
+      const completed = userData.missions.completed;
+      const circles = document.querySelectorAll('.mission-circle');
+      circles.forEach(circle => {
+        const m = parseInt(circle.dataset.mission);
+        circle.classList.remove('completed', 'current', 'locked');
+        if (m <= completed) {
+          circle.classList.add('completed');
+        } else if (m === completed + 1) {
+          circle.classList.add('current');
+        } else {
+          circle.classList.add('locked');
+        }
+      });
+      // Start a mission quiz
+      function startMission(missionNumber) {
+        // Enforce daily mission limit (max 3 per day)
+        if (userData.missions.missionsToday >= 3) {
+          showModal('วันนี้ทำมิชชันครบ 3 ด่านแล้ว โปรดลองใหม่พรุ่งนี้');
+          return;
+        }
+        // Only allow starting the next unlocked mission
+        if (missionNumber !== userData.missions.completed + 1) {
+          return;
+        }
+        // Prepare question and options (demo content for now)
+        const questionEl = document.getElementById('mission-question');
+        const optionsEl = document.getElementById('mission-options');
+        optionsEl.innerHTML = '';
+        let q = '';
+        let choices = [];
+        let correctIndex = 0;
+        if (missionNumber === 1) {
+          q = 'ปลาอยู่ในน้ำหรือไม่?';
+          choices = ['ใช่', 'ไม่'];
+          correctIndex = 0;  // "ใช่" is correct
+        } else if (missionNumber === 2) {
+          q = 'สัตว์ชนิดใดบินได้?';
+          choices = ['นก', 'ช้าง', 'ปลา'];
+          correctIndex = 0;  // "นก" is correct
+        } else {
+          q = '2 + 2 = 4 หรือไม่?';
+          choices = ['ใช่', 'ไม่'];
+          correctIndex = 0;
+        }
+        questionEl.textContent = 'ด่าน ' + missionNumber + ': ' + q;
+        // Create option buttons
+        choices.forEach((choice, index) => {
+          const btn = document.createElement('button');
+          btn.textContent = choice;
+          btn.className = 'option-btn';
+          btn.addEventListener('click', () => {
+            if (index === correctIndex) {
+              // Correct answer: mark mission as completed
+              userData.missions.completed = missionNumber;
+              userData.missions.missionsToday += 1;
+              users[username] = userData;
+              localStorage.setItem('users', JSON.stringify(users));
+              showModal('ผ่านด่านที่ ' + missionNumber + ' แล้ว!');
+              // Update mission circle display
+              circles.forEach(c => {
+                const m = parseInt(c.dataset.mission);
+                c.classList.remove('completed', 'current', 'locked');
+                if (m <= userData.missions.completed) {
+                  c.classList.add('completed');
+                } else if (m === userData.missions.completed + 1) {
+                  c.classList.add('current');
+                } else {
+                  c.classList.add('locked');
+                }
+              });
+              // Hide quiz and return to circle selection
+              document.getElementById('mission-quiz').style.display = 'none';
+              document.getElementById('missions-container').style.display = 'flex';
+            } else {
+              // Incorrect answer: prompt to try again
+              showModal('คำตอบไม่ถูกต้อง ลองอีกครั้ง');
+            }
+          });
+          optionsEl.appendChild(btn);
+        });
+        // Show the quiz section
+        document.getElementById('missions-container').style.display = 'none';
+        document.getElementById('mission-quiz').style.display = 'block';
+      }
+      // Handle mission circle clicks
+      circles.forEach(circle => {
+        circle.addEventListener('click', () => {
+          const missionNum = parseInt(circle.dataset.mission);
+          if (circle.classList.contains('current')) {
+            startMission(missionNum);
+          } else if (circle.classList.contains('locked')) {
+            if (missionNum > userData.missions.completed + 1) {
+              showModal('กรุณาทำด่านก่อนหน้าให้เสร็จก่อน');
+            }
+          }
+        });
+      });
+    }
+  }
+
+  // Sidebar toggle and logout (for logged-in pages)
+  if (page === 'card.html' || page === 'scan.html' || page === 'mission.html') {
+    const menuBtn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    // Ensure sidebar is hidden initially
+    sidebar.style.transform = 'translateX(-100%)';
+    menuBtn.addEventListener('click', () => {
+      if (sidebar.style.transform === 'translateX(0%)') {
+        sidebar.style.transform = 'translateX(-100%)';
+      } else {
+        sidebar.style.transform = 'translateX(0%)';
+      }
+    });
+    // Close sidebar when any menu link is clicked
+    document.querySelectorAll('#sidebar a').forEach(link => {
+      link.addEventListener('click', () => {
+        sidebar.style.transform = 'translateX(-100%)';
+      });
+    });
+    // Logout action
+    document.getElementById('logout').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('loggedInUser');
+      localStorage.setItem('loggedOut', '1');
+      location.href = 'login.html';
+    });
+  }
+})();    var userData = JSON.parse(localStorage.getItem('user-' + loggedInUser)) || {};
   }
 
   // ****** หน้า Login (login.html) ******
@@ -380,3 +671,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
