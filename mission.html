@@ -1,40 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroke Hero Unocker - Missions</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missions</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="inner-page">
-    <div class="top-bar">
-        <button id="menuBtn">☰</button>
-        <h1>Stroke Hero Unocker</h1>
+<body class="mission-page">
+  <!-- Sidebar menu -->
+  <div id="sidebar" class="sidebar">
+    <a href="#" id="closeSidebar">&times;</a>
+    <a href="card.html">Your Card Collection</a>
+    <a href="scan.html">Scan QR</a>
+    <a href="mission.html">Missions</a>
+    <a href="#" id="logoutBtn">Logout</a>
+  </div>
+  <!-- Header bar -->
+  <div class="header">
+    <span id="menuBtn">&#9776;</span>
+    <h1>Missions</h1>
+  </div>
+  <!-- Missions list (level buttons) -->
+  <div id="missions-list" class="missions-list">
+    <!-- ปุ่มด่าน 1-10 จะถูกสร้างโดยสคริปต์ -->
+  </div>
+  <!-- Quiz container for mission levels -->
+  <div id="quiz-container" class="quiz-container">
+    <p id="quiz-question"></p>
+    <div id="quiz-options"></div>
+    <button id="quiz-submit">ยืนยันคำตอบ</button>
+    <p id="quiz-feedback"></p>
+  </div>
+  <!-- Modal for mission completion or limit messages -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button id="modal-close">OK</button>
     </div>
-    <div id="sidebar">
-        <a href="scan.html">Scan</a>
-        <a href="mission.html">Mission</a>
-        <a href="card.html">Cards</a>
-        <div class="user-panel">
-            <span id="usernameDisplay"></span>
-            <button id="logoutBtn">Logout</button>
-        </div>
-    </div>
-    <div class="mission-map-container">
-        <!-- SVG lines connecting the 12 stages -->
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-        <line x1="10" y1="97.5" x2="70" y2="89.5" stroke="gray" stroke-width="2" />
-        <line x1="70" y1="89.5" x2="10" y2="81.5" stroke="gray" stroke-width="2" />
-        <line x1="10" y1="81.5" x2="70" y2="73.5" stroke="gray" stroke-width="2" />
-        <line x1="70" y1="73.5" x2="10" y2="65.5" stroke="gray" stroke-width="2" />
-        <line x1="10" y1="65.5" x2="70" y2="57.5" stroke="gray" stroke-width="2" />
-        <line x1="70" y1="57.5" x2="10" y2="49.5" stroke="gray" stroke-width="2" />
-        <line x1="10" y1="49.5" x2="70" y2="41.5" stroke="gray" stroke-width="2" />
-        <line x1="70" y1="41.5" x2="10" y2="33.5" stroke="gray" stroke-width="2" />
-        <line x1="10" y1="33.5" x2="70" y2="25.5" stroke="gray" stroke-width="2" />
-        <line x1="70" y1="25.5" x2="10" y2="17.5" stroke="gray" stroke-width="2" />
-        <line x1="10" y1="17.5" x2="70" y2="9.5" stroke="gray" stroke-width="2" />
-        </svg>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>        </svg>
         <!-- 12 stage circles positioned as a zigzag path -->
         <div class="stage" style="left: 10%; bottom: 0px;">1</div>
         <div class="stage" style="left: 70%; bottom: 80px;">2</div>
