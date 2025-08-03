@@ -1,40 +1,275 @@
-/* Base styles and theme colors */
-body {
+/* Base styles */
+* {
   margin: 0;
-  font-family: sans-serif;
-  background: #fff;
-  color: #000;
-}
-h1, h2, h3, p {
-  margin: 10px 0;
-}
-a {
-  color: #d32f2f;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-button {
-  background: #d32f2f;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 1em;
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-input[type=text], input[type=password] {
-  width: 100%;
-  padding: 8px;
-  margin: 5px 0;
+  padding: 0;
   box-sizing: border-box;
 }
-
+body {
+  font-family: Arial, sans-serif;
+  background-color: #fff;
+  color: #333;
+}
+/* Top navigation bar */
+.topbar {
+  background-color: #d9534f; /* red theme color */
+  color: #fff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+.menu-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+.page-title {
+  flex: 1;
+  text-align: center;
+  font-size: 20px;
+}
+/* Sidebar menu */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #fff;
+  overflow-y: auto;
+  /* Hidden by default (slide off-screen) */
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  padding-top: 60px; /* space for topbar */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+}
+.sidebar a {
+  display: block;
+  padding: 15px;
+  text-decoration: none;
+  color: #333;
+  border-bottom: 1px solid #eee;
+}
+.sidebar a:hover {
+  background-color: #f1f1f1;
+}
+/* Sidebar width adjustments for responsiveness */
+@media (min-width: 600px) {
+  .sidebar {
+    width: 250px;
+  }
+}
+@media (max-width: 599px) {
+  .sidebar {
+    width: 80%;
+  }
+}
+/* Ensure main content is not hidden under the fixed topbar */
+main {
+  margin-top: 60px;
+}
+/* Card collection grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+@media (min-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.card-slot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000; /* default background for locked cards */
+}
+.card-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Locked card (inherits black background) */
+.card-slot.locked {
+  /* no additional overlay/icon to keep it simple */
+}
+/* Scan page */
+.scan-container {
+  text-align: center;
+  padding: 20px;
+}
+.scan-container p {
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+/* Mission page circles and layout */
+.missions-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+}
+.mission-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #d9534f;
+  color: #d9534f;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+.mission-circle.locked {
+  border-color: #aaa;
+  background: #ccc;
+  color: #fff;
+}
+.mission-circle.completed {
+  border-color: #d9534f;
+  background: #d9534f;
+  color: #fff;
+}
+/* Mission quiz section */
+.mission-quiz {
+  text-align: center;
+  padding: 20px;
+}
+.mission-question {
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+.mission-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mission-options .option-btn {
+  width: 80%;
+  max-width: 200px;
+}
+/* Buttons (global style) */
+button {
+  background-color: #d9534f;
+  color: #fff;
+  font-size: 16px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover {
+  opacity: 0.9;
+}
+/* Option buttons (mission answers) */
+.option-btn {
+  background-color: #fff;
+  color: #d9534f;
+  border: 2px solid #d9534f;
+  border-radius: 4px;
+  margin: 5px;
+  padding: 8px 12px;
+}
+.option-btn:hover {
+  background-color: #d9534f;
+  color: #fff;
+}
+/* Login/Register form styles */
+.form-container {
+  max-width: 300px;
+  margin: 100px auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  text-align: center;
+}
+.form-container h1 {
+  margin-bottom: 15px;
+  font-size: 24px;
+  color: #d9534f;
+}
+.form-container input {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.form-container input:focus {
+  outline: none;
+  border-color: #d9534f;
+}
+.form-container button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+/* Switch page link */
+.switch-page {
+  margin-top: 10px;
+  font-size: 14px;
+}
+.switch-page a {
+  color: #d9534f;
+  text-decoration: none;
+}
+.switch-page a:hover {
+  text-decoration: underline;
+}
+/* Modal (overlay and content) */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 300px;
+  margin: 100px auto;
+  position: relative;
+  text-align: center;
+}
+.close {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  font-size: 20px;
+  color: #000;
+  cursor: pointer;
+}
+.modal-content a {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #d9534f;
+  color: #fff;
+  border-radius: 4px;
+  text-decoration: none;
+}
+.modal-content a:hover {
+  opacity: 0.9;
+}
 /* Login and Register page layout */
 .login-container, .register-container {
   max-width: 300px;
@@ -1017,6 +1252,7 @@ button:disabled, .btn:disabled {
     margin-left: 0;
   }
 }
+
 
 
 
