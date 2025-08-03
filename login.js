@@ -1,44 +1,88 @@
-// login.js
-function togglePassword(id) {
-  const field = document.getElementById(id);
-  field.type = field.type === "password" ? "text" : "password";
-}
+// อ่าน query string เพื่อตรวจสอบว่ามีการ์ดที่ต้องปลดล็อกหรือไม่
+const params = new URLSearchParams(window.location.search);
+const cardToUnlock = params.get('card');  // เช่น "card5" ถ้ามี ?card=card5
 
-function showModal(message) {
-  document.getElementById('login-modal-message').textContent = message;
-  document.getElementById('login-modal').style.display = 'block';
-}
+// อ้างอิง element ที่ต้องใช้งาน
+const usernameInput = document.getElementById('loginUsername');
+const passwordInput = document.getElementById('loginPassword');
+const toggleIcon = document.getElementById('toggleLoginPassword');
+const loginBtn = document.getElementById('loginBtn');
 
-function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
-}
+// อ้างอิงองค์ประกอบของ Modal
+const modal = document.getElementById('modal');
+const modalMessage = document.getElementById('modalMessage');
+const modalOk = document.getElementById('modalOk');
 
-function login() {
-  const username = document.getElementById("login-username").value;
-  const password = document.getElementById("login-password").value;
+// ฟังก์ชันสลับแสดง/ซ่อนรหัสผ่าน
+toggleIcon.addEventListener('click', () => {
+  // เช็คประเภทปัจจุบันของช่องรหัสผ่าน
+  const currentType = passwordInput.getAttribute('type');
+  if (currentType === 'password') {
+    // เปลี่ยนเป็นชนิด text เพื่อแสดงรหัส
+    passwordInput.setAttribute('type', 'text');
+    // เปลี่ยนไอคอนเป็นรูปตาขีดทับ (ซ่อน)
+    toggleIcon.classList.remove('fa-eye');
+    toggleIcon.classList.add('fa-eye-slash');
+  } else {
+    // เปลี่ยนกลับเป็นชนิด password เพื่อซ่อนรหัส
+    passwordInput.setAttribute('type', 'password');
+    // เปลี่ยนไอคอนกลับเป็นรูปตาปกติ
+    toggleIcon.classList.remove('fa-eye-slash');
+    toggleIcon.classList.add('fa-eye');
+  }
+});
 
-  const users = JSON.parse(localStorage.getItem("users") || "[]");
-  const user = users.find(u => u.username === username && u.password === password);
+// ฟังก์ชันเมื่อกดปุ่มเข้าสู่ระบบ
+loginBtn.addEventListener('click', () => {
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
 
-  if (!user) {
-    showModal("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+  if (username === "" || password === "") {
+    // กรณีไม่ได้กรอกข้อมูลครบ
+    modalMessage.innerText = "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน";
+    modal.style.display = "block";
+    modalOk.onclick = () => { modal.style.display = "none"; };
     return;
   }
 
-  localStorage.setItem("currentUser", username);
+  // ดึงข้อมูลผู้ใช้ทั้งหมดจาก localStorage (หรือ [] ถ้ายังไม่มี)
+  const storedUsers = JSON.parse(localStorage.getItem('users') || "[]");
 
-  // ปลดล็อกการ์ดหากมี query
-  const params = new URLSearchParams(window.location.search);
-  const cardId = params.get("card");
-  if (cardId) {
-    const key = `${username}_cards`;
-    const unlocked = JSON.parse(localStorage.getItem(key) || "[]");
-    if (!unlocked.includes(cardId)) {
-      unlocked.push(cardId);
-      localStorage.setItem(key, JSON.stringify(unlocked));
-      alert(`ปลดล็อกการ์ด ${cardId} สำเร็จ!`);
+  // ค้นหาผู้ใช้ที่ username/password ตรงกับที่กรอกเข้ามา
+  const matchedUser = storedUsers.find(u => u.username === username && u.password === password);
+
+  if (!matchedUser) {
+    // ไม่พบบัญชีที่ตรง - แจ้งเตือนล็อกอินไม่สำเร็จ
+    modalMessage.innerText = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+    modal.style.display = "block";
+    modalOk.onclick = () => {
+      modal.style.display = "none";
+    };
+  } else {
+    // พบข้อมูลผู้ใช้ - ล็อกอินสำเร็จ
+    localStorage.setItem('currentUser', username);  // บันทึกชื่อผู้ใช้ที่ล็อกอินปัจจุบัน
+
+    let modalText = "เข้าสู่ระบบสำเร็จ";
+    if (cardToUnlock) {
+      // มีการ์ดที่ต้องปลดล็อก
+      // ดึงรายการการ์ดที่ปลดล็อกของผู้ใช้ (หรือ [] หากยังไม่มีข้อมูล)
+      const cardListKey = username + "_cards";
+      const unlockedCards = JSON.parse(localStorage.getItem(cardListKey) || "[]");
+      if (!unlockedCards.includes(cardToUnlock)) {
+        unlockedCards.push(cardToUnlock);
+      }
+      localStorage.setItem(cardListKey, JSON.stringify(unlockedCards));
+      // เตรียมข้อความแจ้งเตือนการปลดล็อกการ์ด
+      modalText = `ปลดล็อกการ์ด ${cardToUnlock} สำเร็จ!`;
     }
-  }
 
-  window.location.href = "card.html";
-}
+    // แสดง Modal แจ้งความสำเร็จ
+    modalMessage.innerText = modalText;
+    modal.style.display = "block";
+    modalOk.onclick = () => {
+      modal.style.display = "none";
+      // ย้ายไปยังหน้า card.html หลังล็อกอิน (หรือหลังปลดล็อกการ์ดเสร็จ)
+      window.location.href = "card.html";
+    };
+  }
+});
