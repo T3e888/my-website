@@ -1,40 +1,52 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Missions</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ภารกิจ</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="mission-page">
-  <!-- Sidebar menu -->
-  <div id="sidebar" class="sidebar">
-    <a href="#" id="closeSidebar">&times;</a>
-    <a href="card.html">Your Card Collection</a>
-    <a href="scan.html">Scan QR</a>
-    <a href="mission.html">Missions</a>
-    <a href="#" id="logoutBtn">Logout</a>
-  </div>
-  <!-- Header bar -->
-  <div class="header">
-    <span id="menuBtn">&#9776;</span>
-    <h1>Missions</h1>
-  </div>
-  <!-- Missions list (level buttons) -->
-  <div id="missions-list" class="missions-list">
-    <!-- ปุ่มด่าน 1-10 จะถูกสร้างโดยสคริปต์ -->
-  </div>
-  <!-- Quiz container for mission levels -->
-  <div id="quiz-container" class="quiz-container">
-    <p id="quiz-question"></p>
-    <div id="quiz-options"></div>
-    <button id="quiz-submit">ยืนยันคำตอบ</button>
-    <p id="quiz-feedback"></p>
-  </div>
-  <!-- Modal for mission completion or limit messages -->
+<body>
+  <header class="topbar">
+    <button id="menu-btn" class="menu-btn">☰</button>
+    <h2 class="page-title">ภารกิจ</h2>
+  </header>
+  <!-- Sidebar Menu -->
+  <nav id="sidebar" class="sidebar">
+    <a href="card.html">คอลเลกชันการ์ด</a>
+    <a href="scan.html">สแกน QR โค้ด</a>
+    <a href="mission.html">ภารกิจ</a>
+    <a href="#" id="logout">ออกจากระบบ</a>
+  </nav>
+  <main>
+    <div id="missions-container" class="missions-container">
+      <!-- 10 mission level circles -->
+      <div class="mission-circle" data-mission="1">1</div>
+      <div class="mission-circle" data-mission="2">2</div>
+      <div class="mission-circle" data-mission="3">3</div>
+      <div class="mission-circle" data-mission="4">4</div>
+      <div class="mission-circle" data-mission="5">5</div>
+      <div class="mission-circle" data-mission="6">6</div>
+      <div class="mission-circle" data-mission="7">7</div>
+      <div class="mission-circle" data-mission="8">8</div>
+      <div class="mission-circle" data-mission="9">9</div>
+      <div class="mission-circle" data-mission="10">10</div>
+    </div>
+    <div id="mission-quiz" class="mission-quiz" style="display: none;">
+      <p id="mission-question" class="mission-question"></p>
+      <div id="mission-options" class="mission-options"></div>
+    </div>
+  </main>
+  <!-- Modal for mission notifications (e.g., limit reached) -->
   <div id="modal" class="modal">
     <div class="modal-content">
+      <span class="close">&times;</span>
       <p id="modal-message"></p>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>      <p id="modal-message"></p>
       <button id="modal-close">OK</button>
     </div>
   </div>
