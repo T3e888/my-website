@@ -1,34 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Scan Card - Stroke Hero Unocker</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>สแกน QR โค้ด</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="center-form">
-    <h1>Scan QR Card</h1>
-    <div id="scanInfo"></div>
+  <header class="topbar">
+    <button id="menu-btn" class="menu-btn">☰</button>
+    <h2 class="page-title">สแกน QR โค้ด</h2>
+  </header>
+  <!-- Sidebar Menu -->
+  <nav id="sidebar" class="sidebar">
+    <a href="card.html">คอลเลกชันการ์ด</a>
+    <a href="scan.html">สแกน QR โค้ด</a>
+    <a href="mission.html">ภารกิจ</a>
+    <a href="#" id="logout">ออกจากระบบ</a>
+  </nav>
+  <main>
+    <div class="scan-container">
+      <p>โปรดสแกน QR โค้ดเพื่อปลดล็อกการ์ด</p>
+      <input type="file" id="qr-input" accept="image/*" capture="environment" style="display: none;" />
+      <button id="scan-btn" class="scan-btn">เปิดกล้อง/อัปโหลด QR</button>
+      <canvas id="qr-canvas" style="display: none;"></canvas>
+    </div>
+  </main>
+  <!-- Modal for scan success/error messages -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <p id="modal-message"></p>
+    </div>
   </div>
+  <!-- QR code decoding library -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="script.js"></script>
-  <script>
-    // 🔑 QR LOGIN FLOW
-    const params = new URLSearchParams(window.location.search);
-    const card = params.get('card');
-    // ต้องมีพารามิเตอร์ card
-    if (!card) {
-      document.getElementById('scanInfo').textContent = "Invalid QR Code";
-    } else {
-      // ถ้ายังไม่ได้ login ให้ไปหน้า login ก่อน (แนบ card param)
-      const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
-        window.location.href = `login.html?card=${card}`;
-      } else {
-        // ถ้า login แล้ว ปลดล็อกการ์ดให้เลย
-        unlockCardForUser(currentUser, card, true); // true: redirect ไป card.html พร้อมแจ้งเตือน
-      }
-    }
-  </script>
 </body>
 </html>
