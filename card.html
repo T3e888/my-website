@@ -1,62 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Your Cards - Stroke Hero Unocker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Card Collection</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="top-bar"><h1>Stroke Hero Unocker</h1></div>
-  <div class="card-list">
-    <h2>Your Card Collection</h2>
-    <div id="cardGrid"></div>
+<body class="card-page">
+  <!-- Sidebar menu -->
+  <div id="sidebar" class="sidebar">
+    <a href="#" id="closeSidebar">&times;</a>
+    <a href="card.html">Your Card Collection</a>
+    <a href="scan.html">Scan QR</a>
+    <a href="mission.html">Missions</a>
+    <a href="#" id="logoutBtn">Logout</a>
   </div>
-
-  <!-- Modal แจ้งเตือนการปลดล็อก -->
-  <div id="unlockModal" class="modal">
+  <!-- Header bar with title and menu button -->
+  <div class="header">
+    <span id="menuBtn">&#9776;</span>
+    <h1>Your Card Collection</h1>
+  </div>
+  <!-- Card collection grid -->
+  <div id="card-grid" class="card-grid">
+    <!-- การ์ด 25 ใบจะถูกสร้างและแสดงผ่านสคริปต์ -->
+  </div>
+  <!-- Modal for card unlock notification -->
+  <div id="modal" class="modal">
     <div class="modal-content">
-      <span id="closeModal" class="close">&times;</span>
-      <p id="modalText"></p>
+      <p id="modal-message"></p>
+      <button id="modal-close">OK</button>
     </div>
   </div>
-
   <script src="script.js"></script>
-  <script>
-    // ตรวจสอบล็อกอิน
-    const currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) {
-      window.location.href = 'login.html';
-    }
-
-    // แสดงการ์ดที่ปลดล็อก
-    const userKey = `unlocked_${currentUser}`;
-    const unlocked = JSON.parse(localStorage.getItem(userKey) || '[]');
-    const cardGrid = document.getElementById('cardGrid');
-    for (let i = 1; i <= 25; i++) {
-      const cid = `card${i}`;
-      let el = document.createElement('div');
-      el.className = 'card-box';
-      if (unlocked.includes(cid)) {
-        el.textContent = cid; // หรือใส่รูปการ์ดจริงถ้ามี
-      } else {
-        el.classList.add('locked');
-      }
-      cardGrid.appendChild(el);
-    }
-
-    // Modal แจ้งเตือนปลดล็อกการ์ดใหม่
-    const params = new URLSearchParams(window.location.search);
-    const unlockedCard = params.get('card');
-    if (unlockedCard) {
-      document.getElementById('modalText').textContent = `คุณได้ปลดล็อกการ์ด ${unlockedCard} แล้ว!`;
-      document.getElementById('unlockModal').style.display = 'block';
-      document.getElementById('closeModal').onclick = function() {
-        document.getElementById('unlockModal').style.display = 'none';
-        // ลบ query param
-        history.replaceState(null, '', 'card.html');
-      };
-    }
-  </script>
 </body>
 </html>
