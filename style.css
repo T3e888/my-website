@@ -1,40 +1,244 @@
+/* Base styles and theme colors */
 body {
-  font-family: 'Sarabun', sans-serif;
-  background: radial-gradient(circle at 30% 20%, #ffe5e5 30%, #fff 100%);
   margin: 0;
-}
-.center-form {
-  width: 90%;
-  max-width: 400px;
-  margin: 80px auto;
+  font-family: sans-serif;
   background: #fff;
-  border-radius: 20px;
-  padding: 32px 24px 24px 24px;
-  box-shadow: 0 2px 16px #fbb7b780;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  color: #000;
 }
-.center-form h1 { color: #db3d3d; margin-bottom: 20px; }
-input { width: 100%; margin: 8px 0; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 1rem;}
-.btn-primary { background: #db3d3d; color: #fff; padding: 12px 0; width: 100%; border: none; border-radius: 10px; font-size: 1.1rem; margin-top: 14px;}
-.card-list { max-width: 600px; margin: 40px auto; }
-#cardGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.card-box {
-  background: #111;
+h1, h2, h3, p {
+  margin: 10px 0;
+}
+a {
+  color: #d32f2f;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+button {
+  background: #d32f2f;
   color: #fff;
-  border-radius: 15px;
-  padding: 48px 0;
-  text-align: center;
-  font-size: 1.1rem;
-  font-weight: bold;
-  box-shadow: 0 2px 6px #a2a2a244;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 1em;
 }
-.card-box.locked { background: #222; color: #fff0; border: 2px dashed #ccc;}
-/* Modal */
-.modal { display: none; position: fixed; z-index: 10; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); }
-.modal-content { background: #fff; border-radius: 18px; margin: 20% auto; padding: 28px 18px; width: 90%; max-width: 350px; box-shadow: 0 4px 18px #fbb7b799; text-align: center;}
-.close { float:right; font-size: 1.4em; cursor: pointer;}
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  box-sizing: border-box;
+}
+
+/* Login and Register page layout */
+.login-container, .register-container {
+  max-width: 300px;
+  margin: 80px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  text-align: center;
+}
+.login-container h1, .register-container h1 {
+  margin-bottom: 20px;
+}
+.login-container form input, .register-container form input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Header bar and menu button */
+.header {
+  background: #d32f2f;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+  position: relative;
+}
+.header h1 {
+  margin: 0;
+  font-size: 1.5em;
+}
+#menuBtn {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  font-size: 1.5em;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+#menuBtn:focus {
+  outline: none;
+}
+
+/* Sidebar menu styles */
+.sidebar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 200px;
+  background: #d32f2f;
+  padding-top: 60px;
+  z-index: 1000;
+}
+.sidebar a, .sidebar button {
+  display: block;
+  padding: 10px 20px;
+  color: #fff;
+  text-decoration: none;
+  text-align: left;
+  border: none;
+  background: none;
+  width: 100%;
+  cursor: pointer;
+}
+.sidebar a:hover, .sidebar button:hover {
+  background: #a52828;
+}
+#closeSidebar {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 20px;
+  text-decoration: none;
+}
+.sidebar.show {
+  display: block;
+}
+
+/* Card collection grid and card images */
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+}
+.card-img {
+  width: 100px;
+  height: 150px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.card-img.locked {
+  /* Locked cards show as black by placeholder image, no extra overlay needed */
+}
+/* Larger card size on bigger screens */
+@media (min-width: 600px) {
+  .card-img {
+    width: 120px;
+    height: 180px;
+  }
+}
+@media (min-width: 900px) {
+  .card-img {
+    width: 150px;
+    height: 225px;
+  }
+}
+
+/* Scan page container */
+.scan-container {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 10px;
+  text-align: center;
+}
+/* We can style the QR reader element if needed */
+#qr-reader > div {
+  border-radius: 8px;
+}
+
+/* Missions page styles */
+.missions-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+.mission-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 1em;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+.mission-btn.current {
+  background: #d32f2f;
+  color: #fff;
+}
+.mission-btn.completed {
+  background: #4caf50;
+  color: #fff;
+}
+.mission-btn.locked {
+  background: #555;
+  color: #fff;
+}
+.mission-btn:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+/* Quiz section within mission page */
+.quiz-container {
+  display: none;
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: left;
+}
+#quiz-question {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+#quiz-options {
+  margin-bottom: 10px;
+}
+#quiz-feedback {
+  color: red;
+  font-weight: bold;
+}
+
+/* Modal styles (shared by all pages) */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 300px;
+  margin: auto;
+}
+.modal.show {
+  display: flex;
+}
+#modal-close {
+  margin-top: 10px;
+  padding: 5px 15px;
+}.close { float:right; font-size: 1.4em; cursor: pointer;}
 @media (max-width: 650px) {
   #cardGrid { grid-template-columns: repeat(2, 1fr);}
 }    margin: 100px auto 0 auto;
@@ -813,6 +1017,7 @@ button:disabled, .btn:disabled {
     margin-left: 0;
   }
 }
+
 
 
 
