@@ -1,52 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroke Hero Unocker - Cards</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Your Cards - Stroke Hero Unocker</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="inner-page">
-    <div class="top-bar">
-        <button id="menuBtn">☰</button>
-        <h1>Stroke Hero Unocker</h1>
+<body>
+  <div class="top-bar"><h1>Stroke Hero Unocker</h1></div>
+  <div class="card-list">
+    <h2>Your Card Collection</h2>
+    <div id="cardGrid"></div>
+  </div>
+
+  <!-- Modal แจ้งเตือนการปลดล็อก -->
+  <div id="unlockModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal" class="close">&times;</span>
+      <p id="modalText"></p>
     </div>
-    <div id="sidebar">
-        <a href="scan.html">Scan</a>
-        <a href="mission.html">Mission</a>
-        <a href="card.html">Cards</a>
-        <div class="user-panel">
-            <span id="usernameDisplay"></span>
-            <button id="logoutBtn">Logout</button>
-        </div>
-    </div>
-    <div class="scan-container">
-        <h2>Your Card Collection</h2>
-    </div>
-    <div class="cards-container">
-        <div class="card-slot" data-card="card1"></div>
-        <div class="card-slot" data-card="card2"></div>
-        <div class="card-slot" data-card="card3"></div>
-        <div class="card-slot" data-card="card4"></div>
-        <div class="card-slot" data-card="card5"></div>
-        <div class="card-slot" data-card="card6"></div>
-        <div class="card-slot" data-card="card7"></div>
-        <div class="card-slot" data-card="card8"></div>
-        <div class="card-slot" data-card="card9"></div>
-        <div class="card-slot" data-card="card10"></div>
-        <div class="card-slot" data-card="card11"></div>
-        <div class="card-slot" data-card="card12"></div>
-    </div>
-    <script src="script.js"></script>
-<!-- ปุ่มเปิด/ปิดเมนูสามขีด -->
-<button id="menu-toggle" class="menu-toggle">☰</button>
-<div id="sidebar-backdrop" class="sidebar-backdrop"></div>
-<nav id="sidebar" class="sidebar">
-  <a href="card.html" class="menu-link">List Card</a>
-  <a href="scan.html" class="menu-link">Scan QR</a>
-  <a href="mission.html" class="menu-link">Mission</a>
-  <a href="#" class="menu-link" id="logout-link">Logout</a>
-</nav>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // ตรวจสอบล็อกอิน
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+      window.location.href = 'login.html';
+    }
+
+    // แสดงการ์ดที่ปลดล็อก
+    const userKey = `unlocked_${currentUser}`;
+    const unlocked = JSON.parse(localStorage.getItem(userKey) || '[]');
+    const cardGrid = document.getElementById('cardGrid');
+    for (let i = 1; i <= 25; i++) {
+      const cid = `card${i}`;
+      let el = document.createElement('div');
+      el.className = 'card-box';
+      if (unlocked.includes(cid)) {
+        el.textContent = cid; // หรือใส่รูปการ์ดจริงถ้ามี
+      } else {
+        el.classList.add('locked');
+      }
+      cardGrid.appendChild(el);
+    }
+
+    // Modal แจ้งเตือนปลดล็อกการ์ดใหม่
+    const params = new URLSearchParams(window.location.search);
+    const unlockedCard = params.get('card');
+    if (unlockedCard) {
+      document.getElementById('modalText').textContent = `คุณได้ปลดล็อกการ์ด ${unlockedCard} แล้ว!`;
+      document.getElementById('unlockModal').style.display = 'block';
+      document.getElementById('closeModal').onclick = function() {
+        document.getElementById('unlockModal').style.display = 'none';
+        // ลบ query param
+        history.replaceState(null, '', 'card.html');
+      };
+    }
+  </script>
 </body>
 </html>
-
