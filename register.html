@@ -1,27 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroke Hero Unocker - Register</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Register - Stroke Hero Unocker</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="auth-container">
-        <h2>Register</h2>
-        <form id="registerForm">
-            <input type="text" id="registerUsername" placeholder="Username" required>
-            <input type="password" id="registerPassword" placeholder="Password" required>
-            <input type="password" id="registerConfirm" placeholder="Confirm Password" required>
-            <div id="registerError" style="color: red; font-size: 0.9rem; margin: 5px 0;"></div>
-            <button type="submit">Register</button>
-        </form>
-        <p class="alt-link">Already have an account? <a href="login.html">Login here</a></p>
-    </div>
-    <!-- Curved light-red background shape -->
-    <svg class="bottom-wave" viewBox="0 0 1440 320">
-        <path fill="#FFCDD2" d="M0,224L30,213.3C60,203,120,181,180,181.3C240,181,300,203,360,197.3C420,192,480,160,540,160C600,160,660,192,720,202.7C780,213,840,203,900,176C960,149,1020,107,1080,101.3C1140,96,1200,128,1260,149.3C1320,171,1380,181,1410,186.7L1440,192L1440,320L1410,320C1380,320,1320,320,1260,320C1200,320,1140,320,1080,320C1020,320,960,320,900,320C840,320,780,320,720,320C660,320,600,320,540,320C480,320,420,320,360,320C300,320,240,320,180,320C120,320,60,320,30,320L0,320Z"></path>
-    </svg>
-    <script src="script.js"></script>
+  <div class="center-form">
+    <h1>Create account</h1>
+    <input type="email" id="registerEmail" placeholder="Email">
+    <input type="password" id="registerPassword" placeholder="Password">
+    <button id="registerBtn" class="btn-primary">Register</button>
+    <p>Already have an account? <a id="toLogin" href="#">Login</a></p>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    // รับ param card เพื่อส่งต่อ (กรณีล็อกอิน)
+    const params = new URLSearchParams(window.location.search);
+    const card = params.get('card');
+    document.getElementById('toLogin').href = card ? `login.html?card=${card}` : 'login.html';
+  </script>
 </body>
 </html>
