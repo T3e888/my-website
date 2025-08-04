@@ -1,132 +1,181 @@
-/* ตั้งค่าพื้นฐาน */
-body {
+html, body {
+  height: 100%;
   margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
+  padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  box-sizing: border-box;
 }
 
-.container {
-  max-width: 400px;
-  width: 90%;
-  margin: 80px auto;
-  background-color: #ffffff;
-  border: 2px solid #e74c3c;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+body {
+  min-height: 100vh;
+  background: #fff;
+  position: relative;
+  z-index: 0;
+  overflow-x: hidden;
 }
 
-.container h2 {
-  text-align: center;
-  color: #e74c3c;
-  margin-bottom: 20px;
+.bg-gradient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse at top, #fde4ea 60%, #fff 100%);
+  min-height: 100vh;
 }
 
-.container form {
+.auth-card {
+  position: relative;
+  z-index: 1;
+  margin: 4.5rem auto 0 auto;
+  max-width: 440px;
+  width: 93vw;
+  background: #fff;
+  border-radius: 30px;
+  box-shadow: 0 4px 40px 0 #f23c4d27;
+  padding: 2.4rem 1.5rem 2rem 1.5rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
-.container label {
-  margin: 10px 0 5px;
-  font-weight: bold;
-}
-
-.container input[type="text"],
-.container input[type="password"] {
-  padding: 10px;
-  font-size: 16px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.container input[type="text"]:focus,
-.container input[type="password"]:focus {
-  border-color: #e74c3c;
-  outline: none;
-}
-
-.container button {
-  padding: 12px;
-  font-size: 16px;
-  background-color: #e74c3c;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 5px;
-}
-
-.container button:hover {
-  background-color: #cf4436;
-}
-
-.switch-page {
+h1 {
+  color: #d83841;
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin-bottom: 1.9rem;
+  letter-spacing: .01em;
   text-align: center;
-  margin-top: 15px;
 }
 
-.switch-page a {
-  color: #e74c3c;
-  text-decoration: none;
-}
-.switch-page a:hover {
-  text-decoration: underline;
+form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
 }
 
-/* โครงสร้างสำหรับ password field ที่มีไอคอน */
-.password-container {
+input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 1.1rem 1.2rem;
+  border: 1.7px solid #ef919a;
+  border-radius: 11px;
+  font-size: 1.1rem;
+  background: #fff;
+  margin-bottom: 0;
+  box-sizing: border-box;
+  outline: none;
+  transition: border 0.2s;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+  border: 1.7px solid #d83841;
+}
+
+.password-row {
+  display: flex;
+  align-items: center;
   position: relative;
 }
-.password-container .toggle-password {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #888;
-}
-.password-container .toggle-password:hover {
-  color: #555;
+
+.password-row input {
+  flex: 1 1 auto;
+  margin-bottom: 0;
 }
 
-/* สไตล์ Modal */
+.password-row button {
+  background: transparent;
+  border: none;
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  padding: 0 0.5rem;
+  color: #c9a8ac;
+  font-size: 1.18rem;
+}
+
+.password-row button:focus { outline: none; }
+
+.main-btn {
+  background: #d83841;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 1.09rem 0;
+  margin-top: .4rem;
+  box-shadow: 0 3px 9px #d8384121;
+  transition: background 0.18s;
+  cursor: pointer;
+}
+
+.main-btn:hover, .main-btn:focus {
+  background: #bf2532;
+}
+
+.auth-link {
+  margin-top: 1.7rem;
+  color: #6d4a54;
+  font-size: 1.09rem;
+  text-align: center;
+}
+
+.auth-link a {
+  color: #d83841;
+  text-decoration: underline;
+  font-weight: 500;
+  margin-left: 5px;
+}
+
 .modal {
-  display: none;
   position: fixed;
-  z-index: 999;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #2d192638;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1111;
 }
 
 .modal-content {
   background: #fff;
-  max-width: 300px;
-  width: 80%;
-  margin: 20% auto;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 2rem 2.5rem 1.2rem 2.5rem;
+  border-radius: 18px;
   text-align: center;
+  box-shadow: 0 8px 48px #c00a1b2a;
 }
 
-.modal-content p {
-  font-size: 16px;
-  margin-bottom: 20px;
+#loginModalMsg {
+  display: block;
+  margin-bottom: 1.5rem;
+  font-size: 1.16rem;
+  color: #b21e2c;
 }
 
-.modal-content button {
-  padding: 8px 16px;
-  font-size: 14px;
-  background-color: #e74c3c;
+#loginModalBtn {
+  background: #d83841;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 7px;
+  padding: 0.7rem 1.4rem;
+  font-size: 1.07rem;
   cursor: pointer;
+  transition: background 0.16s;
 }
-.modal-content button:hover {
-  background-color: #cf4436;
-}
+
+#loginModalBtn:hover { background: #bf2532; }
+
+@media (max-width: 600px) {
+  .auth-card {
+    padding: 1.3rem 0.5rem 1.5rem 0.5rem;
+    border-radius: 18px;
+  }
+  .modal-content {
+    padding: 1.2rem 1rem 0.7rem 1rem;
+    border-radius: 11px;
+  }
+  h1 { font-size: 2rem; }
+  }
