@@ -33,13 +33,13 @@ toggleIcon.addEventListener('click', () => {
   if (currentType === 'password') {
     // เปลี่ยนเป็นชนิด text เพื่อแสดงรหัส
     passwordInput.setAttribute('type', 'text');
-    // เปลี่ยนไอคอนเป็นรูปตาขีดทับ (ซ่อน)
+    // เปลี่ยนไอคอนเป็นรูปตาขีดทับ (แสดงรหัส)
     toggleIcon.classList.remove('fa-eye');
     toggleIcon.classList.add('fa-eye-slash');
   } else {
     // เปลี่ยนกลับเป็นชนิด password เพื่อซ่อนรหัส
     passwordInput.setAttribute('type', 'password');
-    // เปลี่ยนไอคอนกลับเป็นรูปตาปกติ
+    // เปลี่ยนไอคอนกลับเป็นรูปตาปกติ (ซ่อนรหัส)
     toggleIcon.classList.remove('fa-eye-slash');
     toggleIcon.classList.add('fa-eye');
   }
