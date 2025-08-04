@@ -9,7 +9,7 @@ const passwordInput = document.getElementById('regPassword');
 const toggleIcon = document.getElementById('toggleRegPassword');
 const registerBtn = document.getElementById('registerBtn');
 
-// Modal elements
+// อ้างอิงองค์ประกอบของ Modal
 const modal = document.getElementById('modal');
 const modalMessage = document.getElementById('modalMessage');
 const modalOk = document.getElementById('modalOk');
