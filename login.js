@@ -1,6 +1,19 @@
 // อ่าน query string เพื่อตรวจสอบว่ามีการ์ดที่ต้องปลดล็อกหรือไม่
 const params = new URLSearchParams(window.location.search);
 const cardToUnlock = params.get('card');  // เช่น "card5" ถ้ามี ?card=card5
+// หากผู้ใช้ล็อกอินอยู่แล้ว ให้ปลดล็อกการ์ด (ถ้ามี query) และไปยังหน้า card.html
+const currentUser = localStorage.getItem('currentUser');
+if (currentUser) {
+  if (cardToUnlock) {
+    const cardListKey = currentUser + "_cards";
+    const unlockedCards = JSON.parse(localStorage.getItem(cardListKey) || "[]");
+    if (!unlockedCards.includes(cardToUnlock)) {
+      unlockedCards.push(cardToUnlock);
+      localStorage.setItem(cardListKey, JSON.stringify(unlockedCards));
+    }
+  }
+  window.location.href = "card.html";
+}
 
 // อ้างอิง element ที่ต้องใช้งาน
 const usernameInput = document.getElementById('loginUsername');
@@ -38,7 +51,7 @@ loginBtn.addEventListener('click', () => {
   const password = passwordInput.value.trim();
 
   if (username === "" || password === "") {
-    // กรณีไม่ได้กรอกข้อมูลครบ
+    // กรณีไม่ได้กรอกชื่อผู้ใช้และรหัสผ่านครบ
     modalMessage.innerText = "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน";
     modal.style.display = "block";
     modalOk.onclick = () => { modal.style.display = "none"; };
@@ -62,27 +75,16 @@ loginBtn.addEventListener('click', () => {
     // พบข้อมูลผู้ใช้ - ล็อกอินสำเร็จ
     localStorage.setItem('currentUser', username);  // บันทึกชื่อผู้ใช้ที่ล็อกอินปัจจุบัน
 
-    let modalText = "เข้าสู่ระบบสำเร็จ";
+    // หากมีการ์ดที่ต้องปลดล็อก ให้บันทึกลงในรายการการ์ดของผู้ใช้
     if (cardToUnlock) {
-      // มีการ์ดที่ต้องปลดล็อก
-      // ดึงรายการการ์ดที่ปลดล็อกของผู้ใช้ (หรือ [] หากยังไม่มีข้อมูล)
       const cardListKey = username + "_cards";
       const unlockedCards = JSON.parse(localStorage.getItem(cardListKey) || "[]");
       if (!unlockedCards.includes(cardToUnlock)) {
         unlockedCards.push(cardToUnlock);
+        localStorage.setItem(cardListKey, JSON.stringify(unlockedCards));
       }
-      localStorage.setItem(cardListKey, JSON.stringify(unlockedCards));
-      // เตรียมข้อความแจ้งเตือนการปลดล็อกการ์ด
-      modalText = `ปลดล็อกการ์ด ${cardToUnlock} สำเร็จ!`;
     }
-
-    // แสดง Modal แจ้งความสำเร็จ
-    modalMessage.innerText = modalText;
-    modal.style.display = "block";
-    modalOk.onclick = () => {
-      modal.style.display = "none";
-      // ย้ายไปยังหน้า card.html หลังล็อกอิน (หรือหลังปลดล็อกการ์ดเสร็จ)
-      window.location.href = "card.html";
-    };
+    // ไปยังหน้า card.html ทันทีหลังล็อกอินสำเร็จ
+    window.location.href = "card.html";
   }
 });
