@@ -1,11 +1,30 @@
-<!DOCTYPE html>
-<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=login.html" />
-  <title>Redirecting...</title>
+    <!-- ... ส่วนหัวของเอกสาร (head) ที่มีโค้ดเดิม ... -->
+    <style>
+        /* เพิ่ม CSS สำหรับปุ่มทดสอบหน้า Login */
+        .test-login-btn {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: #E74C3C; /* พื้นหลังสีแดงโทนตามธีม */
+            color: #FFFFFF;           /* ตัวอักษรสีขาว */
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            z-index: 1000;  /* ให้อยู่ด้านบน เพื่อไม่ให้เนื้อหาอื่นบัง */
+        }
+        .test-login-btn:hover {
+            background-color: #C0392B; /* สีแดงเข้มขึ้นเมื่อเอาเมาส์ชี้ */
+        }
+    </style>
 </head>
 <body>
-  <p>กำลังไปยังหน้าล็อกอิน...</p>
+    <!-- ... โค้ด HTML ส่วนเนื้อหาของหน้า card.html เดิม ... -->
+    
+    <!-- เพิ่มปุ่มสำหรับทดสอบหน้า Login: เริ่ม -->
+    <a href="login.html" class="test-login-btn">ทดสอบหน้า Login</a>
+    <!-- เพิ่มปุ่มสำหรับทดสอบหน้า Login: สิ้นสุด -->
+    
+    <!-- ... โค้ดส่วนอื่นๆ ของหน้า card.html ... -->
 </body>
-</html>
