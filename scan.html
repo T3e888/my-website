@@ -1,40 +1,37 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>สแกน QR โค้ด</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Scan Card</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="scan.css">
 </head>
 <body>
-  <header class="topbar">
-    <button id="menu-btn" class="menu-btn">☰</button>
-    <h2 class="page-title">สแกน QR โค้ด</h2>
-  </header>
-  <!-- Sidebar Menu -->
+  <!-- ===== SIDEBAR HTML ===== -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon">
+      <span></span><span></span><span></span>
+    </span>
+  </button>
   <nav id="sidebar" class="sidebar">
-    <a href="card.html">คอลเลกชันการ์ด</a>
-    <a href="scan.html">สแกน QR โค้ด</a>
-    <a href="mission.html">ภารกิจ</a>
-    <a href="#" id="logout">ออกจากระบบ</a>
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+    </ul>
   </nav>
-  <main>
-    <div class="scan-container">
-      <p>โปรดสแกน QR โค้ดเพื่อปลดล็อกการ์ด</p>
-      <input type="file" id="qr-input" accept="image/*" capture="environment" style="display: none;" />
-      <button id="scan-btn" class="scan-btn">เปิดกล้อง/อัปโหลด QR</button>
-      <canvas id="qr-canvas" style="display: none;"></canvas>
-    </div>
-  </main>
-  <!-- Modal for scan success/error messages -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <p id="modal-message"></p>
-    </div>
+  <div id="overlay" class="overlay"></div>
+  <!-- ===== END SIDEBAR HTML ===== -->
+
+  <h1 class="page-title">Scan QR Code</h1>
+  <div class="scan-box">
+    <video id="camera" autoplay playsinline muted></video>
+    <input type="file" id="fileInput" accept="image/*" hidden>
   </div>
-  <!-- QR code decoding library -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="script.js"></script>
+  <div id="modal" class="modal"></div>
+
+  <script src="scan.js"></script>
 </body>
 </html>
