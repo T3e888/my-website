@@ -1,73 +1,73 @@
-// หากผู้ใช้ล็อกอินอยู่แล้ว ให้ออกจากหน้านี้ไป card.html
+// Redirect if already logged in
 if (localStorage.getItem('currentUser')) {
-  window.location.href = "card.html";
+  window.location.href = 'card.html';
 }
 
-// อ้างอิง element ของหน้าสมัครสมาชิก
-const usernameInput = document.getElementById('regUsername');
-const passwordInput = document.getElementById('regPassword');
-const toggleIcon = document.getElementById('toggleRegPassword');
-const registerBtn = document.getElementById('registerBtn');
+const registerForm = document.getElementById('registerForm');
+const registerModal = document.getElementById('registerModal');
+const registerModalMsg = document.getElementById('registerModalMsg');
+const registerModalBtn = document.getElementById('registerModalBtn');
+const toggleRegisterPassword = document.getElementById('toggleRegisterPassword');
+const registerPasswordInput = document.getElementById('register-password');
 
-// อ้างอิงองค์ประกอบของ Modal
-const modal = document.getElementById('modal');
-const modalMessage = document.getElementById('modalMessage');
-const modalOk = document.getElementById('modalOk');
-
-// ฟังก์ชันสลับแสดง/ซ่อนรหัสผ่าน (เหมือนกับ login.js)
-toggleIcon.addEventListener('click', () => {
-  const currentType = passwordInput.getAttribute('type');
-  if (currentType === 'password') {
-    passwordInput.setAttribute('type', 'text');
-    toggleIcon.classList.remove('fa-eye');
-    toggleIcon.classList.add('fa-eye-slash');
-  } else {
-    passwordInput.setAttribute('type', 'password');
-    toggleIcon.classList.remove('fa-eye-slash');
-    toggleIcon.classList.add('fa-eye');
-  }
+toggleRegisterPassword.addEventListener('click', () => {
+  const isHidden = registerPasswordInput.type === 'password';
+  registerPasswordInput.type = isHidden ? 'text' : 'password';
+  toggleRegisterPassword.querySelector('i').classList.toggle('fa-eye-slash', isHidden);
+  toggleRegisterPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
 });
 
-// ฟังก์ชันเมื่อคลิกปุ่มสมัครสมาชิก
-registerBtn.addEventListener('click', () => {
-  const username = usernameInput.value.trim();
-  const password = passwordInput.value.trim();
+registerModalBtn.addEventListener('click', () => {
+  registerModal.style.display = 'none';
+});
 
-  if (username === "" || password === "") {
-    // กรณีกรอกชื่อผู้ใช้หรือรหัสผ่านไม่ครบ
-    modalMessage.innerText = "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน";
-    modal.style.display = "block";
-    modalOk.onclick = () => { modal.style.display = "none"; };
+// Parse card param
+function getCardParam() {
+  const params = new URLSearchParams(window.location.search);
+  const card = params.get('card');
+  if (card && /^card\d{1,3}$/.test(card)) return card;
+  return null;
+}
+
+function showModal(msg, color = '#b21e2c') {
+  registerModalMsg.innerHTML = msg;
+  registerModalMsg.style.color = color;
+  registerModal.style.display = 'flex';
+}
+
+registerForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const username = document.getElementById('register-username').value.trim();
+  const password = registerPasswordInput.value;
+
+  if (!username || !password) {
+    showModal('⚠️ Please enter username and password.');
     return;
   }
 
-  // ดึงข้อมูลผู้ใช้เดิมทั้งหมด
-  const storedUsers = JSON.parse(localStorage.getItem('users') || "[]");
+  let users = [];
+  try { users = JSON.parse(localStorage.getItem('users') || '[]'); }
+  catch { users = []; }
 
-  // ตรวจสอบชื่อผู้ใช้ซ้ำ
-  const existingUser = storedUsers.find(u => u.username === username);
-  if (existingUser) {
-    // พบว่าชื่อผู้ใช้นี้ถูกใช้ไปแล้ว
-    modalMessage.innerText = "ชื่อผู้ใช้นี้ถูกใช้ไปแล้ว กรุณาเปลี่ยนชื่อใหม่";
-    modal.style.display = "block";
-    modalOk.onclick = () => {
-      modal.style.display = "none";
-    };
-  } else {
-    // สามารถใช้ชื่อผู้ใช้นี้ได้ - ทำการสมัคร
-    const newUser = { username: username, password: password };
-    storedUsers.push(newUser);
-    localStorage.setItem('users', JSON.stringify(storedUsers));
-    // สร้างรายการการ์ดว่างสำหรับผู้ใช้ใหม่
-    localStorage.setItem(username + "_cards", JSON.stringify([]));
-
-    // แจ้งสมัครสำเร็จ
-    modalMessage.innerText = "สมัครสมาชิกเสร็จสิ้น";
-    modal.style.display = "block";
-    modalOk.onclick = () => {
-      modal.style.display = "none";
-      // ย้อนกลับไปหน้าเข้าสู่ระบบให้ผู้ใช้ล็อกอิน
-      window.location.href = "login.html";
-    };
+  const exists = users.find(u => u.username === username);
+  if (exists) {
+    showModal('This username is already taken');
+    return;
   }
+
+  // Add user and create <username>_cards = []
+  users.push({ username, password });
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem(`${username}_cards`, JSON.stringify([]));
+
+  // Unlock card from QR link
+  const unlockCard = getCardParam();
+  if (unlockCard) {
+    localStorage.setItem(`${username}_cards`, JSON.stringify([unlockCard]));
+  }
+
+  showModal('Registration successful', '#299c34');
+  registerModalBtn.onclick = function() {
+    window.location.href = 'login.html';
+  };
 });
