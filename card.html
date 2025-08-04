@@ -1,1 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Card Collection</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="card.css">
+</head>
+<body>
+  <!-- ===== SIDEBAR HTML ===== -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon">
+      <span></span><span></span><span></span>
+    </span>
+  </button>
+  <nav id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+    </ul>
+  </nav>
+  <div id="overlay" class="overlay"></div>
+  <!-- ===== END SIDEBAR HTML ===== -->
+
+  <h1 class="page-title">Your Card Collection</h1>
+  <div id="cardGrid" class="grid"></div>
+  <div id="modal" class="modal"></div>
+
+  <script src="card.js"></script>
+</body>
+</html>
 
