@@ -1,3 +1,8 @@
+// หากผู้ใช้ล็อกอินอยู่แล้ว ให้ออกจากหน้านี้ไป card.html
+if (localStorage.getItem('currentUser')) {
+  window.location.href = "card.html";
+}
+
 // อ้างอิง element ของหน้าสมัครสมาชิก
 const usernameInput = document.getElementById('regUsername');
 const passwordInput = document.getElementById('regPassword');
@@ -29,7 +34,7 @@ registerBtn.addEventListener('click', () => {
   const password = passwordInput.value.trim();
 
   if (username === "" || password === "") {
-    // กรณีกรอกไม่ครบ
+    // กรณีกรอกชื่อผู้ใช้หรือรหัสผ่านไม่ครบ
     modalMessage.innerText = "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน";
     modal.style.display = "block";
     modalOk.onclick = () => { modal.style.display = "none"; };
