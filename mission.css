@@ -1,1 +1,226 @@
-
+/* mission.css */
+body {
+  margin: 0;
+  font-family: 'Sarabun', Arial, sans-serif;
+  background: #fff;
+  color: #222;
+  min-height: 100vh;
+}
+header {
+  display: flex;
+  align-items: center;
+  background: #d32f2f;
+  color: #fff;
+  padding: 0.7rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+#menuBtn {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: #fff;
+  margin-right: 1rem;
+  cursor: pointer;
+}
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 260px;
+  height: 100%;
+  background: #b71c1c;
+  color: #fff;
+  transition: left 0.25s;
+  z-index: 10;
+  padding-top: 1rem;
+}
+.sidebar.open {
+  left: 0;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+.sidebar-header h2 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+.close-btn {
+  font-size: 2rem;
+  cursor: pointer;
+}
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0 0 0;
+}
+.sidebar ul li {
+  margin: 1.2rem 0;
+}
+.sidebar ul li a {
+  color: #fff;
+  text-decoration: none;
+  padding: 0.5rem 1.3rem;
+  display: block;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+.sidebar ul li a.active,
+.sidebar ul li a:hover {
+  background: #fff;
+  color: #b71c1c;
+}
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.13);
+  z-index: 9;
+}
+.overlay.open {
+  display: block;
+}
+main {
+  max-width: 420px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+.mission-select h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.missions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  justify-items: center;
+}
+.mission-btn {
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 20px;
+  font-size: 1.2rem;
+  background: #eee;
+  color: #b71c1c;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.18s;
+}
+.mission-btn.locked {
+  background: #f5c3c3;
+  color: #bdbdbd;
+  cursor: not-allowed;
+}
+.mission-btn.done {
+  background: #c8e6c9;
+  color: #388e3c;
+}
+.mission-btn.today {
+  border: 2px solid #d32f2f;
+}
+.reset-info {
+  margin-top: 1.2rem;
+  color: #888;
+  text-align: center;
+}
+.quiz-zone, .quiz-finish {
+  margin: 2rem auto;
+  max-width: 410px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 18px rgba(211,47,47,0.10);
+  padding: 2rem 1.1rem 1.5rem 1.1rem;
+}
+.quiz-zone.hidden, .quiz-finish.hidden {
+  display: none;
+}
+.quiz-progress {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  color: #b71c1c;
+  margin-bottom: 0.6rem;
+}
+.quiz-question {
+  font-size: 1.22rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  min-height: 50px;
+}
+.quiz-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.4rem;
+}
+.choice-btn {
+  padding: 0.85rem 1.1rem;
+  border-radius: 14px;
+  background: #fff7f7;
+  border: 1.8px solid #d32f2f;
+  color: #d32f2f;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.13s, border 0.13s;
+}
+.choice-btn.selected, .choice-btn:active {
+  background: #ffd4d4;
+  border-color: #b71c1c;
+}
+.choice-btn.correct {
+  background: #c8e6c9;
+  border-color: #388e3c;
+  color: #388e3c;
+}
+.choice-btn.incorrect {
+  background: #ffcdd2;
+  border-color: #d32f2f;
+  color: #b71c1c;
+}
+.quiz-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.2rem;
+}
+.btn {
+  border: none;
+  border-radius: 11px;
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  background: #eee;
+  color: #d32f2f;
+  transition: background 0.18s;
+}
+.btn.primary {
+  background: #d32f2f;
+  color: #fff;
+}
+.btn:active {
+  opacity: 0.85;
+}
+.quiz-explain {
+  margin: 1.1rem 0 0.3rem 0;
+  color: #666;
+  background: #fff7f7;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  font-size: 0.99rem;
+}
+@media (max-width: 500px) {
+  main {
+    padding: 0.3rem;
+  }
+  .quiz-zone, .quiz-finish {
+    padding: 1.1rem 0.3rem 1.1rem 0.3rem;
+  }
+}
