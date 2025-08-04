@@ -1,182 +1,185 @@
-// mission.js (เวอร์ชั่นที่เหมือนตาม PDF, ระบบครบ 3 ด่าน/วัน + countdown, บันทึก progress)
+// ==== SIDEBAR JS (Universal, top of every JS file) ====
+document.addEventListener("DOMContentLoaded", () => {
+  // Login guard
+  if (!localStorage.getItem("currentUser")) {
+    window.location.href = "login.html";
+    return;
+  }
+  const toggleBtn = document.getElementById("menu-toggle");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  const closeBtn = document.getElementById("close-sidebar");
+  const menuItems = document.querySelectorAll("#sidebar .menu-item");
+  const logout = document.getElementById("logout-link");
 
-const MISSIONS = [
-  {
-    title: "ด่าน 1",
-    questions: [
-      {
-        question: "ข้อใดคืออาการที่บ่งบอกว่าอาจเกิด Stroke?",
-        choices: ["ตัวร้อน", "ปากเบี้ยว", "หิวข้าว", "ปวดท้อง"],
-        answer: 1,
-        explain: "อาการปากเบี้ยว คือสัญญาณเตือนสำคัญของ Stroke"
-      },
-      {
-        question: "เบอร์ฉุกเฉินในไทยสำหรับ Stroke คือ?",
-        choices: ["191", "112", "1669", "1234"],
-        answer: 2,
-        explain: "ควรโทร 1669 เพื่อขอรถพยาบาล"
-      },
-      {
-        question: "หากเจอผู้ป่วยพูดไม่ชัด ควร?",
-        choices: ["พากลับบ้าน", "ขอให้พูดใหม่", "รีบไปโรงพยาบาล", "ซื้อยาให้"],
-        answer: 2,
-        explain: "ต้องรีบไปโรงพยาบาลทันที"
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.add("open");
+    overlay.classList.add("active");
+  });
+  function closeSidebar() {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("active");
+  }
+  closeBtn.addEventListener("click", closeSidebar);
+  overlay.addEventListener("click", closeSidebar);
+  menuItems.forEach(item => {
+    item.addEventListener("click", (e) => {
+      if(item === logout) {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = "login.html";
+      } else {
+        closeSidebar();
       }
-    ]
-  },
-  // เพิ่มด่านที่ 2-12 ตามต้องการ
-];
+    });
+  });
 
-const TOTAL_MISSIONS = 12;
-const MISSIONS_PER_DAY = 3;
-const RESET_HOURS = 24;
+  // ==== END SIDEBAR JS ====
 
-const userKey = (key) => `sh_hero_${key}`;
+  // ======= Quiz Zone Logic =======
+  const user = localStorage.getItem("currentUser");
+  const levels = 10;
+  const quizPerDay = 3;
+  const dailyInfo = document.getElementById("dailyInfo");
+  const levelList = document.querySelector(".levels");
+  const modal = document.getElementById("quizModal");
 
-const $ = s => document.querySelector(s);
+  // State: <user>_mission (Boolean[levels]), <user>_quizDate, <user>_quizCount
+  let completed = JSON.parse(localStorage.getItem(user + "_mission") || "[]");
+  if (completed.length !== levels) completed = Array(levels).fill(false);
+  let quizDate = localStorage.getItem(user + "_quizDate") || "";
+  let quizCount = parseInt(localStorage.getItem(user + "_quizCount") || "0");
 
-const missionGrid = $('#missionGrid');
-const missionSelect = $('#mission-select');
-const quizBox = $('#quiz-box');
-const missionFinish = $('#mission-finish');
-const missionTitle = $('#missionTitle');
-const quizProgress = $('#quizProgress');
-const quizQuestion = $('#quizQuestion');
-const quizChoices = $('#quizChoices');
-const quizExplain = $('#quizExplain');
-const finishDetail = $('#finishDetail');
-const resetCountdown = $('#resetCountdown');
+  // Reset count if day changed
+  const today = new Date().toISOString().slice(0,10);
+  if (quizDate !== today) {
+    quizDate = today; quizCount = 0;
+    localStorage.setItem(user + "_quizDate", quizDate);
+    localStorage.setItem(user + "_quizCount", quizCount);
+  }
 
-let currentMission = null;
-let currentQ = 0;
-let selected = null;
+  updateUI();
 
-function getProgress() {
-  return JSON.parse(localStorage.getItem(userKey('missions'))) || { finished: [], lastPlayed: null };
-}
-function setProgress(data) {
-  localStorage.setItem(userKey('missions'), JSON.stringify(data));
-}
-
-// countdown to reset
-function showCountdown() {
-  const prog = getProgress();
-  if (!prog.lastPlayed) return resetCountdown.textContent = "";
-  const last = new Date(prog.lastPlayed);
-  const now = new Date();
-  const diff = now - last;
-  if (diff > RESET_HOURS * 3600 * 1000) return resetCountdown.textContent = "";
-  const remain = RESET_HOURS * 3600 * 1000 - diff;
-  const h = Math.floor(remain/3600000), m = Math.floor((remain%3600000)/60000), s = Math.floor((remain%60000)/1000);
-  resetCountdown.textContent = `สามารถเล่นด่านใหม่ได้อีกครั้งใน ${h} ชั่วโมง ${m} นาที ${s} วินาที`;
-  setTimeout(showCountdown, 1000);
-}
-
-// แสดงปุ่มด่าน
-function renderMissionGrid() {
-  missionGrid.innerHTML = "";
-  const prog = getProgress();
-  let unlocked = MISSIONS_PER_DAY;
-  for (let i=0;i<TOTAL_MISSIONS;i++) {
-    const btn = document.createElement('button');
-    btn.className = 'mission-btn';
-    btn.textContent = i+1;
-    if (prog.finished.includes(i)) {
-      btn.classList.add("done");
-      btn.disabled = true;
-    } else if (unlocked > 0) {
-      btn.classList.add("active");
-      btn.onclick = ()=> startMission(i);
-      unlocked--;
-    } else {
-      btn.classList.add("locked");
-      btn.disabled = true;
+  function updateUI() {
+    dailyInfo.textContent = `${quizCount} / ${quizPerDay} quizzes today`;
+    // Build timeline
+    levelList.innerHTML = "";
+    let firstLockedIdx = completed.findIndex(x=>!x);
+    if (firstLockedIdx === -1) firstLockedIdx = levels; // all completed
+    for (let i=0;i<levels;++i) {
+      let li = document.createElement("li");
+      li.className = "level";
+      if (completed[i]) li.classList.add("completed");
+      else if (i === firstLockedIdx && quizCount < quizPerDay) li.classList.add("active");
+      else li.classList.add("locked");
+      li.innerHTML = `<div class="level-circle">${i+1}</div>
+        <div class="level-label">Level ${i+1}</div>`;
+      if (li.classList.contains("active")) {
+        li.onclick = () => startQuiz(i);
+      }
+      levelList.appendChild(li);
     }
-    missionGrid.appendChild(btn);
   }
-  showCountdown();
-}
 
-function startMission(idx) {
-  currentMission = idx;
-  currentQ = 0;
-  selected = null;
-  missionSelect.style.display = 'none';
-  quizBox.classList.remove('hidden');
-  renderQuestion();
-}
-
-function renderQuestion() {
-  const m = MISSIONS[currentMission] || MISSIONS[0];
-  const q = m.questions[currentQ];
-  missionTitle.textContent = m.title;
-  quizProgress.textContent = `คำถาม ${currentQ+1}/${m.questions.length}`;
-  quizQuestion.textContent = q.question;
-  quizChoices.innerHTML = "";
-  quizExplain.classList.add('hidden');
-  q.choices.forEach((c,i)=>{
-    const btn = document.createElement('button');
-    btn.className = "choice-btn";
-    btn.textContent = c;
-    btn.onclick = ()=> selectChoice(i);
-    if (selected === i) btn.classList.add('selected');
-    quizChoices.appendChild(btn);
-  });
-  $('#backBtn').disabled = currentQ===0;
-  $('#nextBtn').disabled = true;
-  $('#checkBtn').disabled = false;
-}
-
-function selectChoice(idx) {
-  selected = idx;
-  Array.from(quizChoices.children).forEach((b,i)=>b.classList.toggle('selected', i===idx));
-  $('#nextBtn').disabled = true;
-  $('#checkBtn').disabled = false;
-}
-
-function checkAnswer() {
-  const m = MISSIONS[currentMission] || MISSIONS[0];
-  const q = m.questions[currentQ];
-  Array.from(quizChoices.children).forEach((b,i)=>{
-    b.classList.remove('selected');
-    if (i === q.answer) b.classList.add('correct');
-    else if (selected === i) b.classList.add('incorrect');
-  });
-  quizExplain.textContent = q.explain;
-  quizExplain.classList.remove('hidden');
-  $('#nextBtn').disabled = false;
-  $('#checkBtn').disabled = true;
-}
-
-function nextQ() {
-  const m = MISSIONS[currentMission] || MISSIONS[0];
-  if (currentQ < m.questions.length - 1) {
-    currentQ++; selected = null; renderQuestion();
-  } else finishMission();
-}
-
-function finishMission() {
-  // save progress
-  const prog = getProgress();
-  if (!prog.finished.includes(currentMission)) prog.finished.push(currentMission);
-  prog.lastPlayed = new Date();
-  setProgress(prog);
-  quizBox.classList.add('hidden');
-  missionFinish.classList.remove('hidden');
-  finishDetail.textContent = `คุณผ่านด่านที่ ${currentMission+1} แล้ว! ขณะนี้ผ่านแล้ว ${prog.finished.length}/${TOTAL_MISSIONS} ด่าน`;
-  renderMissionGrid();
-}
-
-$('#backBtn').onclick = ()=>{
-  if (currentQ === 0) {
-    quizBox.classList.add('hidden');
-    missionSelect.style.display = '';
-  } else {
-    currentQ--; selected = null; renderQuestion();
+  function showModal(msg, cb) {
+    modal.innerHTML = `<div class="modal-content">${msg}<br>
+      <button class="modal-close">OK</button></div>`;
+    modal.classList.add("active");
+    modal.querySelector(".modal-close").onclick = () => {
+      modal.classList.remove("active");
+      if(cb) cb();
+    };
   }
-};
-$('#nextBtn').onclick = nextQ;
-$('#checkBtn').onclick = checkAnswer;
 
-// เริ่มต้น
-renderMissionGrid();
+  // === Sample Stroke Quiz Data ===
+  const quizBank = [
+    {
+      q: "ข้อใดคืออาการเบื้องต้นของโรคหลอดเลือดสมอง?",
+      opts: ["ปากเบี้ยวพูดไม่ชัด", "ปวดหัว", "เจ็บท้อง", "ปวดหลัง"],
+      answer: 0
+    },
+    {
+      q: "ถ้าพบคนหมดสติ ควรทำอย่างไร?",
+      opts: ["โทร 1669", "ให้น้ำ", "จับให้นอนตะแคง", "นวดหลัง"],
+      answer: 0
+    },
+    {
+      q: "ตัวเลขฉุกเฉินช่วยชีวิตในไทยคืออะไร?",
+      opts: ["1669", "1193", "191", "1234"],
+      answer: 0
+    },
+    {
+      q: "อาการใดที่ควรสงสัยว่าเกิด Stroke?",
+      opts: ["พูดไม่ชัด", "ชาตามใบหน้า", "อ่อนแรงแขนขา", "ทุกข้อ"],
+      answer: 3
+    },
+    {
+      q: "วิธีป้องกันโรคหลอดเลือดสมองข้อใดถูกต้อง?",
+      opts: ["งดสูบบุหรี่", "ออกกำลังกาย", "ควบคุมความดัน", "ทุกข้อ"],
+      answer: 3
+    }
+  ];
+
+  function getRandomQuizSet() {
+    // Pick 3 unique questions
+    let idx = [...Array(quizBank.length).keys()].sort(()=>Math.random()-0.5).slice(0,3);
+    return idx.map(i=>quizBank[i]);
+  }
+
+  function startQuiz(idx) {
+    if (quizCount >= quizPerDay) {
+      showModal("You've reached today's limit – come back tomorrow!");
+      return;
+    }
+    let quizSet = getRandomQuizSet();
+    let curr = 0, correct = 0, userAns = [];
+
+    function renderQ() {
+      let q = quizSet[curr];
+      modal.innerHTML = `<div class="modal-content">
+        <div class="quiz-q">Q${curr+1}/3: ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((op,i)=>
+            `<div class="quiz-opt" data-idx="${i}">${op}</div>`).join("")}
+        </div>
+        <div class="quiz-actions">
+          ${curr>0?'<button class="modal-close">Back</button>':''}
+          <button id="submitAns">Submit</button>
+        </div>
+      </div>`;
+      modal.classList.add("active");
+      let selected = -1;
+      document.querySelectorAll(".quiz-opt").forEach(opt=>{
+        opt.onclick = ()=> {
+          document.querySelectorAll(".quiz-opt").forEach(o=>o.classList.remove("selected"));
+          opt.classList.add("selected"); selected = parseInt(opt.dataset.idx);
+        };
+      });
+      document.getElementById("submitAns").onclick = ()=>{
+        if (selected === -1) return;
+        userAns[curr] = selected;
+        if (selected === q.answer) correct++;
+        if (curr < 2) { curr++; renderQ(); }
+        else {
+          if (correct===3) {
+            completed[idx]=true;
+            quizCount++;
+            localStorage.setItem(user + "_mission", JSON.stringify(completed));
+            localStorage.setItem(user + "_quizDate", today);
+            localStorage.setItem(user + "_quizCount", quizCount);
+            updateUI();
+            showModal("ยอดเยี่ยม! คุณผ่าน Level นี้แล้ว");
+          } else {
+            showModal(`ต้องตอบถูกทั้งหมด! คุณได้ ${correct}/3<br>โปรดลองอีกครั้ง`);
+          }
+        }
+      };
+      if (curr>0) {
+        document.querySelector(".modal-close").onclick = ()=>{
+          curr--; renderQ();
+        };
+      }
+    }
+    renderQ();
+  }
+});
