@@ -3,62 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stroke Hero - Quiz Zone</title>
+  <title>Quiz zone - Stroke Hero</title>
+  <link rel="stylesheet" href="sidebar.css">
   <link rel="stylesheet" href="mission.css">
 </head>
 <body>
-  <!-- Slidebar ปุ่ม ☰ -->
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <span class="close-btn" id="closeSidebar">&times;</span>
-      <h2>เมนู</h2>
+<!-- ===== Sidebar (คัดลอกชุดที่คุณให้มาได้เลย) ===== -->
+<button id="menu-toggle" aria-label="เปิดเมนูนำทาง">&#9776;</button>
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <span>เมนูหลัก</span>
+    <button id="close-sidebar" aria-label="ปิดเมนู">&times;</button>
+  </div>
+  <ul>
+    <li><a href="card.html" class="menu-item">คอลเลกชันของฉัน</a></li>
+    <li><a href="scan.html" class="menu-item">สแกนการ์ด</a></li>
+    <li><a href="mission.html" class="menu-item active">โซนตอบคำถาม</a></li>
+    <li><a href="#" class="menu-item" id="logout-link">ออกจากระบบ</a></li>
+  </ul>
+</nav>
+<div id="overlay"></div>
+<!-- ===== end sidebar ===== -->
+
+<main id="main">
+  <h1 class="title-quizzone">Quiz zone</h1>
+
+  <!-- Grid ปุ่มเลือกด่าน 1–12 -->
+  <section id="mission-select">
+    <div class="mission-grid" id="missionGrid"></div>
+    <div class="reset-countdown" id="resetCountdown"></div>
+  </section>
+
+  <!-- กล่อง quiz แต่ละด่าน -->
+  <section id="quiz-box" class="hidden">
+    <div class="quiz-header">
+      <span id="missionTitle"></span>
+      <span id="quizProgress"></span>
     </div>
-    <ul>
-      <li><a href="card.html">My card collection</a></li>
-      <li><a href="scan.html">Scan card</a></li>
-      <li><a href="mission.html" class="active">Quiz zone</a></li>
-      <li><a href="#" id="logoutBtn">Logout</a></li>
-    </ul>
-  </nav>
-  <div class="overlay" id="overlay"></div>
-  
-  <header>
-    <button id="menuBtn">☰</button>
-    <h1>Quiz zone</h1>
-  </header>
-  
-  <main>
-    <!-- เลือกด่าน -->
-    <section id="mission-select" class="mission-select">
-      <h2>เลือกด่าน</h2>
-      <div class="missions">
-        <!-- จะเติมแต่ละด่านด้วย JS -->
-      </div>
-      <div class="reset-info" id="resetInfo"></div>
-    </section>
-    <!-- โซน Quiz -->
-    <section id="quiz-zone" class="quiz-zone hidden">
-      <div class="quiz-progress">
-        <span id="quizTitle"></span>
-        <span id="quizProgress"></span>
-      </div>
-      <div id="quizQuestion" class="quiz-question"></div>
-      <div id="quizChoices" class="quiz-choices"></div>
-      <div id="quizExplain" class="quiz-explain hidden"></div>
-      <div class="quiz-actions">
-        <button id="backBtn" class="btn">Back</button>
-        <button id="nextBtn" class="btn">Next</button>
-        <button id="submitBtn" class="btn primary">ตรวจคำตอบ</button>
-      </div>
-    </section>
-    <!-- Finish Zone -->
-    <section id="quiz-finish" class="quiz-finish hidden">
+    <div class="quiz-question" id="quizQuestion"></div>
+    <div class="quiz-choices" id="quizChoices"></div>
+    <div class="quiz-explain hidden" id="quizExplain"></div>
+    <div class="quiz-btns">
+      <button id="backBtn" class="btn">Back</button>
+      <button id="nextBtn" class="btn">Next</button>
+      <button id="checkBtn" class="btn btn-primary">ตรวจคำตอบ</button>
+    </div>
+  </section>
+
+  <!-- กล่องสรุปหลังผ่านด่าน -->
+  <section id="mission-finish" class="hidden">
+    <div class="finish-msg">
       <h2>เยี่ยมมาก!</h2>
-      <p id="finishText"></p>
-      <button onclick="location.href='mission.html'">กลับไป Quiz zone</button>
-      <button onclick="location.href='card.html'">ไปที่คอลเลคชัน</button>
-    </section>
-  </main>
-  <script src="mission.js"></script>
+      <div id="finishDetail"></div>
+      <button class="btn btn-primary" onclick="location.href='mission.html'">กลับไป Quiz zone</button>
+      <button class="btn" onclick="location.href='card.html'">ไปคอลเลคชัน</button>
+    </div>
+  </section>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="mission.js"></script>
 </body>
 </html>
