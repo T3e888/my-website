@@ -1,67 +1,35 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz zone - Stroke Hero</title>
-  <link rel="stylesheet" href="sidebar.css">
+  <title>Quiz Zone</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="mission.css">
 </head>
 <body>
-<!-- ===== Sidebar (คัดลอกชุดที่คุณให้มาได้เลย) ===== -->
-<button id="menu-toggle" aria-label="เปิดเมนูนำทาง">&#9776;</button>
-<nav id="sidebar">
-  <div class="sidebar-header">
-    <span>เมนูหลัก</span>
-    <button id="close-sidebar" aria-label="ปิดเมนู">&times;</button>
-  </div>
-  <ul>
-    <li><a href="card.html" class="menu-item">คอลเลกชันของฉัน</a></li>
-    <li><a href="scan.html" class="menu-item">สแกนการ์ด</a></li>
-    <li><a href="mission.html" class="menu-item active">โซนตอบคำถาม</a></li>
-    <li><a href="#" class="menu-item" id="logout-link">ออกจากระบบ</a></li>
-  </ul>
-</nav>
-<div id="overlay"></div>
-<!-- ===== end sidebar ===== -->
+  <!-- ===== SIDEBAR HTML ===== -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon">
+      <span></span><span></span><span></span>
+    </span>
+  </button>
+  <nav id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+    </ul>
+  </nav>
+  <div id="overlay" class="overlay"></div>
+  <!-- ===== END SIDEBAR HTML ===== -->
 
-<main id="main">
-  <h1 class="title-quizzone">Quiz zone</h1>
+  <h1 class="page-title">Quiz Zone</h1>
+  <div id="dailyInfo">0 / 3 quizzes today</div>
+  <ul class="levels"></ul>
+  <div id="quizModal" class="modal"></div>
 
-  <!-- Grid ปุ่มเลือกด่าน 1–12 -->
-  <section id="mission-select">
-    <div class="mission-grid" id="missionGrid"></div>
-    <div class="reset-countdown" id="resetCountdown"></div>
-  </section>
-
-  <!-- กล่อง quiz แต่ละด่าน -->
-  <section id="quiz-box" class="hidden">
-    <div class="quiz-header">
-      <span id="missionTitle"></span>
-      <span id="quizProgress"></span>
-    </div>
-    <div class="quiz-question" id="quizQuestion"></div>
-    <div class="quiz-choices" id="quizChoices"></div>
-    <div class="quiz-explain hidden" id="quizExplain"></div>
-    <div class="quiz-btns">
-      <button id="backBtn" class="btn">Back</button>
-      <button id="nextBtn" class="btn">Next</button>
-      <button id="checkBtn" class="btn btn-primary">ตรวจคำตอบ</button>
-    </div>
-  </section>
-
-  <!-- กล่องสรุปหลังผ่านด่าน -->
-  <section id="mission-finish" class="hidden">
-    <div class="finish-msg">
-      <h2>เยี่ยมมาก!</h2>
-      <div id="finishDetail"></div>
-      <button class="btn btn-primary" onclick="location.href='mission.html'">กลับไป Quiz zone</button>
-      <button class="btn" onclick="location.href='card.html'">ไปคอลเลคชัน</button>
-    </div>
-  </section>
-</main>
-
-<script src="sidebar.js"></script>
-<script src="mission.js"></script>
+  <script src="mission.js"></script>
 </body>
 </html>
