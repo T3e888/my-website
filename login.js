@@ -1,90 +1,80 @@
-// อ่าน query string เพื่อตรวจสอบว่ามีการ์ดที่ต้องปลดล็อกหรือไม่
-const params = new URLSearchParams(window.location.search);
-const cardToUnlock = params.get('card');  // เช่น "card5" ถ้ามี ?card=card5
-// หากผู้ใช้ล็อกอินอยู่แล้ว ให้ปลดล็อกการ์ด (ถ้ามี query) และไปยังหน้า card.html
-const currentUser = localStorage.getItem('currentUser');
-if (currentUser) {
-  if (cardToUnlock) {
-    const cardListKey = currentUser + "_cards";
-    const unlockedCards = JSON.parse(localStorage.getItem(cardListKey) || "[]");
-    if (!unlockedCards.includes(cardToUnlock)) {
-      unlockedCards.push(cardToUnlock);
-      localStorage.setItem(cardListKey, JSON.stringify(unlockedCards));
-    }
-  }
-  window.location.href = "card.html";
+// Redirect if already logged in
+if (localStorage.getItem('currentUser')) {
+  window.location.href = 'card.html';
 }
 
-// อ้างอิง element ที่ต้องใช้งาน
-const usernameInput = document.getElementById('loginUsername');
-const passwordInput = document.getElementById('loginPassword');
-const toggleIcon = document.getElementById('toggleLoginPassword');
-const loginBtn = document.getElementById('loginBtn');
+// DOM elements
+const loginForm = document.getElementById('loginForm');
+const loginModal = document.getElementById('loginModal');
+const loginModalMsg = document.getElementById('loginModalMsg');
+const loginModalBtn = document.getElementById('loginModalBtn');
+const toggleLoginPassword = document.getElementById('toggleLoginPassword');
+const loginPasswordInput = document.getElementById('login-password');
 
-// อ้างอิงองค์ประกอบของ Modal
-const modal = document.getElementById('modal');
-const modalMessage = document.getElementById('modalMessage');
-const modalOk = document.getElementById('modalOk');
-
-// ฟังก์ชันสลับแสดง/ซ่อนรหัสผ่าน
-toggleIcon.addEventListener('click', () => {
-  // เช็คประเภทปัจจุบันของช่องรหัสผ่าน
-  const currentType = passwordInput.getAttribute('type');
-  if (currentType === 'password') {
-    // เปลี่ยนเป็นชนิด text เพื่อแสดงรหัส
-    passwordInput.setAttribute('type', 'text');
-    // เปลี่ยนไอคอนเป็นรูปตาขีดทับ (แสดงรหัส)
-    toggleIcon.classList.remove('fa-eye');
-    toggleIcon.classList.add('fa-eye-slash');
-  } else {
-    // เปลี่ยนกลับเป็นชนิด password เพื่อซ่อนรหัส
-    passwordInput.setAttribute('type', 'password');
-    // เปลี่ยนไอคอนกลับเป็นรูปตาปกติ (ซ่อนรหัส)
-    toggleIcon.classList.remove('fa-eye-slash');
-    toggleIcon.classList.add('fa-eye');
-  }
+// Show/hide password
+toggleLoginPassword.addEventListener('click', () => {
+  const isHidden = loginPasswordInput.type === 'password';
+  loginPasswordInput.type = isHidden ? 'text' : 'password';
+  toggleLoginPassword.querySelector('i').classList.toggle('fa-eye-slash', isHidden);
+  toggleLoginPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
 });
 
-// ฟังก์ชันเมื่อกดปุ่มเข้าสู่ระบบ
-loginBtn.addEventListener('click', () => {
-  const username = usernameInput.value.trim();
-  const password = passwordInput.value.trim();
+// Modal close
+loginModalBtn.addEventListener('click', () => {
+  loginModal.style.display = 'none';
+});
 
-  if (username === "" || password === "") {
-    // กรณีไม่ได้กรอกชื่อผู้ใช้และรหัสผ่านครบ
-    modalMessage.innerText = "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน";
-    modal.style.display = "block";
-    modalOk.onclick = () => { modal.style.display = "none"; };
+// Parse card param
+function getCardParam() {
+  const params = new URLSearchParams(window.location.search);
+  const card = params.get('card');
+  if (card && /^card\d{1,3}$/.test(card)) return card;
+  return null;
+}
+
+function showModal(msg, color = '#b21e2c') {
+  loginModalMsg.innerHTML = msg;
+  loginModalMsg.style.color = color;
+  loginModal.style.display = 'flex';
+}
+
+loginForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = loginPasswordInput.value;
+
+  if (!username || !password) {
+    showModal('⚠️ Please enter username and password.');
+    return;
+  }
+  let users = [];
+  try { users = JSON.parse(localStorage.getItem('users') || '[]'); }
+  catch { users = []; }
+
+  const user = users.find(u => u.username === username && u.password === password);
+
+  if (!user) {
+    showModal('❌ Invalid username or password');
     return;
   }
 
-  // ดึงข้อมูลผู้ใช้ทั้งหมดจาก localStorage (หรือ [] ถ้ายังไม่มี)
-  const storedUsers = JSON.parse(localStorage.getItem('users') || "[]");
+  // Save currentUser
+  localStorage.setItem('currentUser', username);
 
-  // ค้นหาผู้ใช้ที่ username/password ตรงกับที่กรอกเข้ามา
-  const matchedUser = storedUsers.find(u => u.username === username && u.password === password);
-
-  if (!matchedUser) {
-    // ไม่พบบัญชีที่ตรง - แจ้งเตือนล็อกอินไม่สำเร็จ
-    modalMessage.innerText = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
-    modal.style.display = "block";
-    modalOk.onclick = () => {
-      modal.style.display = "none";
-    };
-  } else {
-    // พบข้อมูลผู้ใช้ - ล็อกอินสำเร็จ
-    localStorage.setItem('currentUser', username);  // บันทึกชื่อผู้ใช้ที่ล็อกอินปัจจุบัน
-
-    // หากมีการ์ดที่ต้องปลดล็อก ให้บันทึกลงในรายการการ์ดของผู้ใช้
-    if (cardToUnlock) {
-      const cardListKey = username + "_cards";
-      const unlockedCards = JSON.parse(localStorage.getItem(cardListKey) || "[]");
-      if (!unlockedCards.includes(cardToUnlock)) {
-        unlockedCards.push(cardToUnlock);
-        localStorage.setItem(cardListKey, JSON.stringify(unlockedCards));
-      }
+  // Unlock card from QR link
+  const unlockCard = getCardParam();
+  if (unlockCard) {
+    const key = `${username}_cards`;
+    let cards = [];
+    try { cards = JSON.parse(localStorage.getItem(key) || '[]'); }
+    catch { cards = []; }
+    if (!cards.includes(unlockCard)) {
+      cards.push(unlockCard);
+      localStorage.setItem(key, JSON.stringify(cards));
     }
-    // ไปยังหน้า card.html ทันทีหลังล็อกอินสำเร็จ
-    window.location.href = "card.html";
   }
+  showModal('✅ Login successful', '#299c34');
+  loginModalBtn.onclick = function() {
+    window.location.href = 'card.html';
+  };
 });
