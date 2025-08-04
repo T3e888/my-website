@@ -1,41 +1,35 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register</title>
-  <!-- เชื่อมต่อไฟล์ CSS และ Font Awesome เช่นเดียวกับหน้า login -->
-  <link rel="stylesheet" href="register.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Create account</title>
+  <link rel="stylesheet" href="register.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 </head>
 <body>
-  <div class="container">
-    <h2>สมัครสมาชิก</h2>
-    <form>
-      <label for="regUsername">ชื่อผู้ใช้</label>
-      <input type="text" id="regUsername" required />
-
-      <label for="regPassword">รหัสผ่าน</label>
-      <div class="password-container">
-        <input type="password" id="regPassword" required />
-        <i class="fa fa-eye toggle-password" id="toggleRegPassword" title="แสดง/ซ่อนรหัสผ่าน"></i>
+  <div class="bg-gradient"></div>
+  <div class="auth-card">
+    <h1>Create account</h1>
+    <form id="registerForm" autocomplete="off">
+      <input type="text" id="register-username" placeholder="Username" autocomplete="username">
+      <div class="password-row">
+        <input type="password" id="register-password" placeholder="Password" autocomplete="new-password">
+        <button type="button" id="toggleRegisterPassword" tabindex="-1"><i class="fa fa-eye"></i></button>
       </div>
-
-      <button type="button" id="registerBtn">สมัครสมาชิก</button>
+      <button type="submit" class="main-btn">Register</button>
     </form>
-    <p class="switch-page">
-      มีบัญชีอยู่แล้ว? <a href="login.html">เข้าสู่ระบบ</a>
-    </p>
-  </div>
-
-  <!-- Modal โครงสร้างเหมือนกับหน้า login -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <p id="modalMessage"></p>
-      <button id="modalOk">ตกลง</button>
+    <div class="auth-link">
+      Already have an account?
+      <a href="login.html">Login</a>
     </div>
   </div>
-
+  <div id="registerModal" class="modal">
+    <div class="modal-content">
+      <span id="registerModalMsg"></span>
+      <button id="registerModalBtn">OK</button>
+    </div>
+  </div>
   <script src="register.js"></script>
 </body>
 </html>
