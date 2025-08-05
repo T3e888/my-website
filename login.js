@@ -3,6 +3,7 @@ if (localStorage.getItem('currentUser')) {
   window.location.href = 'card.html';
 }
 
+// DOM elements
 const loginForm = document.getElementById('loginForm');
 const loginModal = document.getElementById('loginModal');
 const loginModalMsg = document.getElementById('loginModalMsg');
@@ -18,11 +19,11 @@ toggleLoginPassword.addEventListener('click', () => {
   toggleLoginPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
 });
 
+// Modal close
 loginModalBtn.addEventListener('click', () => {
   loginModal.style.display = 'none';
 });
 
-// Parse card param
 function getCardParam() {
   const params = new URLSearchParams(window.location.search);
   const card = params.get('card');
@@ -41,20 +42,29 @@ loginForm.addEventListener('submit', function(e) {
   const username = document.getElementById('login-username').value.trim();
   const password = loginPasswordInput.value;
 
-  // Username & password must be at least 8 chars
+  // Minimum length validation
   if (!username || !password || username.length < 8 || password.length < 8) {
-    showModal('ใส่ข้อมูลไม่ครบตามกำหนด');
+    showModal('Please fill in all fields and use at least 8 characters for both username and password.');
     return;
   }
 
   let users = [];
-  try { users = JSON.parse(localStorage.getItem('users') || '[]'); }
-  catch { users = []; }
+  try {
+    users = JSON.parse(localStorage.getItem('users') || '[]');
+  } catch {
+    users = [];
+  }
 
-  const user = users.find(u => u.username === username && u.password === password);
+  // User lookup
+  const user = users.find(u => u.username === username);
 
   if (!user) {
-    showModal('❌ Invalid username or password');
+    showModal('This username does not exist in our system. Please check your username or register a new account.');
+    return;
+  }
+
+  if (user.password !== password) {
+    showModal('Incorrect password. Please try again.');
     return;
   }
 
