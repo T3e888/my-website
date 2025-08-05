@@ -148,14 +148,14 @@ input[type="text"]:focus, input[type="password"]:focus {
   box-shadow: 0 8px 48px #c00a1b2a;
 }
 
-#loginModalMsg {
+#loginModalMsg, #registerModalMsg {
   display: block;
   margin-bottom: 1.5rem;
   font-size: 1.16rem;
   color: #b21e2c;
 }
 
-#loginModalBtn {
+#loginModalBtn, #registerModalBtn {
   background: #d83841;
   color: #fff;
   border: none;
@@ -166,7 +166,7 @@ input[type="text"]:focus, input[type="password"]:focus {
   transition: background 0.16s;
 }
 
-#loginModalBtn:hover { background: #bf2532; }
+#loginModalBtn:hover, #registerModalBtn:hover { background: #bf2532; }
 
 @media (max-width: 600px) {
   .auth-card {
@@ -178,4 +178,4 @@ input[type="text"]:focus, input[type="password"]:focus {
     border-radius: 11px;
   }
   h1 { font-size: 2rem; }
-  }
+}
