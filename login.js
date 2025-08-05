@@ -3,7 +3,6 @@ if (localStorage.getItem('currentUser')) {
   window.location.href = 'card.html';
 }
 
-// DOM elements
 const loginForm = document.getElementById('loginForm');
 const loginModal = document.getElementById('loginModal');
 const loginModalMsg = document.getElementById('loginModalMsg');
@@ -19,7 +18,6 @@ toggleLoginPassword.addEventListener('click', () => {
   toggleLoginPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
 });
 
-// Modal close
 loginModalBtn.addEventListener('click', () => {
   loginModal.style.display = 'none';
 });
@@ -43,10 +41,12 @@ loginForm.addEventListener('submit', function(e) {
   const username = document.getElementById('login-username').value.trim();
   const password = loginPasswordInput.value;
 
-  if (!username || !password) {
-    showModal('⚠️ Please enter username and password.');
+  // Username & password must be at least 8 chars
+  if (!username || !password || username.length < 8 || password.length < 8) {
+    showModal('ใส่ข้อมูลไม่ครบตามกำหนด');
     return;
   }
+
   let users = [];
   try { users = JSON.parse(localStorage.getItem('users') || '[]'); }
   catch { users = []; }
@@ -58,7 +58,6 @@ loginForm.addEventListener('submit', function(e) {
     return;
   }
 
-  // Save currentUser
   localStorage.setItem('currentUser', username);
 
   // Unlock card from QR link
