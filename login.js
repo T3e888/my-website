@@ -3,7 +3,6 @@ if (localStorage.getItem('currentUser')) {
   window.location.href = 'card.html';
 }
 
-// DOM elements
 const loginForm = document.getElementById('loginForm');
 const loginModal = document.getElementById('loginModal');
 const loginModalMsg = document.getElementById('loginModalMsg');
