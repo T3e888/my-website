@@ -10,6 +10,7 @@ const registerModalBtn = document.getElementById('registerModalBtn');
 const toggleRegisterPassword = document.getElementById('toggleRegisterPassword');
 const registerPasswordInput = document.getElementById('register-password');
 
+// Show/hide password
 toggleRegisterPassword.addEventListener('click', () => {
   const isHidden = registerPasswordInput.type === 'password';
   registerPasswordInput.type = isHidden ? 'text' : 'password';
@@ -40,8 +41,9 @@ registerForm.addEventListener('submit', function(e) {
   const username = document.getElementById('register-username').value.trim();
   const password = registerPasswordInput.value;
 
-  if (!username || !password) {
-    showModal('⚠️ Please enter username and password.');
+  // Username & password must be at least 8 chars
+  if (!username || !password || username.length < 8 || password.length < 8) {
+    showModal('ใส่ข้อมูลไม่ครบตามกำหนด');
     return;
   }
 
@@ -55,7 +57,6 @@ registerForm.addEventListener('submit', function(e) {
     return;
   }
 
-  // Add user and create <username>_cards = []
   users.push({ username, password });
   localStorage.setItem('users', JSON.stringify(users));
   localStorage.setItem(`${username}_cards`, JSON.stringify([]));
