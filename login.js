@@ -1,5 +1,6 @@
-// Redirect if already logged in
-if (localStorage.getItem('currentUser')) {
+// Redirect if already logged in, but NOT if arriving with card param (for unlock QR)
+const params = new URLSearchParams(window.location.search);
+if (localStorage.getItem('currentUser') && !params.get('card')) {
   window.location.href = 'card.html';
 }
 
@@ -28,7 +29,7 @@ loginModalBtn.addEventListener('click', () => {
 function getCardParam() {
   const params = new URLSearchParams(window.location.search);
   const card = params.get('card');
-  if (card && /^card\d{1,3}$/.test(card)) return card;
+  if (card && /^card([1-9]|1[0-9]|2[0-5])$/.test(card)) return card;
   return null;
 }
 
@@ -75,6 +76,12 @@ loginForm.addEventListener('submit', function(e) {
   }
   showModal('✅ Login successful', '#299c34');
   loginModalBtn.onclick = function() {
+    // Optional: clean the URL after unlocking
+    if (window.history.replaceState) {
+      const url = new URL(window.location);
+      url.searchParams.delete('card');
+      window.history.replaceState({}, document.title, url.pathname);
+    }
     window.location.href = 'card.html';
   };
 });
