@@ -1,45 +1,8 @@
-firebase.auth().onAuthStateChanged(function(user) {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  // Sidebar logic
-  const toggleBtn = document.getElementById("menu-toggle");
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
-  const closeBtn = document.getElementById("close-sidebar");
-  const menuItems = document.querySelectorAll("#sidebar .menu-item");
-  const logout = document.getElementById("logout-link");
-
-  toggleBtn.addEventListener("click", () => {
-    sidebar.classList.add("open");
-    overlay.classList.add("active");
-  });
-  function closeSidebar() {
-    sidebar.classList.remove("open");
-    overlay.classList.remove("active");
-  }
-  closeBtn.addEventListener("click", closeSidebar);
-  overlay.addEventListener("click", closeSidebar);
-
-  logout.addEventListener("click", function(e) {
-    e.preventDefault();
-    firebase.auth().signOut().then(() => {
-      window.location.href = "login.html";
-    });
-  });
-  menuItems.forEach(item => {
-    if (item !== logout) {
-      item.addEventListener("click", closeSidebar);
-    }
-  });
-
-  // User-specific storage key
-  const userKey = user.email.replace(/[^a-zA-Z0-9]/g, '_');
-  let unlocked = JSON.parse(localStorage.getItem(userKey + "_cards") || "[]");
-
-  // --- QR Scan Logic ---
+auth.onAuthStateChanged(async function(user) {
+  if (!user) return location.href = "login.html";
+  const docRef = db.collection('users').doc(user.uid);
+  let userData = (await docRef.get()).data();
+  let unlocked = userData.cards || [];
   const video = document.getElementById("camera");
   const fileInput = document.getElementById("fileInput");
   const modal = document.getElementById("modal");
@@ -57,14 +20,13 @@ firebase.auth().onAuthStateChanged(function(user) {
   function unlockCard(cardID) {
     if (!unlocked.includes(cardID)) {
       unlocked.push(cardID);
-      localStorage.setItem(userKey + "_cards", JSON.stringify(unlocked));
-      showModal(`Unlocked card ${cardID.replace("card", "")}!`, () => {
-        location.href = "card.html";
-      });
+      docRef.update({ cards: unlocked }).then(() =>
+        showModal(`Unlocked card ${cardID.replace("card", "")}!`, () =>
+          location.href = "card.html"
+        )
+      );
     } else {
-      showModal("Card already unlocked!", () => {
-        location.href = "card.html";
-      });
+      showModal("Card already unlocked!", () => location.href = "card.html");
     }
   }
 
@@ -72,7 +34,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     return /^card([1-9]|1[0-9]|2[0-5])$/.test(s);
   }
 
-  // --- Camera: BarcodeDetector or fallback to file input + jsQR ---
+  // Camera: BarcodeDetector or fallback to file input + jsQR
   if ('BarcodeDetector' in window) {
     navigator.mediaDevices.getUserMedia({video: {facingMode:"environment"}})
       .then(stream => {
@@ -109,7 +71,6 @@ firebase.auth().onAuthStateChanged(function(user) {
           const canvas = document.createElement("canvas");
           canvas.width = img.width; canvas.height = img.height;
           canvas.getContext("2d").drawImage(img, 0, 0, img.width, img.height);
-          // You need jsQR for fallback!
           const script = document.createElement('script');
           script.src = 'https://unpkg.com/jsqr';
           script.onload = () => {
