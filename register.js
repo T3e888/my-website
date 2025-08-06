@@ -21,51 +21,41 @@ registerModalBtn.addEventListener('click', () => {
   registerModal.style.display = 'none';
 });
 
-function getCardParam() {
-  const params = new URLSearchParams(window.location.search);
-  const card = params.get('card');
-  if (card && /^card\d{1,3}$/.test(card)) return card;
-  return null;
-}
-
 function showModal(msg, color = '#b21e2c') {
   registerModalMsg.innerHTML = msg;
   registerModalMsg.style.color = color;
   registerModal.style.display = 'flex';
 }
 
-// THE CRUCIAL PART!
 registerForm.addEventListener('submit', function(e) {
   e.preventDefault();
   const username = document.getElementById('register-username').value.trim();
   const password = registerPasswordInput.value;
 
-  // --- ENGLISH VALIDATION ---
+  // Require username and password, min 8 chars
   if (!username || !password || username.length < 8 || password.length < 8) {
-    showModal('Please fill in all fields and use at least 8 characters.');
+    showModal('Please fill in all fields and use at least 8 characters for both username and password.');
     return;
   }
 
+  // Load all users (array) from localStorage
   let users = [];
   try { users = JSON.parse(localStorage.getItem('users') || '[]'); }
   catch { users = []; }
 
+  // Check for duplicate username
   const exists = users.find(u => u.username === username);
   if (exists) {
-    showModal('This username is already taken');
+    showModal('This username is already taken.');
     return;
   }
 
+  // Add user & save updated array
   users.push({ username, password });
   localStorage.setItem('users', JSON.stringify(users));
   localStorage.setItem(`${username}_cards`, JSON.stringify([]));
 
-  const unlockCard = getCardParam();
-  if (unlockCard) {
-    localStorage.setItem(`${username}_cards`, JSON.stringify([unlockCard]));
-  }
-
-  showModal('Registration successful', '#299c34');
+  showModal('Registration successful!', '#299c34');
   registerModalBtn.onclick = function() {
     window.location.href = 'login.html';
   };
