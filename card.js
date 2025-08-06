@@ -1,10 +1,10 @@
-// ==== SIDEBAR JS (Universal, top of every JS file) ====
-document.addEventListener("DOMContentLoaded", () => {
-  // Login guard
-  if (!localStorage.getItem("currentUser")) {
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) {
     window.location.href = "login.html";
     return;
   }
+
+  // === Sidebar Logic ===
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
@@ -22,27 +22,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   closeBtn.addEventListener("click", closeSidebar);
   overlay.addEventListener("click", closeSidebar);
-  menuItems.forEach(item => {
-    item.addEventListener("click", (e) => {
-      if (item === logout) {
-         e.preventDefault();
-  // ลบแค่ session key
-         localStorage.removeItem('currentUser');
-         window.location.href = 'login.html';
-      } else {
-         closeSidebar();
-      }
+
+  // Logout with Firebase
+  logout.addEventListener("click", function(e) {
+    e.preventDefault();
+    firebase.auth().signOut().then(() => {
+      window.location.href = "login.html";
     });
   });
 
-  // ==== END SIDEBAR JS ====
+  menuItems.forEach(item => {
+    if (item !== logout) {
+      item.addEventListener("click", closeSidebar);
+    }
+  });
 
-  // ======= Card Collection Logic =======
+  // === Card Logic ===
   const grid = document.getElementById("cardGrid");
   const modal = document.getElementById("modal");
-  const user = localStorage.getItem("currentUser");
-  if (!user) return;
-  let unlocked = JSON.parse(localStorage.getItem(user + "_cards") || "[]");
+  const userEmail = user.email.replace(/[^a-zA-Z0-9]/g, '_'); // email-safe localStorage key
+  let unlocked = JSON.parse(localStorage.getItem(userEmail + "_cards") || "[]");
 
   // QR unlock via ?card=cardX
   const params = new URLSearchParams(window.location.search);
@@ -50,10 +49,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if(cardToUnlock && /^card([1-9]|1[0-9]|2[0-5])$/.test(cardToUnlock)) {
     if (!unlocked.includes(cardToUnlock)) {
       unlocked.push(cardToUnlock);
-      localStorage.setItem(user + "_cards", JSON.stringify(unlocked));
+      localStorage.setItem(userEmail + "_cards", JSON.stringify(unlocked));
       showModal(`Unlocked card ${cardToUnlock.replace("card", "")}!`);
     }
-    // Clean up URL
     params.delete("card");
     history.replaceState({}, '', window.location.pathname);
   }
@@ -71,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
       div.innerHTML = `<span class="lock-icon">&#128274;</span>`;
     }
     div.innerHTML += `<span class="card-num">${i}</span>`;
-    // Optional: preview modal
     div.onclick = () => {
       if (unlocked.includes(cid)) {
         showModal(`<img src="assets/cards/${cid}.png" alt="Card ${i}" style="max-width:220px;border-radius:12px;"><div style="margin-top:1em;">Card ${i}</div>`);
@@ -80,7 +77,6 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.appendChild(div);
   }
 
-  // --- Modal logic ---
   function showModal(msg) {
     modal.innerHTML = `<div class="modal-content">${msg}<br>
       <button class="modal-close">OK</button></div>`;
