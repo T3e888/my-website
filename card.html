@@ -9,9 +9,7 @@
 <body>
   <!-- ===== SIDEBAR HTML ===== -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
-    <span class="menu-icon">
-      <span></span><span></span><span></span>
-    </span>
+    <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
@@ -29,7 +27,21 @@
   <div id="cardGrid" class="grid"></div>
   <div id="modal" class="modal"></div>
 
+  <!-- ==== Firebase SDK + Config ==== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
   <script src="card.js"></script>
 </body>
 </html>
-
