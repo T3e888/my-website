@@ -1,10 +1,10 @@
-// ==== SIDEBAR JS (Universal, top of every JS file) ====
-document.addEventListener("DOMContentLoaded", () => {
-  // Login guard
-  if (!localStorage.getItem("currentUser")) {
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) {
     window.location.href = "login.html";
     return;
   }
+
+  // Sidebar logic
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
@@ -22,30 +22,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   closeBtn.addEventListener("click", closeSidebar);
   overlay.addEventListener("click", closeSidebar);
-  menuItems.forEach(item => {
-    item.addEventListener("click", (e) => {
-      if (item === logout) {
-         e.preventDefault();
-  // ลบแค่ session key
-         localStorage.removeItem('currentUser');
-         window.location.href = 'login.html';
-       } else {
-         closeSidebar();
-       }
+
+  logout.addEventListener("click", function(e) {
+    e.preventDefault();
+    firebase.auth().signOut().then(() => {
+      window.location.href = "login.html";
     });
   });
+  menuItems.forEach(item => {
+    if (item !== logout) {
+      item.addEventListener("click", closeSidebar);
+    }
+  });
 
-  // ==== END SIDEBAR JS ====
+  // User-specific storage key
+  const userKey = user.email.replace(/[^a-zA-Z0-9]/g, '_');
+  let unlocked = JSON.parse(localStorage.getItem(userKey + "_cards") || "[]");
 
   // --- QR Scan Logic ---
-  const user = localStorage.getItem("currentUser");
-  const modal = document.getElementById("modal");
-  let unlocked = JSON.parse(localStorage.getItem(user + "_cards") || "[]");
-
   const video = document.getElementById("camera");
   const fileInput = document.getElementById("fileInput");
-  let scanning = false;
-  let scanTimeout;
+  const modal = document.getElementById("modal");
 
   function showModal(msg, cb) {
     modal.innerHTML = `<div class="modal-content">${msg}<br>
@@ -60,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function unlockCard(cardID) {
     if (!unlocked.includes(cardID)) {
       unlocked.push(cardID);
-      localStorage.setItem(user + "_cards", JSON.stringify(unlocked));
+      localStorage.setItem(userKey + "_cards", JSON.stringify(unlocked));
       showModal(`Unlocked card ${cardID.replace("card", "")}!`, () => {
         location.href = "card.html";
       });
@@ -81,9 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .then(stream => {
         video.srcObject = stream;
         video.play();
-        scanning = true;
         const detector = new BarcodeDetector({formats: ['qr_code']});
-        scanTimeout = setInterval(async () => {
+        const scanInterval = setInterval(async () => {
           try {
             const canvas = document.createElement("canvas");
             canvas.width = video.videoWidth;
@@ -91,8 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
             canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
             const barcodes = await detector.detect(canvas);
             if (barcodes.length && isValidCardPayload(barcodes[0].rawValue)) {
-              scanning = false;
-              clearInterval(scanTimeout);
+              clearInterval(scanInterval);
               video.srcObject.getTracks().forEach(t=>t.stop());
               unlockCard(barcodes[0].rawValue);
             }
@@ -114,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const canvas = document.createElement("canvas");
           canvas.width = img.width; canvas.height = img.height;
           canvas.getContext("2d").drawImage(img, 0, 0, img.width, img.height);
-          // You'll need to load jsQR from CDN for this fallback
+          // You need jsQR for fallback!
           const script = document.createElement('script');
           script.src = 'https://unpkg.com/jsqr';
           script.onload = () => {
