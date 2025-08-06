@@ -1,10 +1,10 @@
-// ==== SIDEBAR JS (Universal, top of every JS file) ====
-document.addEventListener("DOMContentLoaded", () => {
-  // Login guard
-  if (!localStorage.getItem("currentUser")) {
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) {
     window.location.href = "login.html";
     return;
   }
+
+  // Sidebar logic
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
@@ -22,51 +22,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   closeBtn.addEventListener("click", closeSidebar);
   overlay.addEventListener("click", closeSidebar);
-  menuItems.forEach(item => {
-    item.addEventListener("click", (e) => {
-      if (item === logout) {
-         e.preventDefault();
-  // ลบแค่ session key
-         localStorage.removeItem('currentUser');
-         window.location.href = 'login.html';
-       } else {
-         closeSidebar();
-       }
+
+  logout.addEventListener("click", function(e) {
+    e.preventDefault();
+    firebase.auth().signOut().then(() => {
+      window.location.href = "login.html";
     });
   });
+  menuItems.forEach(item => {
+    if (item !== logout) {
+      item.addEventListener("click", closeSidebar);
+    }
+  });
 
-  // ==== END SIDEBAR JS ====
-
-  // ======= Quiz Zone Logic =======
-  const user = localStorage.getItem("currentUser");
+  // --- Quiz Zone Logic ---
+  const userKey = user.email.replace(/[^a-zA-Z0-9]/g, '_');
   const levels = 10;
   const quizPerDay = 3;
   const dailyInfo = document.getElementById("dailyInfo");
   const levelList = document.querySelector(".levels");
   const modal = document.getElementById("quizModal");
 
-  // State: <user>_mission (Boolean[levels]), <user>_quizDate, <user>_quizCount
-  let completed = JSON.parse(localStorage.getItem(user + "_mission") || "[]");
+  let completed = JSON.parse(localStorage.getItem(userKey + "_mission") || "[]");
   if (completed.length !== levels) completed = Array(levels).fill(false);
-  let quizDate = localStorage.getItem(user + "_quizDate") || "";
-  let quizCount = parseInt(localStorage.getItem(user + "_quizCount") || "0");
+  let quizDate = localStorage.getItem(userKey + "_quizDate") || "";
+  let quizCount = parseInt(localStorage.getItem(userKey + "_quizCount") || "0");
 
-  // Reset count if day changed
   const today = new Date().toISOString().slice(0,10);
   if (quizDate !== today) {
     quizDate = today; quizCount = 0;
-    localStorage.setItem(user + "_quizDate", quizDate);
-    localStorage.setItem(user + "_quizCount", quizCount);
+    localStorage.setItem(userKey + "_quizDate", quizDate);
+    localStorage.setItem(userKey + "_quizCount", quizCount);
   }
 
   updateUI();
 
   function updateUI() {
     dailyInfo.textContent = `${quizCount} / ${quizPerDay} quizzes today`;
-    // Build timeline
     levelList.innerHTML = "";
     let firstLockedIdx = completed.findIndex(x=>!x);
-    if (firstLockedIdx === -1) firstLockedIdx = levels; // all completed
+    if (firstLockedIdx === -1) firstLockedIdx = levels;
     for (let i=0;i<levels;++i) {
       let li = document.createElement("li");
       li.className = "level";
@@ -92,37 +87,36 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // === Sample Stroke Quiz Data ===
+  // === Sample Quiz Data ===
   const quizBank = [
     {
-      q: "ข้อใดคืออาการเบื้องต้นของโรคหลอดเลือดสมอง?",
-      opts: ["ปากเบี้ยวพูดไม่ชัด", "ปวดหัว", "เจ็บท้อง", "ปวดหลัง"],
+      q: "Which of the following is an early symptom of stroke?",
+      opts: ["Face drooping, slurred speech", "Headache", "Stomach pain", "Back pain"],
       answer: 0
     },
     {
-      q: "ถ้าพบคนหมดสติ ควรทำอย่างไร?",
-      opts: ["โทร 1669", "ให้น้ำ", "จับให้นอนตะแคง", "นวดหลัง"],
+      q: "What should you do if you find someone unconscious?",
+      opts: ["Call 1669", "Give water", "Lay on side", "Massage back"],
       answer: 0
     },
     {
-      q: "ตัวเลขฉุกเฉินช่วยชีวิตในไทยคืออะไร?",
+      q: "What is the emergency number in Thailand?",
       opts: ["1669", "1193", "191", "1234"],
       answer: 0
     },
     {
-      q: "อาการใดที่ควรสงสัยว่าเกิด Stroke?",
-      opts: ["พูดไม่ชัด", "ชาตามใบหน้า", "อ่อนแรงแขนขา", "ทุกข้อ"],
+      q: "Which sign suggests possible stroke?",
+      opts: ["Slurred speech", "Facial numbness", "Weak limbs", "All of the above"],
       answer: 3
     },
     {
-      q: "วิธีป้องกันโรคหลอดเลือดสมองข้อใดถูกต้อง?",
-      opts: ["งดสูบบุหรี่", "ออกกำลังกาย", "ควบคุมความดัน", "ทุกข้อ"],
+      q: "Which is a correct way to prevent stroke?",
+      opts: ["No smoking", "Exercise", "Control BP", "All of the above"],
       answer: 3
     }
   ];
 
   function getRandomQuizSet() {
-    // Pick 3 unique questions
     let idx = [...Array(quizBank.length).keys()].sort(()=>Math.random()-0.5).slice(0,3);
     return idx.map(i=>quizBank[i]);
   }
@@ -165,13 +159,13 @@ document.addEventListener("DOMContentLoaded", () => {
           if (correct===3) {
             completed[idx]=true;
             quizCount++;
-            localStorage.setItem(user + "_mission", JSON.stringify(completed));
-            localStorage.setItem(user + "_quizDate", today);
-            localStorage.setItem(user + "_quizCount", quizCount);
+            localStorage.setItem(userKey + "_mission", JSON.stringify(completed));
+            localStorage.setItem(userKey + "_quizDate", today);
+            localStorage.setItem(userKey + "_quizCount", quizCount);
             updateUI();
-            showModal("ยอดเยี่ยม! คุณผ่าน Level นี้แล้ว");
+            showModal("Excellent! You completed this Level.");
           } else {
-            showModal(`ต้องตอบถูกทั้งหมด! คุณได้ ${correct}/3<br>โปรดลองอีกครั้ง`);
+            showModal(`You need to get all answers correct! You got ${correct}/3<br>Please try again.`);
           }
         }
       };
