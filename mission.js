@@ -24,13 +24,14 @@ document.addEventListener("DOMContentLoaded", () => {
   overlay.addEventListener("click", closeSidebar);
   menuItems.forEach(item => {
     item.addEventListener("click", (e) => {
-      if(item === logout) {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = "login.html";
-      } else {
-        closeSidebar();
-      }
+      if (item === logout) {
+         e.preventDefault();
+  // ลบแค่ session key
+         localStorage.removeItem('currentUser');
+         window.location.href = 'login.html';
+       } else {
+         closeSidebar();
+       }
     });
   });
 
