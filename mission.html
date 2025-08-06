@@ -7,42 +7,14 @@
   <link rel="stylesheet" href="mission.css">
 </head>
 <body>
-  <!-- ===== SIDEBAR HTML ===== -->
-  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
-    <span class="menu-icon"><span></span><span></span><span></span></span>
-  </button>
-  <nav id="sidebar" class="sidebar">
-    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
-    <ul class="menu">
-      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
-      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
-      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
-      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
-    </ul>
-  </nav>
-  <div id="overlay" class="overlay"></div>
-  <!-- ===== END SIDEBAR HTML ===== -->
-
+  <!-- SIDEBAR HTML as in your design -->
   <h1 class="page-title">Quiz Zone</h1>
   <div id="dailyInfo">0 / 3 quizzes today</div>
   <ul class="levels"></ul>
   <div id="quizModal" class="modal"></div>
-
   <!-- ==== Firebase SDK and Config ==== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID",
-      measurementId: "YOUR_MEASUREMENT_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
-  <script src="mission.js"></script>
-</body>
-</html>
+    const firebaseConfig =
