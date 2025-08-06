@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Register</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Create account</title>
   <link rel="stylesheet" href="login.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 </head>
@@ -12,9 +12,9 @@
   <div class="auth-card">
     <h1>Create account</h1>
     <form id="registerForm" autocomplete="off">
-      <input type="email" id="reg-email" placeholder="Email" required autocomplete="username">
+      <input type="email" id="register-email" placeholder="Email" autocomplete="username" required>
       <div class="password-row">
-        <input type="password" id="reg-pass" placeholder="Password (min 8 chars)" required autocomplete="new-password">
+        <input type="password" id="register-password" placeholder="Password" autocomplete="new-password" required>
         <button type="button" id="toggleRegisterPassword" tabindex="-1"><i class="fa fa-eye"></i></button>
       </div>
       <button type="submit" class="main-btn">Register</button>
@@ -30,74 +30,24 @@
       <button id="registerModalBtn">OK</button>
     </div>
   </div>
-
-  <!-- Firebase SDKs + Config -->
+  <!-- ==== Firebase SDK and Config ==== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
-    // Replace with your Firebase config!
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID",
-      measurementId: "YOUR_MEASUREMENT_ID"
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
   </script>
-
-  <script>
-    // Show/hide password
-    const toggleRegisterPassword = document.getElementById('toggleRegisterPassword');
-    const registerPasswordInput = document.getElementById('reg-pass');
-    toggleRegisterPassword.addEventListener('click', () => {
-      const isHidden = registerPasswordInput.type === 'password';
-      registerPasswordInput.type = isHidden ? 'text' : 'password';
-      toggleRegisterPassword.querySelector('i').classList.toggle('fa-eye-slash', isHidden);
-      toggleRegisterPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
-    });
-
-    // Modal logic
-    const registerModal = document.getElementById('registerModal');
-    const registerModalMsg = document.getElementById('registerModalMsg');
-    const registerModalBtn = document.getElementById('registerModalBtn');
-    function showModal(msg, color = '#b21e2c') {
-      registerModalMsg.textContent = msg;
-      registerModalMsg.style.color = color;
-      registerModal.style.display = 'flex';
-    }
-    registerModalBtn.addEventListener('click', () => {
-      registerModal.style.display = 'none';
-    });
-
-    // Auto redirect if logged in (Firebase)
-    auth.onAuthStateChanged(user => {
-      if (user) window.location.href = "card.html";
-    });
-
-    // Register form
-    document.getElementById('registerForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('reg-email').value.trim();
-      const password = registerPasswordInput.value;
-      if (!email || !password || password.length < 8) {
-        showModal("Please enter a valid email and a password at least 8 characters.");
-        return;
-      }
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          showModal("✅ Registration successful!", "#299c34");
-          registerModalBtn.onclick = function() {
-            window.location.href = "login.html";
-          };
-        })
-        .catch(error => {
-          showModal("❌ " + error.message);
-        });
-    });
-  </script>
+  <script src="register.js"></script>
 </body>
 </html>
