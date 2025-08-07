@@ -22,7 +22,6 @@ loginModalBtn.addEventListener('click', () => loginModal.style.display = 'none')
 // Username → fake email domain (for Firebase)
 const FAKE_DOMAIN = '@myapp.fake';
 
-// Redirect if already logged in
 firebase.auth().onAuthStateChanged(user => {
   if (user) window.location.href = 'card.html';
 });
@@ -42,6 +41,6 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
       loginModalBtn.onclick = () => { window.location.href = 'card.html'; };
     })
     .catch(error => {
-      showModal('❌ ' + error.message);
+      showModal('❌ ' + (error.message.includes('user-not-found') ? 'Username not found' : error.message));
     });
 });
