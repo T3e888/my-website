@@ -19,9 +19,33 @@ function showModal(msg, color='#b21e2c') {
 loginModalBtn.addEventListener('click', () => loginModal.style.display = 'none');
 
 const FAKE_DOMAIN = '@myapp.fake';
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-firebase.auth().onAuthStateChanged(user => {
-  if (user) window.location.href = 'card.html';
+// QR card unlock support
+function getCardParam() {
+  const url = new URL(window.location.href);
+  const card = url.searchParams.get("card");
+  return /^card([1-9]|1[0-9]|2[0-5])$/.test(card) ? card : null;
+}
+let pendingCard = getCardParam();
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    // If there's a card param, unlock the card then redirect
+    if (pendingCard) {
+      const docRef = db.collection('users').doc(user.uid);
+      const doc = await docRef.get();
+      let cards = (doc.exists && doc.data().cards) ? doc.data().cards : [];
+      if (!cards.includes(pendingCard)) {
+        cards.push(pendingCard);
+        await docRef.update({ cards });
+      }
+      window.location.href = "card.html";
+    } else {
+      window.location.href = 'card.html';
+    }
+  }
 });
 
 document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -33,10 +57,11 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     return;
   }
   const fakeEmail = username + FAKE_DOMAIN;
-  firebase.auth().signInWithEmailAndPassword(fakeEmail, password)
-    .then(() => {
+  auth.signInWithEmailAndPassword(fakeEmail, password)
+    .then(async () => {
+      // On login, QR card handled by onAuthStateChanged above.
       showModal('✅ Login successful!', '#299c34');
-      loginModalBtn.onclick = () => { window.location.href = 'card.html'; };
+      loginModalBtn.onclick = () => { window.location.href = pendingCard ? window.location.href : "card.html"; };
     })
     .catch(error => {
       showModal('❌ ' + error.message);
