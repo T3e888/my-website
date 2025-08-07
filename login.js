@@ -7,6 +7,7 @@ toggleLoginPassword.addEventListener('click', () => {
   toggleLoginPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
 });
 
+// Modal helpers
 const loginModal     = document.getElementById('loginModal');
 const loginModalMsg  = document.getElementById('loginModalMsg');
 const loginModalBtn  = document.getElementById('loginModalBtn');
@@ -38,9 +39,6 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
       loginModalBtn.onclick = () => { window.location.href = 'card.html'; };
     })
     .catch(error => {
-      let msg = error.message;
-      if (msg.includes('user-not-found')) msg = "Username not found.";
-      if (msg.includes('wrong-password')) msg = "Incorrect password.";
-      showModal('❌ ' + msg);
+      showModal('❌ ' + error.message);
     });
 });
