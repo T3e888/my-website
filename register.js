@@ -19,38 +19,53 @@ registerModalBtn.addEventListener('click', () => registerModal.style.display = '
 
 const FAKE_DOMAIN = '@myapp.fake';
 
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
+document.getElementById('registerForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const username = document.getElementById('register-username').value.trim();
   const password = registerPasswordInput.value;
+
   if (!username || !password) {
     showModal('Please enter both username and password.');
     return;
   }
-  const fakeEmail = username + FAKE_DOMAIN;
-
-  // Check username uniqueness in Firestore
-  const snapshot = await db.collection('users').where('username', '==', username).get();
-  if (!snapshot.empty) {
-    showModal('This username is already taken. Please use another.');
+  if (username.length < 3) {
+    showModal('Username must be at least 3 characters.');
+    return;
+  }
+  if (password.length < 6) {
+    showModal('Password must be at least 6 characters.');
     return;
   }
 
-  auth.createUserWithEmailAndPassword(fakeEmail, password)
-    .then(cred => {
-      // Save user data in Firestore
-      return db.collection('users').doc(cred.user.uid).set({
-        username: username,
-        cards: [],
-        mission: Array(10).fill(false),
-        quizCount: 0,
-        quizDate: ""
+  const fakeEmail = username + FAKE_DOMAIN;
+
+  // Check for existing username
+  db.collection('users').where('username', '==', username).get().then(snapshot => {
+    if (!snapshot.empty) {
+      showModal('This username is already taken. Please use another.');
+      return;
+    }
+    // Create the Firebase Auth user
+    auth.createUserWithEmailAndPassword(fakeEmail, password)
+      .then(cred => {
+        // Create user doc in Firestore
+        return db.collection('users').doc(cred.user.uid).set({
+          username: username,
+          cards: [],
+          mission: Array(10).fill(false),
+          quizCount: 0,
+          quizDate: ""
+        });
+      })
+      .then(() => {
+        showModal("Registration successful!", "#299c34");
+        registerModalBtn.onclick = () =>
+          window.location.href = "card.html";
+      })
+      .catch(err => {
+        let msg = err.message;
+        if (msg.includes("already in use")) msg = "Username already exists.";
+        showModal('❌ ' + msg);
       });
-    })
-    .then(() => {
-      showModal("Registration successful!", "#299c34");
-      registerModalBtn.onclick = () =>
-        window.location.href = "card.html";
-    })
-    .catch(err => showModal('❌ ' + err.message));
+  }).catch(error => showModal('❌ ' + error.message));
 });
