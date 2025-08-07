@@ -1,21 +1,47 @@
-document.getElementById('toggleLoginPassword').onclick = function() {
-  const pw = document.getElementById('login-password');
-  pw.type = pw.type === "password" ? "text" : "password";
-};
-
-const loginForm = document.getElementById('loginForm');
-loginForm.addEventListener('submit', function(e) {
-  e.preventDefault();
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  auth.signInWithEmailAndPassword(email, password)
-    .then(() => window.location.href = "card.html")
-    .catch(err => showModal(err.message));
+// Helper: show/hide password
+const toggleLoginPassword = document.getElementById('toggleLoginPassword');
+const loginPasswordInput = document.getElementById('login-password');
+toggleLoginPassword.addEventListener('click', () => {
+  const isHidden = loginPasswordInput.type === 'password';
+  loginPasswordInput.type = isHidden ? 'text' : 'password';
+  toggleLoginPassword.querySelector('i').classList.toggle('fa-eye-slash', isHidden);
+  toggleLoginPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
 });
 
-function showModal(msg) {
-  document.getElementById('loginModalMsg').innerText = msg;
-  document.getElementById('loginModal').style.display = 'flex';
-  document.getElementById('loginModalBtn').onclick = () =>
-    document.getElementById('loginModal').style.display = 'none';
+// Modal helpers
+const loginModal     = document.getElementById('loginModal');
+const loginModalMsg  = document.getElementById('loginModalMsg');
+const loginModalBtn  = document.getElementById('loginModalBtn');
+function showModal(msg, color='#b21e2c') {
+  loginModalMsg.textContent = msg;
+  loginModalMsg.style.color = color;
+  loginModal.style.display = 'flex';
 }
+loginModalBtn.addEventListener('click', () => loginModal.style.display = 'none');
+
+// Username → fake email domain (for Firebase)
+const FAKE_DOMAIN = '@myapp.fake';
+
+// Redirect if already logged in
+firebase.auth().onAuthStateChanged(user => {
+  if (user) window.location.href = 'card.html';
+});
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = loginPasswordInput.value;
+  if (!username || !password) {
+    showModal('Please enter both username and password.');
+    return;
+  }
+  const fakeEmail = username + FAKE_DOMAIN;
+  firebase.auth().signInWithEmailAndPassword(fakeEmail, password)
+    .then(() => {
+      showModal('✅ Login successful!', '#299c34');
+      loginModalBtn.onclick = () => { window.location.href = 'card.html'; };
+    })
+    .catch(error => {
+      showModal('❌ ' + error.message);
+    });
+});
