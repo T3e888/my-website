@@ -1,4 +1,3 @@
-// Helper: show/hide password
 const toggleLoginPassword = document.getElementById('toggleLoginPassword');
 const loginPasswordInput = document.getElementById('login-password');
 toggleLoginPassword.addEventListener('click', () => {
@@ -8,7 +7,6 @@ toggleLoginPassword.addEventListener('click', () => {
   toggleLoginPassword.querySelector('i').classList.toggle('fa-eye', !isHidden);
 });
 
-// Modal helpers
 const loginModal     = document.getElementById('loginModal');
 const loginModalMsg  = document.getElementById('loginModalMsg');
 const loginModalBtn  = document.getElementById('loginModalBtn');
@@ -19,7 +17,6 @@ function showModal(msg, color='#b21e2c') {
 }
 loginModalBtn.addEventListener('click', () => loginModal.style.display = 'none');
 
-// Username → fake email domain (for Firebase)
 const FAKE_DOMAIN = '@myapp.fake';
 
 firebase.auth().onAuthStateChanged(user => {
@@ -41,6 +38,9 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
       loginModalBtn.onclick = () => { window.location.href = 'card.html'; };
     })
     .catch(error => {
-      showModal('❌ ' + (error.message.includes('user-not-found') ? 'Username not found' : error.message));
+      let msg = error.message;
+      if (msg.includes('user-not-found')) msg = "Username not found.";
+      if (msg.includes('wrong-password')) msg = "Incorrect password.";
+      showModal('❌ ' + msg);
     });
 });
