@@ -17,7 +17,7 @@
         <input type="password" id="register-password" placeholder="Password" autocomplete="new-password" required>
         <button type="button" id="toggleRegisterPassword" tabindex="-1"><i class="fa fa-eye"></i></button>
       </div>
-      <button type="submit" class="main-btn" id="registerBtn">Register</button>
+      <button type="submit" class="main-btn">Register</button>
     </form>
     <div class="auth-link">
       Already have an account?
@@ -45,8 +45,6 @@
       measurementId: "G-33LJCV1MD8"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
   </script>
   <script src="register.js"></script>
 </body>
