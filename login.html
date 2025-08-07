@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Login</title>
   <link rel="stylesheet" href="login.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 </head>
@@ -12,7 +12,7 @@
   <div class="auth-card">
     <h1>Login</h1>
     <form id="loginForm" autocomplete="off">
-      <input type="email" id="login-email" placeholder="Email" autocomplete="username" required>
+      <input type="text" id="login-username" placeholder="Username" autocomplete="username" required>
       <div class="password-row">
         <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
         <button type="button" id="toggleLoginPassword" tabindex="-1"><i class="fa fa-eye"></i></button>
@@ -30,11 +30,13 @@
       <button id="loginModalBtn">OK</button>
     </div>
   </div>
-  <!-- ==== Firebase SDK and Config ==== -->
+
+  <!-- Firebase scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
+    // Replace with your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
       authDomain: "login-ba993.firebaseapp.com",
@@ -45,8 +47,6 @@
       measurementId: "G-33LJCV1MD8"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
   </script>
   <script src="login.js"></script>
 </body>
