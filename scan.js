@@ -1,5 +1,34 @@
+function setupSidebar() {
+  const toggleBtn = document.getElementById("menu-toggle");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  const closeBtn = document.getElementById("close-sidebar");
+  const menuItems = document.querySelectorAll("#sidebar .menu-item");
+  const logout = document.getElementById("logout-link");
+
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.add("open");
+    overlay.classList.add("active");
+  });
+  function closeSidebar() {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("active");
+  }
+  closeBtn.addEventListener("click", closeSidebar);
+  overlay.addEventListener("click", closeSidebar);
+  logout.addEventListener("click", function(e) {
+    e.preventDefault();
+    auth.signOut().then(() => window.location.href = "login.html");
+  });
+  menuItems.forEach(item => {
+    if (item !== logout) item.addEventListener("click", closeSidebar);
+  });
+}
+
 auth.onAuthStateChanged(async function(user) {
   if (!user) return location.href = "login.html";
+  setupSidebar();
+
   const docRef = db.collection('users').doc(user.uid);
   let userData = (await docRef.get()).data();
   let unlocked = userData.cards || [];
