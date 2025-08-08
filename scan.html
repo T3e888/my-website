@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="scan.css">
 </head>
 <body>
-  <!-- SIDEBAR HTML -->
+  <!-- ===== SIDEBAR (unchanged) ===== -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -21,23 +21,29 @@
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
+  <!-- ===== END SIDEBAR ===== -->
 
   <h1 class="page-title">Scan QR Code</h1>
+
   <div class="scan-box">
-    <div class="qr-box">
-      <div class="qr-image-icon">
-        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" alt="QR" style="width:70px;opacity:.8;">
-      </div>
-      <label for="fileInput" class="file-btn" id="fileLabel">
-        Choose Image - <span id="fileStatus">No image choosen</span>
-      </label>
-      <input type="file" id="fileInput" accept="image/*" style="display:none;">
-      <div class="or-text">Or drop an image to scan</div>
-      <a id="scan-camera-link" href="#" class="scan-camera-link">Scan using camera directly</a>
+    <!-- Live camera -->
+    <video id="camera" autoplay playsinline muted></video>
+
+    <!-- Actions -->
+    <div class="scan-actions">
+      <button id="uploadBtn" class="btn">Scan from image</button>
+      <div id="dropZone" class="drop-zone">Drag & drop an image here</div>
+      <p class="hint">Tip: You can also scan a link like <code>login.html?card=card7</code></p>
     </div>
+
+    <!-- Hidden file input for upload -->
+    <input type="file" id="fileInput" accept="image/*" hidden>
   </div>
+
+  <!-- Modal -->
   <div id="modal" class="modal"></div>
-  <!-- ==== Firebase SDK and Config ==== -->
+
+  <!-- ==== Firebase SDK and Config (you already use these) ==== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -51,10 +57,11 @@
       appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
       measurementId: "G-33LJCV1MD8"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
   </script>
+
   <script src="scan.js"></script>
 </body>
 </html>
