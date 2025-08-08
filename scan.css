@@ -7,6 +7,7 @@
 }
 .menu-icon { display: flex; flex-direction: column; gap: 7px; }
 .menu-icon span { display: block; width: 26px; height: 4px; background: #fff; border-radius: 3px; }
+
 #sidebar {
   position: fixed; top: 0; left: 0; height: 100vh; width: 220px;
   background: #e53935; box-shadow: 3px 0 16px rgba(0,0,0,0.18);
@@ -27,15 +28,17 @@
   color: #fff; font-size: 1.16rem; text-decoration: none; font-weight: 500;
   padding: 8px 36px; border-radius: 10px; display: block; transition: background 0.13s;
 }
-#sidebar .menu-item a:hover, #sidebar .menu-item.active a { background: #fff2; }
+#sidebar .menu-item a:hover, #sidebar .menu-item.active a { background: #ffffff22; }
 #logout-link a { color: #ffcdd2 !important; font-weight: 600; }
 #logout-link a:hover { background: #b71c1c !important; color: #fff !important; }
+
 .overlay {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(80,10,10,0.13); z-index: 1200;
   opacity: 0; pointer-events: none; transition: opacity 0.25s;
 }
 .overlay.active { opacity: 1; pointer-events: auto; }
+
 @media (max-width: 600px) {
   #sidebar { width: 85vw; border-radius: 0 18px 18px 0; }
   .sidebar-toggle { top: 14px; left: 14px; width: 42px; height: 42px; }
@@ -43,6 +46,7 @@
 body { padding-left: 0 !important; }
 /* ==== END SIDEBAR CSS ==== */
 
+/* ==== PAGE THEME ==== */
 body {
   background: #111;
   color: #fff;
@@ -54,24 +58,72 @@ body {
   color: #e57373;
   margin: 36px 0 24px;
   font-size: 2.1em;
+  letter-spacing: 0.01em;
 }
+
+/* ==== SCANNER LAYOUT ==== */
 .scan-box {
   display: flex; flex-direction: column;
   align-items: center; justify-content: flex-start;
   margin: 0 auto;
-  padding: 32px 0 0 0;
+  padding: 8px 16px 32px;
+  max-width: 720px;
 }
+
 video#camera {
-  width: 320px; height: 240px;
+  width: 360px; height: 270px;
   border: 6px solid #e53935;
   border-radius: 16px;
   box-shadow: 0 4px 16px #000a;
   background: #222;
 }
+
 @media (max-width: 500px) {
-  video#camera { width: 96vw; height: 56vw; min-height: 140px;}
+  video#camera { width: 96vw; height: 56vw; min-height: 140px; }
 }
+
+/* Hidden file input used by the button */
 #fileInput { display: none; }
+
+/* ==== ACTIONS (upload + drop zone) ==== */
+.scan-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.scan-actions .btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(229,57,53,.25);
+  transition: transform .12s, filter .12s, background .12s;
+}
+.scan-actions .btn:hover { background: #bf2532; transform: translateY(-1px); filter: brightness(1.05); }
+
+.drop-zone {
+  width: min(440px, 92vw);
+  min-height: 90px;
+  border: 2px dashed #e57373;
+  border-radius: 14px;
+  background: #1b1b1b;
+  color: #ffcdd2;
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px;
+  box-shadow: inset 0 0 0 1px #0008;
+  text-align: center;
+}
+.drop-zone.dragging { border-color: #fff; color: #fff; }
+
+.hint { color: #ffcdd2; font-size: .95rem; opacity: .9; margin: 2px 0 0; }
+
+/* ==== MODAL ==== */
 .modal {
   position: fixed; left: 0; right: 0; top: 0; bottom: 0;
   background: rgba(0,0,0,0.45);
@@ -79,15 +131,19 @@ video#camera {
   z-index: 2000;
 }
 .modal.active { display: flex; }
+
 .modal-content {
-  background: #fff; border-radius: 16px; padding: 36px 32px;
-  text-align: center; min-width: 220px;
+  background: #fff; border-radius: 16px; padding: 28px 24px;
+  text-align: center; min-width: 240px; max-width: 90vw;
   box-shadow: 0 6px 28px #e5737380;
-  color: #b71c1c; font-size: 1.3em;
+  color: #b71c1c; font-size: 1.18em;
+}
+.modal-content img {
+  max-width: 240px; height: auto; border-radius: 12px; display: block; margin: 10px auto 0;
 }
 .modal-close {
-  display: inline-block; margin-top: 22px; padding: 10px 26px;
+  display: inline-block; margin-top: 18px; padding: 10px 22px;
   background: #e57373; color: #fff; border: none;
   border-radius: 10px; font-size: 1em;
   cursor: pointer; font-weight: 600;
-}
+  }
