@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="scan.css">
 </head>
 <body>
-  <!-- SIDEBAR HTML as in your design -->
+  <!-- SIDEBAR HTML -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -21,10 +21,20 @@
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
+
   <h1 class="page-title">Scan QR Code</h1>
   <div class="scan-box">
-    <video id="camera" autoplay playsinline muted></video>
-    <input type="file" id="fileInput" accept="image/*" hidden>
+    <div class="qr-box">
+      <div class="qr-image-icon">
+        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" alt="QR" style="width:70px;opacity:.8;">
+      </div>
+      <label for="fileInput" class="file-btn" id="fileLabel">
+        Choose Image - <span id="fileStatus">No image choosen</span>
+      </label>
+      <input type="file" id="fileInput" accept="image/*" style="display:none;">
+      <div class="or-text">Or drop an image to scan</div>
+      <a id="scan-camera-link" href="#" class="scan-camera-link">Scan using camera directly</a>
+    </div>
   </div>
   <div id="modal" class="modal"></div>
   <!-- ==== Firebase SDK and Config ==== -->
