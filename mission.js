@@ -2,6 +2,9 @@
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
+const LEVEL_COUNT = 10;
+let CURRENT_POINTS = 0; // in-memory cache for HUD
+
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
     location.href = "login.html";
@@ -26,10 +29,7 @@ function initUIBasics() {
   logout?.addEventListener("click", (e) => { e.preventDefault(); auth.signOut().then(() => location.href = "login.html"); });
 }
 
-// ====== Data ======
-const LEVEL_COUNT = 10;
-
-// 10 questions used for every checkpoint (you can customize per level later)
+// ====== Questions (10 per checkpoint) ======
 const BASE_QUESTIONS = [
   { q: "Which is an early sign of stroke?", opts: ["Face drooping, slurred speech", "Stomach pain", "Back pain", "Rash"], a: 0 },
   { q: "Emergency number in Thailand?",    opts: ["1669", "1234", "110", "999"], a: 0 },
@@ -43,6 +43,23 @@ const BASE_QUESTIONS = [
   { q: "If you see stroke signs you should…",opts:["Call 1669 immediately", "Wait an hour", "Go to sleep", "Search YouTube"], a:0 },
 ];
 
+// ====== Helpers ======
+function renderPoints(n) {
+  CURRENT_POINTS = n;
+  const el = document.getElementById("pointsNum");
+  if (el) el.textContent = String(n);
+}
+
+function nodeElement(index, state) {
+  const li = document.createElement("li");
+  li.className = `node ${state}`;
+  li.innerHTML = `
+    <div class="badge">${state==="done"?"✓":index+1}</div>
+    <div class="label">Checkpoint ${index+1}</div>
+  `;
+  return li;
+}
+
 // ====== Build path & bind clicks ======
 async function buildPath(user) {
   const path = document.getElementById("path");
@@ -50,12 +67,21 @@ async function buildPath(user) {
 
   const docRef = db.collection("users").doc(user.uid);
   const snap = await docRef.get();
+
+  // Make sure doc exists and has needed fields
   if (!snap.exists) {
-    await docRef.set({ username: (user.email||"").split("@")[0], cards: [], mission: Array(LEVEL_COUNT).fill(false) }, { merge: true });
+    await docRef.set({
+      username: (user.email||"").split("@")[0],
+      cards: [],
+      mission: Array(LEVEL_COUNT).fill(false),
+      points: 0
+    }, { merge: true });
   }
-  const data = (await docRef.get()).data();
+
+  const data = (await docRef.get()).data() || {};
   let completed = Array.isArray(data.mission) ? data.mission.slice(0, LEVEL_COUNT) : Array(LEVEL_COUNT).fill(false);
   while (completed.length < LEVEL_COUNT) completed.push(false);
+  renderPoints(typeof data.points === "number" ? data.points : 0);
 
   // find first active level (first false)
   let activeIdx = completed.findIndex(v => !v);
@@ -84,23 +110,12 @@ async function buildPath(user) {
   }
 }
 
-function nodeElement(index, state) {
-  const li = document.createElement("li");
-  li.className = `node ${state}`;
-  li.innerHTML = `
-    <div class="badge">${state==="done"?"✓":index+1}</div>
-    <div class="label">Checkpoint ${index+1}</div>
-  `;
-  return li;
-}
-
-// ====== Quiz flow ======
+// ====== Quiz flow (adds +1 point only on first pass) ======
 function startQuiz(levelIdx, docRef, completed) {
   const modal = document.getElementById("quizModal");
   const box   = document.getElementById("quizBox");
 
-  // copy 10 Qs (you can randomize if you want)
-  const questions = BASE_QUESTIONS.map(q => ({...q}));
+  const questions = BASE_QUESTIONS.map(q => ({...q})); // copy
   let idx = 0;
   let correct = 0;
   const answers = [];
@@ -144,21 +159,36 @@ function startQuiz(levelIdx, docRef, completed) {
     document.getElementById("nextBtn").onclick = async () => {
       if (selected === -1) return;
       if (selected === questions[idx].a) correct++;
+
       if (idx < 9) {
         idx++;
         render();
       } else {
         // finished
         if (correct === 10) {
+          const firstTimePass = !completed[levelIdx];
           completed[levelIdx] = true;
-          await docRef.set({ mission: completed }, { merge: true });
+
+          // If first time, increment points atomically (+1)
+          if (firstTimePass) {
+            await docRef.set(
+              { mission: completed, points: firebase.firestore.FieldValue.increment(1) },
+              { merge: true }
+            );
+            renderPoints(CURRENT_POINTS + 1);
+          } else {
+            await docRef.set({ mission: completed }, { merge: true });
+          }
+
           box.innerHTML = `
             <div class="center">
               <h2 class="q-title">🎉 Perfect! 10/10</h2>
               <p>You passed Checkpoint ${levelIdx+1}.</p>
+              <p>+1 🧠 point ${firstTimePass ? "(first time)" : "(already awarded earlier)"} </p>
               <button class="btn btn-red" id="okBtn">OK</button>
             </div>`;
           document.getElementById("okBtn").onclick = () => location.reload();
+
         } else {
           box.innerHTML = `
             <div class="center">
@@ -189,4 +219,4 @@ function toast(msg){
     </div>`;
   modal.classList.add("show");
   document.getElementById("closeNotice").onclick = () => modal.classList.remove("show");
-   }
+          }
