@@ -82,3 +82,18 @@ body{
 .center{text-align:center}
 .all-done{color:#2e7d32;text-align:center;margin:14px 0 32px;font-weight:800}
 .hidden{display:none}
+/* === Points HUD === */
+.points-hud{
+  position: fixed;
+  top: 16px; right: 16px;
+  z-index: 1202;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fff;
+  color: #e53935;
+  border: 2px solid #ffcdd2;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 800;
+  box-shadow: 0 4px 18px rgba(229,57,53,0.18);
+}
+.points-hud #pointsNum { min-width: 18px; text-align: right; }
