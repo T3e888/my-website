@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="mission.css" />
 </head>
 <body>
+  <!-- ===== SIDEBAR ===== -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -20,9 +21,12 @@
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
+  <!-- ===== END SIDEBAR ===== -->
 
   <!-- Points HUD -->
-  <div class="points-hud"><span>🧠</span><span id="pointsNum">0</span></div>
+  <div class="points-hud" title="Your points">
+    🧠 <span id="pointsNum">0</span>
+  </div>
 
   <h1 class="page-title">Quiz Zone</h1>
   <p class="subtitle">Pass checkpoints in order. 10/10 to pass.</p>
@@ -30,11 +34,12 @@
   <ul id="path" class="path"></ul>
   <div id="allDone" class="all-done hidden">🎉 All checkpoints complete!</div>
 
-  <!-- Quiz/Confirm Modal -->
+  <!-- Quiz Modal -->
   <div id="quizModal" class="modal">
     <div class="modal-content" id="quizBox"></div>
   </div>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -48,7 +53,7 @@
       appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
       measurementId: "G-33LJCV1MD8"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
   <script src="mission.js"></script>
 </body>
