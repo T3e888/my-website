@@ -3,7 +3,7 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const LEVEL_COUNT = 10;
-let CURRENT_POINTS = 0; // local HUD cache
+let CURRENT_POINTS = 0; // in-memory cache for HUD
 
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
@@ -14,7 +14,7 @@ auth.onAuthStateChanged(async (user) => {
   await buildPath(user);
 });
 
-// ====== Sidebar small logic ======
+// ====== Sidebar small logic (kept same style) ======
 function initUIBasics() {
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar   = document.getElementById("sidebar");
@@ -68,6 +68,7 @@ async function buildPath(user) {
   const docRef = db.collection("users").doc(user.uid);
   const snap = await docRef.get();
 
+  // Ensure doc & fields exist
   if (!snap.exists) {
     await docRef.set({
       username: (user.email||"").split("@")[0],
@@ -82,12 +83,16 @@ async function buildPath(user) {
   while (completed.length < LEVEL_COUNT) completed.push(false);
   renderPoints(typeof data.points === "number" ? data.points : 0);
 
-  // first active level
+  // first active (first false)
   let activeIdx = completed.findIndex(v => !v);
   if (activeIdx === -1) {
+    // all done
     path.innerHTML = "";
     allDoneEl.classList.remove("hidden");
-    for (let i=0;i<LEVEL_COUNT;i++) path.appendChild(nodeElement(i,"done"));
+    for (let i=0;i<LEVEL_COUNT;i++) {
+      const li = nodeElement(i, "done");
+      path.appendChild(li);
+    }
     return;
   }
 
@@ -105,20 +110,22 @@ async function buildPath(user) {
   }
 }
 
-// ====== Quiz flow (score computed at end; includes Back button) ======
-function startQuiz(levelIdx, docRef, completed){
+// ====== Quiz flow (adds +1 point only on first pass) ======
+function startQuiz(levelIdx, docRef, completed) {
   const modal = document.getElementById("quizModal");
   const box   = document.getElementById("quizBox");
 
-  const questions = BASE_QUESTIONS.map(q => ({...q}));
+  const questions = BASE_QUESTIONS.map(q => ({...q})); // copy
   let idx = 0;
-  const answers = []; // chosen indices
+  let correct = 0;
+  const answers = [];
 
   render();
 
-  function render(){
+  function render() {
     const q = questions[idx];
     box.innerHTML = `
+      <button class="close-x" id="closeQuizX" aria-label="Close">×</button>
       <div class="q-header">
         <div class="q-title">Checkpoint ${levelIdx+1}</div>
         <div class="q-progress">${idx+1}/10</div>
@@ -134,12 +141,13 @@ function startQuiz(levelIdx, docRef, completed){
     `;
     modal.classList.add("show");
 
-    // restore selection when navigating back
+    // NEW: top-right close (X)
+    document.getElementById("closeQuizX").onclick = () => {
+      modal.classList.remove("show");
+    };
+
     let selected = (answers[idx] !== undefined) ? answers[idx] : -1;
     const opts = [...box.querySelectorAll(".q-option")];
-
-    const highlight = () =>
-      opts.forEach(o => o.classList.toggle("selected", Number(o.dataset.i)===selected));
     highlight();
 
     opts.forEach(el => {
@@ -150,27 +158,29 @@ function startQuiz(levelIdx, docRef, completed){
       };
     });
 
+    function highlight(){
+      opts.forEach(o => o.classList.toggle("selected", Number(o.dataset.i)===selected));
+    }
+
     document.getElementById("nextBtn").onclick = async () => {
       if (selected === -1) return;
+      if (selected === questions[idx].a) correct++;
 
       if (idx < 9) {
         idx++;
         render();
       } else {
-        // compute score ONCE
-        const correct = answers.reduce((sum, a, i) =>
-          sum + (a === questions[i].a ? 1 : 0), 0);
-
+        // finished
         if (correct === 10) {
           const firstTimePass = !completed[levelIdx];
           completed[levelIdx] = true;
 
+          // If first time, increment points atomically (+1)
           if (firstTimePass) {
             await docRef.set(
               { mission: completed, points: firebase.firestore.FieldValue.increment(1) },
               { merge: true }
             );
-            // update HUD
             renderPoints(CURRENT_POINTS + 1);
           } else {
             await docRef.set({ mission: completed }, { merge: true });
@@ -196,13 +206,11 @@ function startQuiz(levelIdx, docRef, completed){
               </div>
             </div>`;
           document.getElementById("closeBtn").onclick = () => modal.classList.remove("show");
-          document.getElementById("retryBtn").onclick = () => { idx = 0; answers.length = 0; render(); };
+          document.getElementById("retryBtn").onclick = () => { idx = 0; correct = 0; answers.length = 0; render(); };
         }
       }
     };
-
-    if (idx>0)
-      document.getElementById("backBtn").onclick = () => { idx--; render(); };
+    if (idx>0) document.getElementById("backBtn").onclick = () => { idx--; render(); };
   }
 }
 
@@ -217,4 +225,4 @@ function toast(msg){
     </div>`;
   modal.classList.add("show");
   document.getElementById("closeNotice").onclick = () => modal.classList.remove("show");
-}
+      }
