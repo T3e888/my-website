@@ -23,6 +23,11 @@
   <div id="overlay" class="overlay"></div>
   <!-- ===== END SIDEBAR ===== -->
 
+  <!-- Points HUD -->
+  <div class="points-hud" title="Your points">
+    🧠 <span id="pointsNum">0</span>
+  </div>
+
   <h1 class="page-title">Quiz Zone</h1>
   <p class="subtitle">Pass checkpoints in order. 10/10 to pass.</p>
 
@@ -31,9 +36,7 @@
 
   <!-- Quiz Modal -->
   <div id="quizModal" class="modal">
-    <div class="modal-content" id="quizBox">
-      <!-- filled by JS -->
-    </div>
+    <div class="modal-content" id="quizBox"></div>
   </div>
 
   <!-- Firebase -->
@@ -50,7 +53,7 @@
       appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
       measurementId: "G-33LJCV1MD8"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
   <script src="mission.js"></script>
 </body>
