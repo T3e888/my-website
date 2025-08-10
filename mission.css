@@ -97,3 +97,14 @@ body{
   box-shadow: 0 4px 18px rgba(229,57,53,0.18);
 }
 .points-hud #pointsNum { min-width: 18px; text-align: right; }
+/* Exit button in quiz modal header */
+.q-exit{
+  background: none;
+  border: 0;
+  font-size: 1.6rem;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.q-exit:hover{ color:#e53935; background:#f4f4f4; }
