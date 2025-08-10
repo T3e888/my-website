@@ -128,6 +128,7 @@ function startQuiz(levelIdx, docRef, completed) {
       <div class="q-header">
         <div class="q-title">Checkpoint ${levelIdx+1}</div>
         <div class="q-progress">${idx+1}/10</div>
+        <button class="q-exit" id="exitQuiz" title="Exit">×</button>
       </div>
       <div class="q-body">${q.q}</div>
       <div class="q-options">
@@ -155,6 +156,11 @@ function startQuiz(levelIdx, docRef, completed) {
     function highlight(){
       opts.forEach(o => o.classList.toggle("selected", Number(o.dataset.i)===selected));
     }
+
+    // NEW: exit button closes the quiz without saving progress
+    document.getElementById("exitQuiz").onclick = () => {
+      modal.classList.remove("show");
+    };
 
     document.getElementById("nextBtn").onclick = async () => {
       if (selected === -1) return;
@@ -219,4 +225,4 @@ function toast(msg){
     </div>`;
   modal.classList.add("show");
   document.getElementById("closeNotice").onclick = () => modal.classList.remove("show");
-          }
+}
