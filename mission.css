@@ -95,3 +95,13 @@ body{
 .center{text-align:center}
 .all-done{color:#2e7d32;text-align:center;margin:14px 0 32px;font-weight:900}
 .hidden{display:none}
+/* Close X for quiz modal */
+.modal-content { position: relative; } /* you already have this; ok to keep */
+.close-x{
+  position:absolute;
+  top:10px; right:12px;
+  background:transparent; border:none;
+  font-size:28px; line-height:1;
+  color:#e53935; cursor:pointer;
+}
+.close-x:active { transform: scale(0.98); }
