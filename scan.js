@@ -1,236 +1,236 @@
-// --- guard + bootstrap ---
+// --- Auth guard ---
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
-    // If the page itself has ?card=cardX, send to login with that same param,
-    // then login flow can unlock after auth.
     const params = new URLSearchParams(location.search);
     const cardParam = params.get('card');
-    if (cardParam) {
-      location.href = `login.html?card=${encodeURIComponent(cardParam)}`;
-    } else {
-      location.href = 'login.html';
-    }
+    location.href = cardParam ? `login.html?card=${encodeURIComponent(cardParam)}` : 'login.html';
     return;
   }
-
-  initScanPage(user).catch(err => console.error(err));
+  initScanPage(user).catch(console.error);
 });
 
 async function initScanPage(user) {
-  // ====== SIDEBAR (unchanged behavior) ======
+  // ===== Sidebar =====
   const toggleBtn = document.getElementById('menu-toggle');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('overlay');
   const closeBtn = document.getElementById('close-sidebar');
-  const logout = document.getElementById('logout-link');
+  const logout   = document.getElementById('logout-link');
 
-  toggleBtn?.addEventListener('click', () => {
-    sidebar.classList.add('open');
-    overlay.classList.add('active');
-  });
-  function closeSidebar() {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('active');
-  }
+  toggleBtn?.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); });
+  function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('active'); }
   closeBtn?.addEventListener('click', closeSidebar);
   overlay?.addEventListener('click', closeSidebar);
-  logout?.addEventListener('click', (e) => {
-    e.preventDefault();
-    auth.signOut().then(() => location.href = 'login.html');
-  });
-  document.querySelectorAll('#sidebar .menu-item a').forEach(a => {
-    if (!a.closest('#logout-link')) a.addEventListener('click', closeSidebar);
-  });
+  logout?.addEventListener('click', (e) => { e.preventDefault(); auth.signOut().then(() => location.href='login.html'); });
 
-  // ====== If this page URL has ?card=cardX, unlock immediately ======
+  // ===== Unlock if ?card=cardX is in the URL =====
   const hereParams = new URLSearchParams(location.search);
   const hereCard = hereParams.get('card');
   if (isValidCardId(hereCard)) {
-    await saveUnlockedCard(user.uid, hereCard);
-    showModal(`Unlocked card ${numFromCardId(hereCard)}!<br>
-      <img src="assets/cards/${hereCard}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
+    await saveUnlockedCard(user.uid, hereCard.toLowerCase());
+    showModal(
+      `Unlocked card ${numFromCardId(hereCard)}!<br><img src="assets/cards/${hereCard}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
       () => { cleanCardQueryFromUrl(); location.href = 'card.html'; }
     );
-    return; // stop camera if any
-  } else {
-    // Just clean junk/unknown card param from URL
-    if (hereCard) cleanCardQueryFromUrl();
+    return;
+  } else if (hereCard) {
+    cleanCardQueryFromUrl();
   }
 
-  // ====== Live camera scan ======
-  const video = document.getElementById('camera');
-  const fileInput = document.getElementById('fileInput');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const dropZone = document.getElementById('dropZone');
+  // ===== Elements =====
+  const uploadPanel = document.getElementById('uploadPanel');
+  const cameraPanel = document.getElementById('cameraPanel');
+  const cameraLink  = document.getElementById('cameraLink');
+  const backToUpload= document.getElementById('backToUpload');
+  const video       = document.getElementById('camera');
+  const fileInput   = document.getElementById('fileInput');
+  const uploadBtn   = document.getElementById('uploadBtn');
+  const dropZone    = document.getElementById('dropZone');
 
-  // Start camera with BarcodeDetector if possible
-  let stopStream = () => {};
-  if ('BarcodeDetector' in window) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      video.srcObject = stream;
-      await video.play();
-      stopStream = () => stream.getTracks().forEach(t => t.stop());
-
-      const detector = new BarcodeDetector({ formats: ['qr_code'] });
-      const scanLoop = async () => {
-        if (!video.videoWidth) {
-          requestAnimationFrame(scanLoop);
-          return;
-        }
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-          const codes = await detector.detect(canvas);
-          if (codes && codes.length) {
-            const raw = codes[0].rawValue || '';
-            const card = extractCardId(raw);
-            if (card) {
-              stopStream();
-              await handleUnlock(user.uid, card);
-              return;
-            } else {
-              // Not a valid card payload; keep scanning
-            }
-          }
-        } catch (_) {}
-        requestAnimationFrame(scanLoop);
-      };
-      requestAnimationFrame(scanLoop);
-    } catch (err) {
-      // Camera not allowed; fall back to upload
-      console.warn('Camera not available:', err);
-    }
-  }
-
-  // ====== Upload button ======
+  // ===== Upload & drop (works immediately) =====
   uploadBtn?.addEventListener('click', () => fileInput.click());
   fileInput?.addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
-    if (f) await readImageAndDecode(f, async (text) => {
-      const card = extractCardId(text);
-      if (card) await handleUnlock(user.uid, card);
-      else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
-    });
+    if (f) {
+      uploadBtn.textContent = `Choose Image - ${f.name}`;
+      await readImageAndDecode(f, async (text) => {
+        const card = extractCardId(text);
+        if (card) await handleUnlock(user.uid, card);
+        else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
+      });
+    }
     e.target.value = '';
   });
 
-  // ====== Drag & drop ======
-  ;['dragenter','dragover'].forEach(ev =>
+  ['dragenter','dragover'].forEach(ev =>
     dropZone?.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('dragging'); })
   );
-  ;['dragleave','drop'].forEach(ev =>
+  ['dragleave','drop'].forEach(ev =>
     dropZone?.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('dragging'); })
   );
   dropZone?.addEventListener('drop', async (e) => {
     const f = e.dataTransfer?.files?.[0];
-    if (f) await readImageAndDecode(f, async (text) => {
-      const card = extractCardId(text);
-      if (card) await handleUnlock(user.uid, card);
-      else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
+    if (f) {
+      uploadBtn.textContent = `Choose Image - ${f.name}`;
+      await readImageAndDecode(f, async (text) => {
+        const card = extractCardId(text);
+        if (card) await handleUnlock(user.uid, card);
+        else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
+      });
+    }
+  });
+
+  // ===== Camera: start only when user clicks =====
+  let stopControls = null; // function to stop any live reader/stream
+
+  cameraLink?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    uploadPanel.style.display = 'none';
+    cameraPanel.classList.add('show');
+    stopControls = await startLiveCamera(video, async (raw) => {
+      const card = extractCardId(raw);
+      if (card) {
+        await handleUnlock(user.uid, card);
+        if (stopControls) stopControls();
+      }
     });
   });
 
-  // ====== helpers ======
+  backToUpload?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (stopControls) stopControls();
+    cameraPanel.classList.remove('show');
+    uploadPanel.style.display = '';
+  });
+
+  // ----- helpers -----
   async function handleUnlock(uid, cardId) {
     await saveUnlockedCard(uid, cardId);
-    showModal(`Unlocked card ${numFromCardId(cardId)}!<br>
-      <img src="assets/cards/${cardId}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
+    showModal(
+      `Unlocked card ${numFromCardId(cardId)}!<br><img src="assets/cards/${cardId}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
       () => location.href = 'card.html'
     );
   }
 }
 
-// ---------- QR helpers ----------
-function extractCardId(text) {
-  if (!text) return null;
+// Start camera using BarcodeDetector first, then ZXing video fallback.
+// Returns a stop() function.
+async function startLiveCamera(videoEl, onResult) {
+  // 1) BarcodeDetector
+  if ('BarcodeDetector' in window) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      videoEl.srcObject = stream;
+      await videoEl.play();
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      let stopped = false;
 
-  // 1) If it's literally "card7" etc.
-  if (isValidCardId(text)) return text;
+      const loop = async () => {
+        if (stopped) return;
+        if (!videoEl.videoWidth) return requestAnimationFrame(loop);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = videoEl.videoWidth;
+          canvas.height = videoEl.videoHeight;
+          canvas.getContext('2d').drawImage(videoEl, 0, 0);
+          const codes = await detector.detect(canvas);
+          if (codes && codes.length && codes[0].rawValue) {
+            await onResult(codes[0].rawValue);
+          }
+        } catch {}
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
 
-  // 2) If it's a URL, try to read ?card=cardX
-  try {
-    const u = new URL(text);
-    const q = u.searchParams.get('card');
-    if (isValidCardId(q)) return q;
-    // 3) Or filename includes cardX.png
-    const tail = u.pathname.split('/').pop() || '';
-    const m = tail.match(/^card([1-9]|1[0-9]|2[0-5])(?:\.png)?$/i);
-    if (m) return `card${m[1]}`;
-  } catch (_) {
-    // Not a URL; keep going
+      const stop = () => {
+        if (stopped) return;
+        stopped = true;
+        stream.getTracks().forEach(t => t.stop());
+        videoEl.srcObject = null;
+      };
+      return stop;
+    } catch (e) {
+      console.warn('BarcodeDetector not available:', e);
+    }
   }
 
-  // 4) Generic regex in the string
-  const m2 = text.match(/card([1-9]|1[0-9]|2[0-5])(?!\w)/i);
-  if (m2) return `card${m2[1]}`;
+  // 2) ZXing live fallback
+  if (window.ZXingBrowser) {
+    try {
+      const reader = new ZXingBrowser.BrowserQRCodeReader();
+      const controls = await reader.decodeFromVideoDevice(null, videoEl, (result) => {
+        if (result && result.text) onResult(result.text);
+      });
+      return () => { try { controls.stop(); } catch {} videoEl.srcObject = null; };
+    } catch (e) {
+      console.warn('ZXing video fallback failed:', e);
+    }
+  }
 
+  showModal('Camera is not available on this device. You can still upload/drag an image to scan.');
+  return () => {};
+}
+
+// ---------- Parsing helpers ----------
+function extractCardId(text) {
+  text = (text || '').trim();
+  if (isValidCardId(text)) return text.toLowerCase();
+  let u = null;
+  try { u = new URL(text); }
+  catch {
+    if (/^[a-z0-9.-]+\.[a-z]{2,}/i.test(text)) { try { u = new URL('https://' + text); } catch {} }
+  }
+  if (u) {
+    const q = u.searchParams.get('card');
+    if (isValidCardId(q)) return q.toLowerCase();
+    const last = (u.pathname.split('/').pop() || '').toLowerCase();
+    const m = last.match(/^card(0?[1-9]|1[0-9]|2[0-5])(?:\.png)?$/);
+    if (m) return `card${Number(m[1])}`;
+  }
+  const m2 = text.toLowerCase().match(/card(0?[1-9]|1[0-9]|2[0-5])\b/);
+  if (m2) return `card${Number(m2[1])}`;
   return null;
 }
-
-function isValidCardId(v) {
-  return typeof v === 'string' && /^card([1-9]|1[0-9]|2[0-5])$/i.test(v);
-}
-function numFromCardId(cardId) {
-  return cardId.replace(/[^0-9]/g, '');
-}
-
-function cleanCardQueryFromUrl() {
-  const url = new URL(location.href);
-  url.searchParams.delete('card');
-  history.replaceState({}, '', url.toString());
-}
+function isValidCardId(v){ return typeof v==='string' && /^card(0?[1-9]|1[0-9]|2[0-5])$/i.test(v); }
+function numFromCardId(id){ return String(Number((id||'').replace(/[^0-9]/g,''))); }
+function cleanCardQueryFromUrl(){ const url=new URL(location.href); url.searchParams.delete('card'); history.replaceState({},'',url.toString()); }
 
 // ---------- Firestore save ----------
 async function saveUnlockedCard(uid, cardId) {
   const docRef = db.collection('users').doc(uid);
-  await docRef.set(
-    { cards: firebase.firestore.FieldValue.arrayUnion(cardId) },
-    { merge: true }
-  );
+  await docRef.set({ cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
 }
 
-// ---------- Image decoding (jsQR fallback) ----------
-let jsQRLoaded = false;
-function loadJsQR() {
-  return new Promise((resolve, reject) => {
-    if (jsQRLoaded) return resolve();
-    const s = document.createElement('script');
-    s.src = 'https://unpkg.com/jsqr';
-    s.onload = () => { jsQRLoaded = true; resolve(); };
-    s.onerror = reject;
-    document.body.appendChild(s);
-  });
-}
-
-async function readImageAndDecode(file, onDecoded) {
+// ---------- Image decoding: ZXing first, jsQR fallback ----------
+let jsQRLoaded=false;
+function loadJsQR(){ return new Promise((res,rej)=>{ if(jsQRLoaded) return res(); const s=document.createElement('script'); s.src='https://unpkg.com/jsqr'; s.onload=()=>{jsQRLoaded=true;res();}; s.onerror=rej; document.body.appendChild(s);}); }
+async function readImageAndDecode(file,onDecoded){
+  const dataUrl = await new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); });
+  try{
+    if(window.ZXingBrowser){
+      const img = document.createElement('img'); img.src=dataUrl; await img.decode();
+      const reader = new ZXingBrowser.BrowserQRCodeReader();
+      const res = await reader.decodeFromImageElement(img);
+      if(res && res.text){ onDecoded(res.text); return; }
+    }
+  }catch{}
   await loadJsQR();
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    canvas.getContext('2d').drawImage(img, 0, 0);
-    const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
-    const qr = window.jsQR(imageData.data, imageData.width, imageData.height);
-    onDecoded(qr ? qr.data : '');
+  const img2=new Image();
+  img2.onload=()=>{
+    const c=document.createElement('canvas'); c.width=img2.width; c.height=img2.height;
+    const ctx=c.getContext('2d'); ctx.drawImage(img2,0,0);
+    const d=ctx.getImageData(0,0,c.width,c.height);
+    const qr=window.jsQR(d.data,d.width,d.height);
+    onDecoded(qr?qr.data:'');
   };
-  img.onerror = () => onDecoded('');
-  const reader = new FileReader();
-  reader.onload = (e) => { img.src = e.target.result; };
-  reader.readAsDataURL(file);
+  img2.onerror=()=>onDecoded('');
+  img2.src=dataUrl;
 }
 
 // ---------- Modal ----------
-function showModal(msg, cb) {
-  const modal = document.getElementById('modal');
-  modal.innerHTML = `<div class="modal-content">${msg}<br>
-    <button class="modal-close">OK</button></div>`;
+function showModal(msg,cb){
+  const modal=document.getElementById('modal');
+  modal.innerHTML=`<div class="modal-content">${msg}<br><button class="modal-close">OK</button></div>`;
   modal.classList.add('active');
-  modal.querySelector('.modal-close').onclick = () => {
-    modal.classList.remove('active');
-    if (cb) cb();
-  };
-              }
+  modal.querySelector('.modal-close').onclick=()=>{ modal.classList.remove('active'); if(cb) cb(); };
+      }
