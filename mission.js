@@ -3,7 +3,7 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const LEVEL_COUNT = 10;
-let CURRENT_POINTS = 0; // in-memory cache for HUD
+let CURRENT_POINTS = 0; // HUD cache
 
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
@@ -14,7 +14,7 @@ auth.onAuthStateChanged(async (user) => {
   await buildPath(user);
 });
 
-// ====== Sidebar small logic (kept same style) ======
+// ====== Sidebar small logic (same style) ======
 function initUIBasics() {
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar   = document.getElementById("sidebar");
@@ -68,7 +68,6 @@ async function buildPath(user) {
   const docRef = db.collection("users").doc(user.uid);
   const snap = await docRef.get();
 
-  // Ensure doc & fields exist
   if (!snap.exists) {
     await docRef.set({
       username: (user.email||"").split("@")[0],
@@ -83,16 +82,11 @@ async function buildPath(user) {
   while (completed.length < LEVEL_COUNT) completed.push(false);
   renderPoints(typeof data.points === "number" ? data.points : 0);
 
-  // first active (first false)
   let activeIdx = completed.findIndex(v => !v);
   if (activeIdx === -1) {
-    // all done
     path.innerHTML = "";
     allDoneEl.classList.remove("hidden");
-    for (let i=0;i<LEVEL_COUNT;i++) {
-      const li = nodeElement(i, "done");
-      path.appendChild(li);
-    }
+    for (let i=0;i<LEVEL_COUNT;i++) path.appendChild(nodeElement(i, "done"));
     return;
   }
 
@@ -110,12 +104,12 @@ async function buildPath(user) {
   }
 }
 
-// ====== Quiz flow (adds +1 point only on first pass) ======
+// ====== Quiz flow (+1 point on first pass) ======
 function startQuiz(levelIdx, docRef, completed) {
   const modal = document.getElementById("quizModal");
   const box   = document.getElementById("quizBox");
 
-  const questions = BASE_QUESTIONS.map(q => ({...q})); // copy
+  const questions = BASE_QUESTIONS.map(q => ({...q}));
   let idx = 0;
   let correct = 0;
   const answers = [];
@@ -128,11 +122,8 @@ function startQuiz(levelIdx, docRef, completed) {
       <div class="q-header">
         <div class="q-title">Checkpoint ${levelIdx+1}</div>
         <div class="q-progress">${idx+1}/10</div>
+        <button class="close-x" aria-label="Close quiz">×</button>
       </div>
-
-      <!-- absolutely positioned top-right, away from progress -->
-      <button class="close-x" id="closeQuizX" aria-label="Close">×</button>
-
       <div class="q-body">${q.q}</div>
       <div class="q-options">
         ${q.opts.map((t,i)=>`<div class="q-option" data-i="${i}">${t}</div>`).join("")}
@@ -144,19 +135,13 @@ function startQuiz(levelIdx, docRef, completed) {
     `;
     modal.classList.add("show");
 
-    // Close (×)
-    document.getElementById("closeQuizX").onclick = () => {
-      modal.classList.remove("show");
-    };
+    // Close (X)
+    box.querySelector(".close-x").onclick = () => modal.classList.remove("show");
 
-    // keyboard Esc to close
-    const escHandler = (e) => { if (e.key === "Escape") { modal.classList.remove("show"); window.removeEventListener("keydown", escHandler); } };
-    window.addEventListener("keydown", escHandler);
-
+    // Restore selection (if any)
     let selected = (answers[idx] !== undefined) ? answers[idx] : -1;
     const opts = [...box.querySelectorAll(".q-option")];
     highlight();
-
     opts.forEach(el => {
       el.onclick = () => {
         selected = Number(el.dataset.i);
@@ -164,7 +149,6 @@ function startQuiz(levelIdx, docRef, completed) {
         highlight();
       };
     });
-
     function highlight(){
       opts.forEach(o => o.classList.toggle("selected", Number(o.dataset.i)===selected));
     }
@@ -177,12 +161,10 @@ function startQuiz(levelIdx, docRef, completed) {
         idx++;
         render();
       } else {
-        // finished
+        const firstTimePass = !completed[levelIdx];
         if (correct === 10) {
-          const firstTimePass = !completed[levelIdx];
           completed[levelIdx] = true;
 
-          // If first time, increment points atomically (+1)
           if (firstTimePass) {
             await docRef.set(
               { mission: completed, points: firebase.firestore.FieldValue.increment(1) },
@@ -232,4 +214,4 @@ function toast(msg){
     </div>`;
   modal.classList.add("show");
   document.getElementById("closeNotice").onclick = () => modal.classList.remove("show");
-}
+    }
