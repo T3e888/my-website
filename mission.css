@@ -77,11 +77,30 @@ body{
 .modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:2000}
 .modal.show{display:flex}
 .modal-content{
-  background:#fff;border-radius:16px;max-width:680px;width:92vw;padding:20px 16px 16px;box-shadow:0 12px 48px #00000030
+  background:#fff;border-radius:16px;max-width:680px;width:92vw;padding:20px 16px 16px;box-shadow:0 12px 48px #00000030;
+  position:relative;
 }
-.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+/* Header now has 3 columns: title | progress | close */
+.q-header{
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items:center;
+  margin-bottom:10px;
+}
 .q-title{color:var(--red-2);font-weight:900}
 .q-progress{color:#888;font-weight:700}
+
+/* Close X (its own column so no overlap) */
+.close-x{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+  background:transparent;border:none;color:#e53935;font-size:18px;
+  cursor:pointer;line-height:1;
+}
+.close-x:active{transform:scale(0.98)}
+
 .q-body{margin-top:6px;color:#333}
 .q-options{margin-top:12px;display:flex;flex-direction:column;gap:10px}
 .q-option{
@@ -95,13 +114,3 @@ body{
 .center{text-align:center}
 .all-done{color:#2e7d32;text-align:center;margin:14px 0 32px;font-weight:900}
 .hidden{display:none}
-/* Close X for quiz modal */
-.modal-content { position: relative; } /* you already have this; ok to keep */
-.close-x{
-  position:absolute;
-  top:10px; right:12px;
-  background:transparent; border:none;
-  font-size:28px; line-height:1;
-  color:#e53935; cursor:pointer;
-}
-.close-x:active { transform: scale(0.98); }
