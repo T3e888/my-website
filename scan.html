@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Scan Card</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="scan.css">
+  <meta charset="UTF-8" />
+  <title>Scan QR Code</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="scan.css" />
 </head>
 <body>
-  <!-- ===== SIDEBAR (unchanged) ===== -->
+  <!-- ===== SIDEBAR ===== -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -25,25 +25,38 @@
 
   <h1 class="page-title">Scan QR Code</h1>
 
-  <div class="scan-box">
-    <!-- Live camera -->
-    <video id="camera" autoplay playsinline muted></video>
+  <!-- ===== Upload-first UI (like your screenshot) ===== -->
+  <section id="uploadPanel" class="upload-card">
+    <button class="info-dot" title="Upload or drop a QR image. Or open the camera below.">i</button>
 
-    <!-- Actions -->
-    <div class="scan-actions">
-      <button id="uploadBtn" class="btn">Scan from image</button>
-      <div id="dropZone" class="drop-zone">Drag & drop an image here</div>
-      <p class="hint">Tip: You can also scan a link like <code>login.html?card=card7</code></p>
+    <div class="illustration" aria-hidden="true">
+      <!-- simple inline icon -->
+      <svg width="88" height="68" viewBox="0 0 88 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="1.5" width="85" height="65" rx="8" stroke="#c5c5c5" stroke-width="3"/>
+        <path d="M14 46l14-17 12 12 8-10 18 23H14z" fill="#c5c5c5" opacity=".8"/>
+        <circle cx="57" cy="21" r="6" fill="#c5c5c5"/>
+      </svg>
     </div>
 
-    <!-- Hidden file input for upload -->
-    <input type="file" id="fileInput" accept="image/*" hidden>
-  </div>
+    <div id="dropZone" class="drop-wrap">
+      <button id="uploadBtn" class="red-btn">Choose Image - No image choosen</button>
+      <div class="drop-hint">Or drop an image to scan</div>
+    </div>
+
+    <a id="cameraLink" class="camera-link" href="#">Scan using camera directly</a>
+    <input id="fileInput" type="file" accept="image/*" hidden />
+  </section>
+
+  <!-- ===== Camera panel (shown only when user clicks link) ===== -->
+  <section id="cameraPanel" class="camera-panel">
+    <video id="camera" autoplay playsinline muted></video>
+    <a id="backToUpload" class="back-link" href="#">← Back to upload</a>
+  </section>
 
   <!-- Modal -->
   <div id="modal" class="modal"></div>
 
-  <!-- ==== Firebase SDK and Config (you already use these) ==== -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -61,6 +74,9 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
   </script>
+
+  <!-- Stronger QR reader -->
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest/umd/index.min.js"></script>
 
   <script src="scan.js"></script>
 </body>
