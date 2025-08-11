@@ -125,11 +125,14 @@ function startQuiz(levelIdx, docRef, completed) {
   function render() {
     const q = questions[idx];
     box.innerHTML = `
-      <button class="close-x" id="closeQuizX" aria-label="Close">×</button>
       <div class="q-header">
         <div class="q-title">Checkpoint ${levelIdx+1}</div>
         <div class="q-progress">${idx+1}/10</div>
       </div>
+
+      <!-- absolutely positioned top-right, away from progress -->
+      <button class="close-x" id="closeQuizX" aria-label="Close">×</button>
+
       <div class="q-body">${q.q}</div>
       <div class="q-options">
         ${q.opts.map((t,i)=>`<div class="q-option" data-i="${i}">${t}</div>`).join("")}
@@ -141,10 +144,14 @@ function startQuiz(levelIdx, docRef, completed) {
     `;
     modal.classList.add("show");
 
-    // NEW: top-right close (X)
+    // Close (×)
     document.getElementById("closeQuizX").onclick = () => {
       modal.classList.remove("show");
     };
+
+    // keyboard Esc to close
+    const escHandler = (e) => { if (e.key === "Escape") { modal.classList.remove("show"); window.removeEventListener("keydown", escHandler); } };
+    window.addEventListener("keydown", escHandler);
 
     let selected = (answers[idx] !== undefined) ? answers[idx] : -1;
     const opts = [...box.querySelectorAll(".q-option")];
@@ -225,4 +232,4 @@ function toast(msg){
     </div>`;
   modal.classList.add("show");
   document.getElementById("closeNotice").onclick = () => modal.classList.remove("show");
-      }
+}
