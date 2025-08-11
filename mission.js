@@ -111,8 +111,7 @@ function startQuiz(levelIdx, docRef, completed) {
 
   const questions = BASE_QUESTIONS.map(q => ({...q}));
   let idx = 0;
-  let correct = 0;
-  const answers = [];
+  const answers = []; // store selected index per question
 
   render();
 
@@ -154,15 +153,17 @@ function startQuiz(levelIdx, docRef, completed) {
     }
 
     document.getElementById("nextBtn").onclick = async () => {
-      if (selected === -1) return;
-      if (selected === questions[idx].a) correct++;
+      if (selected === -1 && answers[idx] === undefined) return; // must choose at least once
 
       if (idx < 9) {
         idx++;
         render();
       } else {
+        // compute score from answers to avoid double counting on back/changes
+        const score = answers.reduce((sum, ans, i) => sum + (ans === questions[i].a ? 1 : 0), 0);
         const firstTimePass = !completed[levelIdx];
-        if (correct === 10) {
+
+        if (score === 10) {
           completed[levelIdx] = true;
 
           if (firstTimePass) {
@@ -188,14 +189,14 @@ function startQuiz(levelIdx, docRef, completed) {
           box.innerHTML = `
             <div class="center">
               <h2 class="q-title">Keep going!</h2>
-              <p>You scored <b>${correct}/10</b>. You must get <b>10/10</b> to pass.</p>
+              <p>You scored <b>${score}/10</b>. You must get <b>10/10</b> to pass.</p>
               <div class="q-actions" style="justify-content:center">
                 <button class="btn btn-grey" id="closeBtn">Close</button>
                 <button class="btn btn-red" id="retryBtn">Try again</button>
               </div>
             </div>`;
           document.getElementById("closeBtn").onclick = () => modal.classList.remove("show");
-          document.getElementById("retryBtn").onclick = () => { idx = 0; correct = 0; answers.length = 0; render(); };
+          document.getElementById("retryBtn").onclick = () => { idx = 0; answers.length = 0; render(); };
         }
       }
     };
@@ -214,4 +215,4 @@ function toast(msg){
     </div>`;
   modal.classList.add("show");
   document.getElementById("closeNotice").onclick = () => modal.classList.remove("show");
-    }
+                     }
