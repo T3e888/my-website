@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Learn about Stroke</title>
+  <title>Learn</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="learn.css" />
 </head>
 <body>
-  <!-- Sidebar (same style as other pages) -->
+  <!-- Sidebar -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -26,23 +26,19 @@
   <h1 class="page-title">Learn</h1>
   <p class="subtitle">Tap a card to read.</p>
 
-  <section class="learn-grid" id="learnGrid">
-    <!-- filled by JS -->
-  </section>
+  <div id="learnGrid" class="grid"></div>
 
   <!-- Modal -->
   <div id="learnModal" class="modal">
     <div class="modal-content">
-      <button class="close-x" id="closeLearn">×</button>
-      <h2 id="mTitle"></h2>
-      <div id="mBody" class="m-body"></div>
+      <button class="close-x" id="learnClose">×</button>
+      <div id="learnBody"></div>
     </div>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase (just for auth-guard + logout) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
@@ -55,6 +51,7 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
+
   <script src="learn.js"></script>
 </body>
 </html>
