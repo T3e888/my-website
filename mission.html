@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="mission.css" />
 </head>
 <body>
-  <!-- ===== SIDEBAR ===== -->
+  <!-- ===== SIDEBAR (same structure as other pages) ===== -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -25,18 +25,19 @@
   <!-- ===== END SIDEBAR ===== -->
 
   <!-- Points HUD -->
-  <div class="points-hud" title="Your points">
+  <div class="points-hud" id="pointsHud" aria-live="polite">
     🧠 <span id="pointsNum">0</span>
   </div>
 
   <h1 class="page-title">Quiz Zone</h1>
   <p class="subtitle">Pass checkpoints in order. 10/10 to pass.</p>
 
+  <!-- Path -->
   <ul id="path" class="path"></ul>
   <div id="allDone" class="all-done hidden">🎉 All checkpoints complete!</div>
 
   <!-- Quiz Modal -->
-  <div id="quizModal" class="modal">
+  <div id="quizModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
     <div class="modal-content" id="quizBox"></div>
   </div>
 
@@ -56,6 +57,8 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
+
+  <!-- App -->
   <script src="mission.js"></script>
 </body>
 </html>
