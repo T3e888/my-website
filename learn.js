@@ -1,128 +1,103 @@
-<script>
 const auth = firebase.auth();
 
 auth.onAuthStateChanged(user=>{
-  if(!user){ location.href = "login.html"; return; }
-  setupSidebar(); buildPage();
+  if(!user) return location.href="login.html";
+  setupSidebar();
+  buildLearn();
 });
 
+// Sidebar identical behavior
 function setupSidebar(){
-  const toggleBtn = document.getElementById("menu-toggle");
-  const sidebar   = document.getElementById("sidebar");
-  const overlay   = document.getElementById("overlay");
-  const closeBtn  = document.getElementById("close-sidebar");
-  const logout    = document.getElementById("logout-link");
-  toggleBtn?.addEventListener("click", ()=>{sidebar.classList.add("open");overlay.classList.add("active");});
-  function close(){sidebar.classList.remove("open");overlay.classList.remove("active");}
+  const toggleBtn=document.getElementById("menu-toggle");
+  const sidebar=document.getElementById("sidebar");
+  const overlay=document.getElementById("overlay");
+  const closeBtn=document.getElementById("close-sidebar");
+  const logout=document.getElementById("logout-link");
+
+  const open=()=>{sidebar.classList.add("open");overlay.classList.add("active");};
+  const close=()=>{sidebar.classList.remove("open");overlay.classList.remove("active");};
+
+  toggleBtn?.addEventListener("click", open);
   closeBtn?.addEventListener("click", close);
   overlay?.addEventListener("click", close);
-  logout?.addEventListener("click", (e)=>{e.preventDefault(); auth.signOut().then(()=>location.href="login.html");});
+  document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
+    if(!a.closest("#logout-link")) a.addEventListener("click", close);
+  });
+  logout?.addEventListener("click",(e)=>{e.preventDefault();auth.signOut().then(()=>location.href="login.html");});
 }
 
-/* Slide content (your text) */
+// Content slides (shortened to keep file small; you can expand freely)
 const SLIDES = [
-  {
-    title:"Basic Knowledge about Stroke",
-    brief:"What stroke is, types, TIA, and why time matters.",
+  { title:"Basic Knowledge about Stroke",
+    brief:"What stroke is and why time matters.",
     html: `
-      <p><b>Stroke</b> = brain lacks blood flow or has bleeding → sudden malfunction. Go to hospital immediately.</p>
-      <h4>Two main types</h4>
+      <h2>Basic Knowledge about Stroke</h2>
+      <p><b>Stroke</b> = the brain lacks blood flow or has bleeding → sudden malfunction. It’s a medical emergency.</p>
       <ul>
-        <li><b>Ischemic</b> (~80–85%): vessel narrowed/blocked → less blood.</li>
-        <li><b>Hemorrhagic</b> (~15–20%): vessel ruptures → bleeding.</li>
+        <li><b>Ischemic</b> (≈80–85%): vessel blocked → low blood flow.</li>
+        <li><b>Hemorrhagic</b> (≈15–20%): vessel ruptures → bleeding.</li>
       </ul>
-      <p><b>TIA</b>: stroke-like symptoms that disappear within 24 hrs. It’s a <i>warning stroke</i>.</p>
-      <p>Called <b>cerebrovascular</b> because it involves brain blood vessels. Blood arrives via <b>carotid</b> & <b>vertebral</b> arteries.</p>
-      <p><b>Time matters:</b> permanent damage can begin in about 4–5 minutes.</p>
-      <p>Can happen at any age (risk ↑ with age). In Thailand, cases rising with aging & risky lifestyles.</p>
-      <p><b>Summary:</b> Medical emergency. “Time = Brain”.</p>
-    `
+      <p><b>TIA</b> = stroke-like symptoms that disappear within 24 hours → warning stroke → see a doctor.</p>
+      <p>Brain blood supply from carotid & vertebral arteries. Damage can begin in ~4–5 minutes without blood.</p>
+      <p><i>Summary:</i> Time = Brain. Call emergency immediately.</p>`
   },
-  {
-    title:"Causes & Risk Factors",
-    brief:"Blockage vs rupture and key risks you can control.",
+  { title:"Causes & Risk Factors",
+    brief:"Blockage, rupture, and what increases risk.",
     html: `
-      <h4>Main mechanisms</h4>
-      <ul>
-        <li><b>Blockage</b> (clot in brain/neck or from heart – atrial fibrillation).</li>
-        <li><b>Rupture</b> (weak wall from long-term high BP, aneurysm, AVM).</li>
-      </ul>
-      <h4>Controllable risks</h4>
-      <ul>
-        <li>High blood pressure (most important)</li><li>Smoking</li><li>Diabetes</li>
-        <li>High cholesterol</li><li>Excess alcohol</li><li>Obesity & inactivity</li>
-        <li>Chronic stress / lack of sleep</li>
-      </ul>
-      <h4>Uncontrollable</h4>
-      <ul><li>Age, family history, gender</li></ul>
-      <p><b>Summary:</b> Control BP, sugar, cholesterol; quit smoking; exercise.</p>
-    `
+      <h2>Causes & Risk Factors</h2>
+      <p><b>Blockage</b>: clot in brain/neck or from heart (e.g., atrial fibrillation).</p>
+      <p><b>Rupture</b>: weak vessel walls from long-term high blood pressure, aneurysm.</p>
+      <p><b>Controllable</b>: high BP, smoking, diabetes, high cholesterol, alcohol, obesity/inactivity, stress/sleep.</p>
+      <p><b>Uncontrollable</b>: age, family history, gender.</p>
+      <p>Control BP/sugar/cholesterol, quit smoking, exercise → lower risk.</p>`
   },
-  {
-    title:"Prevention & Self-Care",
-    brief:"Diet, exercise, sleep, stress, check-ups.",
+  { title:"Prevention & Self-Care",
+    brief:"Daily habits that protect your brain.",
     html: `
-      <ul>
-        <li><b>Diet:</b> fruit/veg, whole grains, fish, nuts; reduce salt/sugar/fried fats.</li>
-        <li><b>Exercise:</b> 150 min/week + 2 strength days.</li>
-        <li><b>Quit smoking:</b> risk drops in 1–2 yrs; ~5 yrs near non-smoker.</li>
-        <li><b>Limit alcohol</b>, keep healthy weight & waist.</li>
-        <li><b>Sleep</b> 7–9 h; manage stress; stay hydrated.</li>
-        <li><b>Check-ups</b> & follow doctor advice.</li>
-      </ul>
-    `
+      <h2>Prevention & Self-Care</h2>
+      <p>Eat heart-healthy, exercise 150 min/week, quit smoking, limit alcohol.</p>
+      <p>Control weight & waist, sleep 7–9h, manage stress, hydrate.</p>
+      <p>Regular check-ups + follow doctor’s advice.</p>`
   },
-  {
-    title:"Warning Signs & First Aid (BEFAST)",
-    brief:"Know the signs. Call 1669 fast.",
+  { title:"Warning Signs & First Aid (BEFAST)",
+    brief:"Recognize and act fast.",
     html: `
-      <p><b>BEFAST:</b> Balance, Eyes, Face, Arms, Speech, Time.</p>
+      <h2>BEFAST: Warning Signs</h2>
       <ul>
-        <li><b>B</b> – sudden dizziness/unsteady walking</li>
-        <li><b>E</b> – sudden blurred/double vision or one-eye blindness</li>
-        <li><b>F</b> – face droop</li>
-        <li><b>A</b> – arm/leg weakness</li>
-        <li><b>S</b> – slurred speech / can’t speak</li>
-        <li><b>T</b> – <b>Time</b>: call <b>1669</b> immediately</li>
+        <li><b>B</b>alance problems</li>
+        <li><b>E</b>yes: vision loss/double vision</li>
+        <li><b>F</b>ace drooping</li>
+        <li><b>A</b>rm weakness</li>
+        <li><b>S</b>peech difficulty</li>
+        <li><b>T</b>ime to call 1669 immediately</li>
       </ul>
-      <p>Quick test: smile / raise both arms / say a short sentence.</p>
-      <p><b>Don’t:</b> wait, give food/drink/medicine, or drive yourself if severe.</p>
-    `
+      <p>Quick test: smile / raise both arms / say a short sentence. If abnormal → call an ambulance.</p>`
   },
-  {
-    title:"Treatment & Recovery (Elementary)",
-    brief:"What hospitals do and how to recover well.",
+  { title:"Treatment & Recovery",
+    brief:"What hospitals do and how to recover.",
     html: `
-      <ul>
-        <li><b>At once:</b> tell an adult, call 1669, go to hospital quickly.</li>
-        <li><b>Check:</b> CT/MRI to see block vs bleed.</li>
-        <li><b>If block:</b> clot-busting medicine (time-limited).</li>
-        <li><b>If bleed:</b> stop bleeding, sometimes surgery.</li>
-      </ul>
-      <p><b>After emergency:</b> physical/speech/occupational therapy; healthy food; rest; encouragement; prevent another stroke (BP, sugar, cholesterol, exercise, follow-ups).</p>
-    `
+      <h2>Treatment & Recovery</h2>
+      <p>CT/MRI to see block vs bleed → different treatments (clot-buster vs stop bleeding).</p>
+      <p>Rehab: physical, speech, and occupational therapy; healthy food, rest, and family encouragement.</p>
+      <p>Prevent another stroke: control BP/sugar/cholesterol, exercise, keep appointments.</p>`
   }
 ];
 
-function buildPage(){
+function buildLearn(){
   const grid = document.getElementById("learnGrid");
+  const modal = document.getElementById("learnModal");
+  const body  = document.getElementById("learnBody");
+  const close = document.getElementById("learnClose");
+
   grid.innerHTML = "";
-  SLIDES.forEach((s,idx)=>{
-    const card = document.createElement("div");
-    card.className = "learn-card";
-    card.innerHTML = `<h3>Slide ${idx+1} — ${s.title}</h3><p>${s.brief}</p>`;
-    card.onclick = ()=> openModal(s.title, s.html);
-    grid.appendChild(card);
+  SLIDES.forEach((s, i)=>{
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `<h3>Slide ${i+1}: ${s.title}</h3><p>${s.brief}</p>`;
+    c.onclick = ()=>{ body.innerHTML = s.html; modal.classList.add("show"); };
+    grid.appendChild(c);
   });
 
-  const modal = document.getElementById("learnModal");
-  document.getElementById("closeLearn").onclick = ()=> modal.classList.remove("show");
-  modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("show"); });
+  close.onclick = ()=> modal.classList.remove("show");
+  modal.addEventListener("click", (e)=>{ if(e.target===modal) modal.classList.remove("show"); });
 }
-
-function openModal(title, html){
-  document.getElementById("mTitle").textContent = title;
-  document.getElementById("mBody").innerHTML = html;
-  document.getElementById("learnModal").classList.add("show");
-}
-</script>
