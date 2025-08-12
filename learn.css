@@ -1,0 +1,29 @@
+/* reuse sidebar rules from your other pages */
+@import url('mission.css'); /* pulls sidebar + modal styles + fonts/colors */
+
+/* Page header overrides (optional) */
+.page-title{margin-top:32px;text-align:center;color:#d32f2f;font-size:2.2rem;font-weight:900}
+.subtitle{margin:0 auto 16px;text-align:center;color:#888}
+
+/* Card grid */
+.learn-grid{
+  width:92vw;max-width:880px;margin:12px auto 48px;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:16px;
+}
+@media (max-width:680px){ .learn-grid{grid-template-columns:1fr;} }
+
+.learn-card{
+  background:#fff;border:2px solid #ffcdd2;border-radius:16px;
+  box-shadow:0 8px 22px #e539351a; padding:16px; cursor:pointer;
+  transition:transform .12s, box-shadow .12s, border .12s;
+}
+.learn-card:hover{ transform:translateY(-2px); box-shadow:0 10px 26px #e5393526; border-color:#e57373; }
+.learn-card h3{margin:.2rem 0;color:#e53935}
+.learn-card p{margin:.2rem 0;color:#555}
+
+/* Learn modal body */
+.modal .modal-content{position:relative;max-width:760px}
+.m-body{color:#333;line-height:1.55}
+.m-body h4{margin:12px 0 6px;color:#d32f2f}
+.m-body ul{margin:.3rem 0 .7rem 1.2rem}
+.m-body li{margin:.2rem 0}
