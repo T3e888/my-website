@@ -114,3 +114,4 @@ body{
 .center{text-align:center}
 .all-done{color:#2e7d32;text-align:center;margin:14px 0 32px;font-weight:900}
 .hidden{display:none}
+.node::after { display: none !important; }
