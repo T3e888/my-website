@@ -2,7 +2,7 @@
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-const LEVEL_COUNT = 10;      // keep 10 as you had
+const LEVEL_COUNT = 15;      // keep 10 as you had
 let CURRENT_POINTS = 0;
 
 // ---- small safe-log helper so errors don't kill the UI ----
