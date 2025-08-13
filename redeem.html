@@ -1,0 +1,81 @@
+<!-- redeem.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redeeming…</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      font-family:'Noto Sans Thai','Noto Sans',sans-serif;background:#fff;color:#d32f2f}
+    .box{border:2px solid #ffcdd2;border-radius:16px;padding:22px 18px;text-align:center;
+      box-shadow:0 8px 24px rgba(229,57,53,.12);max-width:520px}
+    .muted{color:#888;margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div id="msg">🔄 Checking your key…</div>
+    <div id="sub" class="muted"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const fn   = firebase.functions();
+
+    const qs = new URLSearchParams(location.search);
+    const k  = qs.get('k');
+    const s  = qs.get('s') || "";
+    const t  = qs.get('t') || "";
+    const msg = t => document.getElementById('msg').innerHTML = t;
+    const sub = t => document.getElementById('sub').textContent = t || "";
+
+    if (!k) {
+      msg("❌ Missing key.");
+    } else {
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          location.href = `login.html?k=${encodeURIComponent(k)}${s?`&s=${encodeURIComponent(s)}`:""}${t?`&t=${encodeURIComponent(t)}`:""}`;
+          return;
+        }
+        try {
+          const redeem = fn.httpsCallable('redeemKey');
+          const { data } = await redeem({ k, s, t });
+          if (data.status === 'owned-new') {
+            msg(`🎉 Claimed! You are the <b>OWNER</b> of <b>${data.cardId}</b>.`);
+            sub("Redirecting to your collection…");
+          } else if (data.status === 'owned-again') {
+            msg(`✅ You already own <b>${data.cardId}</b>.`);
+            sub("Opening your collection…");
+          } else if (data.status === 'already-claimed') {
+            msg(`⚠️ This key was already claimed by <b>@${data.ownerName || 'someone'}</b>.`);
+            sub("Ask them to share it with you.");
+          } else if (data.status === 'already-have') {
+            msg(`✅ You already have <b>${data.cardId}</b>.`);
+          } else {
+            msg(`❌ ${data.message || 'Invalid key.'}`);
+          }
+        } catch (e) {
+          msg(`❌ Error: ${e?.message || e}`);
+        }
+        setTimeout(() => location.href = 'card.html', 1400);
+      });
+    }
+  </script>
+</body>
+</html>
