@@ -20,19 +20,29 @@ loginModalBtn.addEventListener('click', () => loginModal.style.display = 'none')
 
 const FAKE_DOMAIN = '@myapp.fake';
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
+const fn   = firebase.functions();
 
-// QR card unlock support
-function getCardParam() {
-  const url = new URL(window.location.href);
-  const card = url.searchParams.get("card");
-  return /^card([1-9]|1[0-9]|2[0-5])$/.test(card) ? card : null;
-}
-let pendingCard = getCardParam();
+// --- query params ---
+function qp(n){ return new URLSearchParams(location.search).get(n); }
+function validCard(v){ return /^card([1-9]|1[0-9]|2[0-5])$/.test(v || ""); }
+const pendingCard = validCard(qp('card')) ? qp('card') : null; // legacy card unlock
+const pendingKey  = qp('k');                                   // NEW secure key
+const sig         = qp('s') || "";                             // optional signature
+const ts          = qp('t') || "";                             // optional timestamp
 
 auth.onAuthStateChanged(async user => {
-  if (user) {
-    // If there's a card param, unlock the card then redirect
+  if (!user) return;
+
+  try {
+    // NEW: redeem key if present
+    if (pendingKey) {
+      const redeem = fn.httpsCallable('redeemKey');
+      await redeem({ k: pendingKey, s: sig, t: ts });
+      window.location.replace('card.html');
+      return;
+    }
+    // legacy ?card= flow (keep)
     if (pendingCard) {
       const docRef = db.collection('users').doc(user.uid);
       const doc = await docRef.get();
@@ -41,11 +51,11 @@ auth.onAuthStateChanged(async user => {
         cards.push(pendingCard);
         await docRef.update({ cards });
       }
-      window.location.href = "card.html";
-    } else {
-      window.location.href = 'card.html';
     }
+  } catch(e) {
+    // don't block login if redeem fails
   }
+  window.location.replace('card.html');
 });
 
 document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -58,12 +68,12 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
   }
   const fakeEmail = username + FAKE_DOMAIN;
   auth.signInWithEmailAndPassword(fakeEmail, password)
-    .then(async () => {
-      // On login, QR card handled by onAuthStateChanged above.
+    .then(() => {
       showModal('✅ Login successful!', '#299c34');
-      loginModalBtn.onclick = () => { window.location.href = pendingCard ? window.location.href : "card.html"; };
+      loginModalBtn.onclick = () => {
+        if (pendingKey) location.href = `redeem.html?k=${encodeURIComponent(pendingKey)}${sig?`&s=${encodeURIComponent(sig)}`:""}${ts?`&t=${encodeURIComponent(ts)}`:""}`;
+        else location.href = pendingCard ? location.href : "card.html";
+      };
     })
-    .catch(error => {
-      showModal('❌ ' + error.message);
-    });
+    .catch(error => showModal('❌ ' + error.message));
 });
