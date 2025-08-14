@@ -1,1 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Your Profile</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--red:#d32f2f;--grey:#888;--bg:#fff}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:'Noto Sans',system-ui,-apple-system,Segoe UI,Roboto}
+    .wrap{max-width:860px;margin:28px auto;padding:0 16px}
+    h1{margin:0 0 16px;color:var(--red);font-size:28px}
+    .card{background:#fff;border:1px solid #eee;border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .col{flex:1 1 320px}
+    label{font-size:13px;color:#555;margin-bottom:6px;display:block}
+    input,textarea{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;font-size:15px}
+    textarea{min-height:84px;resize:vertical}
+    .btn{border:0;border-radius:999px;padding:10px 16px;font-weight:600;cursor:pointer}
+    .btn-red{background:var(--red);color:#fff}
+    .btn-grey{background:#f1f1f1;color:#333}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .muted{color:var(--grey);font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px;margin-top:10px}
+    .cardItem{border:1px dashed #bbb;border-radius:12px;padding:6px;text-align:center;background:#fafafa}
+    .cardItem img{width:100%;height:auto;border-radius:10px;display:block}
+    .pill{display:inline-block;background:#fdecea;color:#b71c1c;padding:3px 8px;border-radius:999px;font-size:12px;margin-left:8px}
+    .topBar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    a.link{color:var(--red);text-decoration:none;font-weight:600}
+    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#333;color:#fff;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s}
+    #toast.show{opacity:1}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topBar">
+      <h1>Your Profile</h1>
+      <div>
+        <a class="link" href="card.html">← Back to collection</a>
+      </div>
+    </div>
 
+    <!-- Overview -->
+    <div class="card">
+      <div class="row">
+        <div class="col">
+          <div style="font-size:18px;font-weight:600" id="displayName">—</div>
+          <div class="muted">UID: <span id="uid">—</span></div>
+          <div class="muted">Email: <span id="email">—</span></div>
+          <div style="margin-top:10px">
+            <b>Points:</b> <span id="points">0</span>
+            <span class="pill"><span id="cardsCount">0</span> cards</span>
+          </div>
+        </div>
+        <div class="col">
+          <label>About me</label>
+          <textarea id="about" placeholder="Write something about you…"></textarea>
+          <div class="actions">
+            <button class="btn btn-red" id="saveAboutBtn">Save</button>
+            <span class="muted" id="saveAboutMsg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit username -->
+    <div class="card">
+      <div class="row">
+        <div class="col">
+          <label>Username (displayed in your app)</label>
+          <input id="username" type="text" placeholder="yourname" />
+          <div class="actions">
+            <button class="btn btn-red" id="saveUserBtn">Update Username</button>
+            <span class="muted" id="saveUserMsg"></span>
+          </div>
+        </div>
+        <div class="col">
+          <label>Quick actions</label>
+          <div class="actions">
+            <button class="btn btn-grey" id="signOutBtn">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change password -->
+    <div class="card">
+      <div class="row">
+        <div class="col">
+          <label>Current password</label>
+          <input id="curPass" type="password" />
+        </div>
+        <div class="col">
+          <label>New password</label>
+          <input id="newPass" type="password" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-red" id="changePassBtn">Change Password</button>
+        <span class="muted" id="passMsg"></span>
+      </div>
+    </div>
+
+    <!-- Your cards -->
+    <div class="card">
+      <div class="topBar"><b>Your Cards</b></div>
+      <div id="cardsGrid" class="grid"></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="profile.js"></script>
+</body>
+</html>
