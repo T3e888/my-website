@@ -32,7 +32,7 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
       await db.collection('users').doc(cred.user.uid).set({
         username: username,
         cards: cardArr,
-        mission: Array(10).fill(false),
+        mission: Array(15).fill(false),
         quizCount: 0,
         quizDate: ""
       });
