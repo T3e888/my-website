@@ -113,3 +113,5 @@ auth.onAuthStateChanged(async (user) => {
   // Sign out (backup if user clicks the button in content)
   $("signOutBtn").onclick = () => auth.signOut().then(()=>location.href="login.html");
 });
+const uname = name.trim().toLowerCase();
+await db.collection('usernames').doc(uname).set({ uid: user.uid, username: uname });
