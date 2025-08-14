@@ -1,4 +1,4 @@
-<!-- redeem.html (Firestore-only) -->
+<!-- redeem.html (Firestore-only, no Cloud Functions) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +19,7 @@
     <div id="sub" class="muted"></div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (NO functions SDK here) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -47,47 +47,47 @@
     } else {
       auth.onAuthStateChanged(async (user) => {
         if (!user) {
-          // send to login and come back
+          // send to login and come back to redeem
           location.href = `login.html?k=${encodeURIComponent(key)}`;
           return;
         }
         try {
           const keyRef = db.collection('cardKeys').doc(key);
           const uid    = user.uid;
-
           let outcome = 'error';
           let cardId  = '';
 
           await db.runTransaction(async tx => {
             const snap = await tx.get(keyRef);
             if (!snap.exists) { outcome = 'no-key'; return; }
-            const data = snap.data();       // expects { cardId, humanKey?, claimedBy?, claimedAt? }
+            const data = snap.data();                // { cardId, humanKey?, claimedBy?, claimedAt? }
             cardId = data.cardId;
-
             if (!cardId) { outcome = 'bad-key'; return; }
 
-            // If someone else already claimed
+            // if already claimed by someone else
             if (data.claimedBy && data.claimedBy !== uid) {
               outcome = 'claimed-by-other';
               return;
             }
 
-            // First time claim → mark owner
+            // first claim by this user
             if (!data.claimedBy) {
               tx.update(keyRef, {
                 claimedBy: uid,
-                claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+                claimedAt: firebase.firestore.FieldValue.serverTimestamp(),
               });
               outcome = 'owned-new';
             } else {
               outcome = 'owned-again'; // same user scanning again
             }
 
-            // Ensure user's doc and add card to array (idempotent)
+            // ensure user doc + add card to array (idempotent)
             const uref = db.collection('users').doc(uid);
-            tx.set(uref, { username: (user.email||'').split('@')[0] || 'user',
-                           cards: firebase.firestore.FieldValue.arrayUnion(cardId)
-                         }, { merge: true });
+            const uname = (user.email||'').split('@')[0] || 'user';
+            tx.set(uref, {
+              username: uname,
+              cards: firebase.firestore.FieldValue.arrayUnion(cardId)
+            }, { merge: true });
           });
 
           if (outcome === 'owned-new') {
