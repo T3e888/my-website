@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Share Cards</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="share.css" />
+</head>
+<body>
+  <!-- ===== SIDEBAR (same pattern as your other pages) ===== -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon"><span></span><span></span><span></span></span>
+  </button>
+  <nav id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item"><a href="learn.html">Learn</a></li>
+      <li class="menu-item"><a href="profile.html">Profile</a></li>
+      <li class="menu-item"><a href="share.html" class="active">Share</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+    </ul>
+  </nav>
+  <div id="overlay" class="overlay"></div>
+  <!-- ===== END SIDEBAR ===== -->
+
+  <h1 class="page-title">Share Cards</h1>
+  <p class="subtitle">Lend a card for <b>3 days</b>. After the countdown ends, it becomes theirs (owner).</p>
+
+  <!-- Share form -->
+  <section class="panel">
+    <h2>Send a Card</h2>
+    <div class="share-form">
+      <div class="field">
+        <label for="toUser">Recipient username</label>
+        <input id="toUser" type="text" placeholder="their_username" />
+        <div class="hint">Usernames are lowercase. Example: <code>alice</code></div>
+      </div>
+      <div class="field">
+        <label>Pick one of your owned cards</label>
+        <div id="ownedGrid" class="grid"></div>
+        <div class="hint">Tap a card below to share it to the username above.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Borrowed section -->
+  <section class="panel">
+    <h2>Borrowed by You (3-day countdown)</h2>
+    <div id="borrowedList" class="borrowed-list"></div>
+  </section>
+
+  <!-- Activity log -->
+  <section class="panel">
+    <h2>Share Activity</h2>
+    <div id="logList" class="log-list"></div>
+  </section>
+
+  <!-- Modal -->
+  <div id="modal" class="modal"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="share.js"></script>
+</body>
+</html>
