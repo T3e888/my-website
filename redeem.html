@@ -1,4 +1,4 @@
-<!-- redeem.html -->
+<!-- redeem.html (Firestore-only) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,7 +23,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
@@ -36,39 +35,74 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const fn   = firebase.functions();
+    const db   = firebase.firestore();
 
-    const qs = new URLSearchParams(location.search);
-    const k  = qs.get('k');
-    const s  = qs.get('s') || "";
-    const t  = qs.get('t') || "";
+    const qs  = new URLSearchParams(location.search);
+    const key = (qs.get('k') || '').trim();
     const msg = t => document.getElementById('msg').innerHTML = t;
     const sub = t => document.getElementById('sub').textContent = t || "";
 
-    if (!k) {
-      msg("❌ Missing key.");
+    if (!key) {
+      msg("❌ Missing key in URL.");
     } else {
       auth.onAuthStateChanged(async (user) => {
         if (!user) {
-          location.href = `login.html?k=${encodeURIComponent(k)}${s?`&s=${encodeURIComponent(s)}`:""}${t?`&t=${encodeURIComponent(t)}`:""}`;
+          // send to login and come back
+          location.href = `login.html?k=${encodeURIComponent(key)}`;
           return;
         }
         try {
-          const redeem = fn.httpsCallable('redeemKey');
-          const { data } = await redeem({ k, s, t });
-          if (data.status === 'owned-new') {
-            msg(`🎉 Claimed! You are the <b>OWNER</b> of <b>${data.cardId}</b>.`);
+          const keyRef = db.collection('cardKeys').doc(key);
+          const uid    = user.uid;
+
+          let outcome = 'error';
+          let cardId  = '';
+
+          await db.runTransaction(async tx => {
+            const snap = await tx.get(keyRef);
+            if (!snap.exists) { outcome = 'no-key'; return; }
+            const data = snap.data();       // expects { cardId, humanKey?, claimedBy?, claimedAt? }
+            cardId = data.cardId;
+
+            if (!cardId) { outcome = 'bad-key'; return; }
+
+            // If someone else already claimed
+            if (data.claimedBy && data.claimedBy !== uid) {
+              outcome = 'claimed-by-other';
+              return;
+            }
+
+            // First time claim → mark owner
+            if (!data.claimedBy) {
+              tx.update(keyRef, {
+                claimedBy: uid,
+                claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              outcome = 'owned-new';
+            } else {
+              outcome = 'owned-again'; // same user scanning again
+            }
+
+            // Ensure user's doc and add card to array (idempotent)
+            const uref = db.collection('users').doc(uid);
+            tx.set(uref, { username: (user.email||'').split('@')[0] || 'user',
+                           cards: firebase.firestore.FieldValue.arrayUnion(cardId)
+                         }, { merge: true });
+          });
+
+          if (outcome === 'owned-new') {
+            msg(`🎉 Claimed! You are the <b>OWNER</b> of <b>${cardId}</b>.`);
             sub("Redirecting to your collection…");
-          } else if (data.status === 'owned-again') {
-            msg(`✅ You already own <b>${data.cardId}</b>.`);
+          } else if (outcome === 'owned-again') {
+            msg(`✅ You already own <b>${cardId}</b>.`);
             sub("Opening your collection…");
-          } else if (data.status === 'already-claimed') {
-            msg(`⚠️ This key was already claimed by <b>@${data.ownerName || 'someone'}</b>.`);
+          } else if (outcome === 'claimed-by-other') {
+            msg(`⚠️ This key was already claimed by someone else.`);
             sub("Ask them to share it with you.");
-          } else if (data.status === 'already-have') {
-            msg(`✅ You already have <b>${data.cardId}</b>.`);
+          } else if (outcome === 'no-key') {
+            msg("❌ Key not found.");
           } else {
-            msg(`❌ ${data.message || 'Invalid key.'}`);
+            msg("❌ Invalid key.");
           }
         } catch (e) {
           msg(`❌ Error: ${e?.message || e}`);
