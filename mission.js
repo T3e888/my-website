@@ -2,7 +2,7 @@
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-const LEVEL_COUNT = 15;      // 15 checkpoints now
+const LEVEL_COUNT = 15; // 15 checkpoints
 let CURRENT_POINTS = 0;
 
 // tiny safe logger
@@ -16,7 +16,7 @@ auth.onAuthStateChanged(async (user) => {
   catch (e) { log("buildPath error:", e); toast("Small loading error. Refresh and try again."); }
 });
 
-// ====== Sidebar (unchanged) ======
+// ====== Sidebar ======
 function setupSidebar() {
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar   = document.getElementById("sidebar");
@@ -36,8 +36,7 @@ function setupSidebar() {
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 }
 
-// ====== QUESTION BANK (5 categories, 10 Q each) ======
-// Format: { q: "...", opts: ["A","B","C","D"], a: <correct index> }
+// ====== QUESTION BANKS ======
 const Q1_BASIC = [
   { q:"How many main types of stroke are there?", opts:["One","Two: Ischemic & Hemorrhagic","Three","Four"], a:1 },
   { q:"What does 'stroke' mean?", opts:[
@@ -150,12 +149,8 @@ const Q5_TREAT = [
 ];
 
 // Category map: 1–3 → Q1, 4–6 → Q2, 7–9 → Q3, 10–12 → Q4, 13–15 → Q5
-function categoryForLevel(levelIdx /* 0-based */){
-  return Math.floor(levelIdx / 3) + 1; // 1..5
-}
-function bankForCategory(cat){
-  return [null, Q1_BASIC, Q2_CAUSES, Q3_PREVENT, Q4_BEFAST, Q5_TREAT][cat] || Q1_BASIC;
-}
+function categoryForLevel(levelIdx){ return Math.floor(levelIdx / 3) + 1; } // 1..5
+function bankForCategory(cat){ return [null, Q1_BASIC, Q2_CAUSES, Q3_PREVENT, Q4_BEFAST, Q5_TREAT][cat] || Q1_BASIC; }
 
 // ====== helpers ======
 function shuffle(arr){
@@ -169,7 +164,7 @@ function shuffle(arr){
 function pickQuestionsForCheckpoint(levelIdx){
   const cat = categoryForLevel(levelIdx);
   const bank = bankForCategory(cat);
-  return shuffle(bank).slice(0, 10).map(q => ({...q})); // copy
+  return shuffle(bank).slice(0, 10).map(q => ({...q}));
 }
 function renderPoints(n){
   CURRENT_POINTS = n|0;
@@ -194,6 +189,7 @@ async function buildPath(user){
 
   const docRef = db.collection("users").doc(user.uid);
   const snap = await docRef.get();
+
   if (!snap.exists) {
     await docRef.set({
       username:(user.email||"").split("@")[0],
@@ -202,19 +198,26 @@ async function buildPath(user){
       points:0
     }, {merge:true});
   }
+
   const data = (await docRef.get()).data() || {};
   let completed = Array.isArray(data.mission) ? data.mission.slice(0, LEVEL_COUNT) : Array(LEVEL_COUNT).fill(false);
   while (completed.length < LEVEL_COUNT) completed.push(false);
+
+  // ✅ Normalize Firestore: ensure 15 items actually stored (fixes older 10-slot users)
+  if (!Array.isArray(data.mission) || data.mission.length !== LEVEL_COUNT) {
+    await docRef.set({ mission: completed }, { merge: true });
+  }
+
   renderPoints(typeof data.points==="number" ? data.points : 0);
 
   const activeIdx = completed.findIndex(v=>!v);
   path.innerHTML = "";
   if (activeIdx === -1) {
-    allDoneEl.classList.remove("hidden");
+    allDoneEl?.classList.remove("hidden");
     for (let i=0;i<LEVEL_COUNT;i++) path.appendChild(nodeElement(i,"done"));
     return;
   }
-  allDoneEl.classList.add("hidden");
+  allDoneEl?.classList.add("hidden");
 
   for (let i=0;i<LEVEL_COUNT;i++){
     const state = completed[i] ? "done" : (i===activeIdx ? "active" : "locked");
@@ -226,7 +229,7 @@ async function buildPath(user){
   }
 }
 
-// ====== Quiz flow (✕, Back, Next, 10/10, +1 point on first pass) ======
+// ====== Quiz flow ======
 function startQuiz(levelIdx, docRef, completed){
   const modal = document.getElementById("quizModal");
   const box   = document.getElementById("quizBox");
@@ -269,7 +272,7 @@ function startQuiz(levelIdx, docRef, completed){
       if (selected === -1) return;
       if (idx < 9) { idx++; render(); return; }
 
-      // Finished — compute score from the stored answers (prevents any double-count)
+      // Finished — compute score
       const correct = answers.reduce((sum,ans,i)=> sum + (ans===questions[i].a ? 1 : 0), 0);
       const firstTime = !completed[levelIdx];
 
@@ -305,7 +308,6 @@ function startQuiz(levelIdx, docRef, completed){
         document.getElementById("closeX3").onclick=()=>modal.classList.remove("show");
         document.getElementById("closeBtn").onclick = ()=>modal.classList.remove("show");
         document.getElementById("retryBtn").onclick = ()=>{
-          // reshuffle same category for a fresh quiz
           const fresh = pickQuestionsForCheckpoint(levelIdx);
           for (let i=0;i<10;i++) questions[i] = fresh[i];
           idx = 0; answers.fill(undefined); render();
