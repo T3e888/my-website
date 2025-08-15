@@ -1,4 +1,4 @@
-// share.js — fixes "no owned cards" and makes Share fully work
+// share.js — robust share flow with username fallback + safe modal + index hints
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
@@ -27,21 +27,44 @@ function setupSidebar(){
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 }
 
-/* ===== Modal ===== */
+/* ===== Modal (safe if <div id="modal"> is missing) ===== */
 function showModal(msg, cb){
   const modal = $("modal");
+  if (!modal){
+    // fallback so the click flow never silently dies
+    alert(msg.replace(/<[^>]+>/g, " "));
+    if (cb) cb();
+    return;
+  }
   modal.innerHTML = `<div class="modal-content">${msg}<br><button class="ok">OK</button></div>`;
   modal.classList.add("active");
   modal.querySelector(".ok").onclick = ()=>{ modal.classList.remove("active"); if(cb) cb(); };
 }
 
-/* ===== Username helpers ===== */
+/* ===== Username helpers =====
+   Try /usernames/{uname} first; if missing, fall back to users where username == uname */
 async function getUidByUsername(username){
   const uname = (username||"").trim().toLowerCase();
   if (!uname) return null;
-  const doc = await db.collection("usernames").doc(uname).get();
-  return doc.exists ? (doc.data().uid || null) : null;
+
+  // 1) fast path: usernames directory
+  try {
+    const doc = await db.collection("usernames").doc(uname).get();
+    if (doc.exists) {
+      const uid = doc.data()?.uid;
+      if (typeof uid === "string" && uid.length) return uid;
+    }
+  } catch {}
+
+  // 2) fallback: query users collection
+  try {
+    const q = await db.collection("users").where("username", "==", uname).limit(1).get();
+    if (!q.empty) return q.docs[0].id;
+  } catch {}
+
+  return null;
 }
+
 async function getUsernameByUid(uid){
   try {
     const snap = await db.collection("users").doc(uid).get();
@@ -49,18 +72,15 @@ async function getUsernameByUid(uid){
   } catch { return uid.slice(0,6); }
 }
 
-/* ===== One-time self-heal: sync claimed keys -> users/{uid}.cards =====
-   (covers any past sessions where redeem worked but cards[] wasn’t written) */
+/* ===== One-time self-heal: sync claimed keys -> users/{uid}.cards ===== */
 async function healOwnedCards(uid){
-  // read up to 200 claimed keys for this user
-  const q = await db.collection('cardKeys').where('claimedBy','==',uid).limit(200).get();
+  const q = await db.collection("cardKeys").where("claimedBy","==",uid).limit(200).get();
   if (q.empty) return false;
   const ids = [];
   q.forEach(d => { const v = d.data(); if (v && typeof v.cardId === 'string') ids.push(v.cardId); });
   if (!ids.length) return false;
 
-  // union in small batches
-  const ref = db.collection('users').doc(uid);
+  const ref = db.collection("users").doc(uid);
   const BATCH = 10;
   for (let i=0;i<ids.length;i+=BATCH){
     const slice = ids.slice(i, i+BATCH);
@@ -96,7 +116,7 @@ async function onShareClick(fromUid, cardId){
   if (!username) { showModal("Please enter a recipient username."); return; }
 
   const toUid = await getUidByUsername(username);
-  if (!toUid) { showModal("Username not found."); return; }
+  if (!toUid) { showModal(`Username <b>@${username}</b> not found.`); return; }
   if (toUid === fromUid) { showModal("You can’t share a card to yourself."); return; }
 
   // Only allow sharing of truly-owned cards (not borrowed)
@@ -125,23 +145,27 @@ async function onShareClick(fromUid, cardId){
 
   // Share for 3 days
   const untilTs = new Date(Date.now() + BORROW_MS);
-  await sharedRef.set({
-    cardId,
-    fromUid: fromUid,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    until: untilTs
-  });
+  try{
+    await sharedRef.set({
+      cardId,
+      fromUid: fromUid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      until: untilTs
+    });
 
-  // Add to share log
-  await db.collection("shareInbox").add({
-    fromUid: fromUid,
-    toUid: toUid,
-    cardId: cardId,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    status: "borrowed"
-  });
+    // Add to share log
+    await db.collection("shareInbox").add({
+      fromUid: fromUid,
+      toUid: toUid,
+      cardId: cardId,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: "borrowed"
+    });
 
-  showModal(`✅ Shared <b>${cardId}</b> to <b>@${username}</b> for <b>3 days</b>.`);
+    showModal(`✅ Shared <b>${cardId}</b> to <b>@${username}</b> for <b>3 days</b>.`);
+  }catch(e){
+    showModal(`❌ Could not share: ${e?.message || e}`);
+  }
 }
 
 /* ===== Borrowed list + countdown + auto-convert ===== */
@@ -237,43 +261,52 @@ function watchBorrowed(uid){
     });
 }
 
-/* ===== Activity log ===== */
+/* ===== Activity log (with index helper) ===== */
 async function renderLog(uid){
   const box = $("logList");
   box.innerHTML = `<div class="hint">Loading…</div>`;
 
-  const sent = await db.collection("shareInbox").where("fromUid","==",uid).orderBy("createdAt","desc").limit(20).get();
-  const got  = await db.collection("shareInbox").where("toUid","==",uid).orderBy("createdAt","desc").limit(20).get();
+  try{
+    const sent = await db.collection("shareInbox").where("fromUid","==",uid).orderBy("createdAt","desc").limit(20).get();
+    const got  = await db.collection("shareInbox").where("toUid","==",uid).orderBy("createdAt","desc").limit(20).get();
 
-  function row(d, role){
-    const data = d.data();
-    const status = data.status || "borrowed";
-    const badgeClass = status === "converted" ? "converted" : (status === "borrowed" ? "borrowed" : "sent");
-    const who = role === "out" ? `to @${d._toName || data.toUid.slice(0,6)}` : `from @${d._fromName || data.fromUid.slice(0,6)}`;
-    const when = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : "";
-    return `<div class="log-item">
-      <div><b>${data.cardId}</b> ${who}<br><small>${when}</small></div>
-      <div class="badge ${badgeClass}">${status}</div>
+    function row(d, role){
+      const data = d.data();
+      const status = data.status || "borrowed";
+      const badgeClass = status === "converted" ? "converted" : (status === "borrowed" ? "borrowed" : "sent");
+      const who = role === "out" ? `to @${d._toName || data.toUid.slice(0,6)}` : `from @${d._fromName || data.fromUid.slice(0,6)}`;
+      const when = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : "";
+      return `<div class="log-item">
+        <div><b>${data.cardId}</b> ${who}<br><small>${when}</small></div>
+        <div class="badge ${badgeClass}">${status}</div>
+      </div>`;
+    }
+
+    const sentDocs = [];
+    for (const d of sent.docs){
+      const toName = await getUsernameByUid(d.data().toUid);
+      const dd = d; dd._toName = toName; sentDocs.push(dd);
+    }
+    const gotDocs = [];
+    for (const d of got.docs){
+      const fromName = await getUsernameByUid(d.data().fromUid);
+      const dd = d; dd._fromName = fromName; gotDocs.push(dd);
+    }
+
+    const html = [
+      ...gotDocs.map(d=>row(d, "in")),
+      ...sentDocs.map(d=>row(d, "out"))
+    ].slice(0,20).join("");
+
+    box.innerHTML = html || `<div class="hint">No share activity yet.</div>`;
+  }catch(e){
+    box.innerHTML = `<div class="hint">
+      Share Activity needs two Firestore composite indexes:<br>
+      1) <code>shareInbox</code>: <b>fromUid ASC</b>, <b>createdAt DESC</b><br>
+      2) <code>shareInbox</code>: <b>toUid ASC</b>, <b>createdAt DESC</b><br>
+      Create them in Firestore &gt; Indexes &gt; Composite.
     </div>`;
   }
-
-  const sentDocs = [];
-  for (const d of sent.docs){
-    const toName = await getUsernameByUid(d.data().toUid);
-    const dd = d; dd._toName = toName; sentDocs.push(dd);
-  }
-  const gotDocs = [];
-  for (const d of got.docs){
-    const fromName = await getUsernameByUid(d.data().fromUid);
-    const dd = d; dd._fromName = fromName; gotDocs.push(dd);
-  }
-
-  const html = [
-    ...gotDocs.map(d=>row(d, "in")),
-    ...sentDocs.map(d=>row(d, "out"))
-  ].slice(0,20).join("");
-
-  box.innerHTML = html || `<div class="hint">No share activity yet.</div>`;
 }
 
 /* ===== Start ===== */
@@ -303,9 +336,7 @@ auth.onAuthStateChanged(async (user)=>{
     if (!didHealFromKeys && cards.length === 0){
       didHealFromKeys = true;
       const healed = await healOwnedCards(user.uid);
-      if (healed){
-        // onSnapshot will re-render with fixed data
-      }
+      // onSnapshot will re-render if anything changed
     }
   });
 
