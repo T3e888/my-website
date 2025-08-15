@@ -27,6 +27,39 @@ const $ = (id) => document.getElementById(id);
 const toastEl = $("toast");
 function toast(t){ toastEl.textContent = t; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"), 1600); }
 
+// maintains /usernames mapping safely
+async function ensureUsernameMapping(uid, uname) {
+  if (!uname) return;
+  uname = uname.trim().toLowerCase();
+  if (!uname) return;
+  try {
+    // create/update if free or already mine (rules enforce)
+    await db.collection("usernames").doc(uname).set({ uid, username: uname }, { merge: true });
+  } catch (e) {
+    // ignore if taken by someone else; UI handles on rename
+  }
+}
+
+async function renameUsernameMapping(uid, oldU, newU) {
+  oldU = (oldU||"").trim().toLowerCase();
+  newU = (newU||"").trim().toLowerCase();
+  if (!newU) throw new Error("Username required");
+  if (oldU === newU) return;
+
+  // if old mapping is mine, delete it
+  if (oldU) {
+    try {
+      const oldSnap = await db.collection("usernames").doc(oldU).get();
+      if (oldSnap.exists && oldSnap.data().uid === uid) {
+        await db.collection("usernames").doc(oldU).delete();
+      }
+    } catch {}
+  }
+
+  // create new mapping (rules ensure it's free or mine)
+  await db.collection("usernames").doc(newU).set({ uid, username: newU });
+}
+
 // ---------- App ----------
 auth.onAuthStateChanged(async (user) => {
   if (!user) { location.href = "login.html"; return; }
@@ -38,7 +71,7 @@ auth.onAuthStateChanged(async (user) => {
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure user doc exists (merge doesn’t overwrite)
+  // Ensure user doc exists + seed
   await docRef.set({
     username: (user.email||"").split("@")[0],
     cards: [],
@@ -46,34 +79,40 @@ auth.onAuthStateChanged(async (user) => {
     points: 0
   }, { merge: true });
 
-  // Load current data
+  // Load
   const snap = await docRef.get();
   const data = snap.data() || {};
+  const currentUname = (data.username || (user.email||"").split("@")[0] || "").toLowerCase();
 
-  $("username").value      = data.username || (user.email||"").split("@")[0];
+  $("username").value      = currentUname;
   $("about").value         = data.about || "";
   $("points").textContent  = String(data.points || 0);
 
-  // Render cards (from users/{uid}.cards array)
+  // Create mapping if missing
+  await ensureUsernameMapping(user.uid, currentUname);
+
+  // Render cards
   const cards = Array.isArray(data.cards) ? data.cards : [];
   $("cardsCount").textContent = String(cards.length);
   const grid = $("cardsGrid");
   grid.innerHTML = cards.length
     ? cards.map(cId => {
-        const img = `assets/cards/${cId}.png`;      // e.g. assets/cards/card1.png
+        const img = `assets/cards/${cId}.png`;
         const label = cId.replace(/card/i,"Card ");
         return `<div class="cardItem"><img src="${img}" alt="${label}" /><div class="muted">${label}</div></div>`;
       }).join("")
     : `<div class="muted">No cards yet.</div>`;
 
-  // Save username
+  // Save username (also update /usernames mapping)
   $("saveUserBtn").onclick = async () => {
-    const name = $("username").value.trim();
+    const newName = $("username").value.trim().toLowerCase();
     $("saveUserMsg").textContent = "";
-    if (!name) { $("saveUserMsg").textContent = "Enter a username."; return; }
+    if (!newName) { $("saveUserMsg").textContent = "Enter a username."; return; }
+
     try {
-      await docRef.set({ username: name }, { merge: true });
-      $("displayName").textContent = name;
+      await renameUsernameMapping(user.uid, currentUname, newName);
+      await docRef.set({ username: newName }, { merge: true });
+      $("displayName").textContent = newName;
       toast("Username updated");
     } catch (e) {
       $("saveUserMsg").textContent = e.message || String(e);
@@ -110,8 +149,6 @@ auth.onAuthStateChanged(async (user) => {
     }
   };
 
-  // Sign out (backup if user clicks the button in content)
+  // Sign out
   $("signOutBtn").onclick = () => auth.signOut().then(()=>location.href="login.html");
 });
-const uname = name.trim().toLowerCase();
-await db.collection('usernames').doc(uname).set({ uid: user.uid, username: uname });
