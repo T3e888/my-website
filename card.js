@@ -1,4 +1,4 @@
-// ========== card.js (robust render) ==========
+// ========== card.js (robust render, no more cards reset) ==========
 
 const byId = (id) => document.getElementById(id);
 const TOTAL_CARDS = 25;
@@ -93,13 +93,23 @@ auth.onAuthStateChanged(async (user) => {
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure the user doc exists so reads never fail
-  await docRef.set({
-    username: (user.email || "").split("@")[0] || "user",
-    cards: [],
-    mission: Array(15).fill(false),
-    points: 0
-  }, { merge: true });
+  // Ensure the user doc exists WITHOUT clearing cards
+  let snap = await docRef.get();
+  if (!snap.exists) {
+    // First time only: create the document with an empty cards array
+    await docRef.set({
+      username: (user.email || "").split("@")[0] || "user",
+      cards: [],
+      mission: Array(15).fill(false),
+      points: 0
+    }); // no merge needed on first create
+  } else {
+    // If username missing, fill it in; DO NOT touch cards here
+    const data = snap.data() || {};
+    if (!data.username) {
+      await docRef.set({ username: (user.email || "").split("@")[0] || "user" }, { merge: true });
+    }
+  }
 
   // Keep two live sets and re-render when either changes
   const ownedSet    = new Set();
@@ -110,18 +120,18 @@ auth.onAuthStateChanged(async (user) => {
   setTimeout(async () => {
     if (!didFirstRender) {
       try {
-        const snap = await docRef.get();
-        const data  = snap.exists ? (snap.data() || {}) : {};
-        const cards = Array.isArray(data.cards) ? data.cards : [];
-        ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
+        const snap2 = await docRef.get();
+        const data2  = snap2.exists ? (snap2.data() || {}) : {};
+        const cards2 = Array.isArray(data2.cards) ? data2.cards : [];
+        ownedSet.clear(); cards2.forEach(c => ownedSet.add(c));
         renderGrid(ownedSet, borrowedSet);
       } catch { /* ignore */ }
     }
   }, 2000);
 
   // 1) Live owned cards
-  docRef.onSnapshot((snap) => {
-    const data  = snap.exists ? (snap.data() || {}) : {};
+  docRef.onSnapshot((snapLive) => {
+    const data  = snapLive.exists ? (snapLive.data() || {}) : {};
     const cards = Array.isArray(data.cards) ? data.cards : [];
     ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
     renderGrid(ownedSet, borrowedSet);
@@ -140,7 +150,6 @@ auth.onAuthStateChanged(async (user) => {
     });
     renderGrid(ownedSet, borrowedSet);
   }, (err) => {
-    // If rules block or collection missing, we still render owned
     console.warn("shared listener error:", err);
     renderGrid(ownedSet, borrowedSet);
   });
