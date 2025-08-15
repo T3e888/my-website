@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="profile.css" />
 </head>
 <body>
-  <!-- ===== SIDEBAR (same structure as your other pages) ===== -->
+  <!-- Sidebar -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -24,7 +24,7 @@
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
-  <!-- ===== END SIDEBAR ===== -->
+  <!-- /Sidebar -->
 
   <h1 class="page-title">Your Profile</h1>
 
@@ -37,7 +37,9 @@
           <div class="muted">UID: <span id="uid">—</span></div>
           <div class="muted">Email: <span id="email">—</span></div>
           <div class="stats">
-            
+            <b>Points:</b> <span id="points">0</span>
+            <span class="pill"><span id="cardsCount">0</span> cards</span>
+          </div>
         </div>
         <div class="col">
           <label>About me</label>
@@ -88,10 +90,16 @@
       </div>
     </section>
 
-    <!-- Your cards -->
-  
+    <!-- Your owned cards -->
+    <section class="card">
+      <div class="topBar"><b>Your Cards</b></div>
+      <div id="cardsGrid" class="grid"></div>
+    </section>
+  </div>
 
-  <!-- Firebase SDKs -->
+  <div id="toast"></div>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -109,4 +117,4 @@
   </script>
   <script src="profile.js"></script>
 </body>
-            </html>
+</html>
