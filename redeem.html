@@ -1,4 +1,4 @@
-<!-- redeem.html — Idempotent redeem + force-add to user.cards -->
+<!-- redeem.html (self-heals user.cards when key is already yours) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,47 +46,52 @@
       msg("❌ Missing key in URL.");
     } else {
       auth.onAuthStateChanged(async (user) => {
-        if (!user) { location.href = `login.html?k=${encodeURIComponent(key)}`; return; }
-
-        const keyRef  = db.collection('cardKeys').doc(key);
-        const userRef = db.collection('users').doc(user.uid);
-        const uid     = user.uid;
-
-        let outcome = 'error';
-        let cardId  = '';
-
+        if (!user) {
+          // send to login and come back
+          location.href = `login.html?k=${encodeURIComponent(key)}`;
+          return;
+        }
         try {
-          // Transaction: claim if possible and/or ensure user doc exists
+          const keyRef  = db.collection('cardKeys').doc(key);
+          const userRef = db.collection('users').doc(user.uid);
+          const uid     = user.uid;
+
+          let outcome = 'error';
+          let cardId  = '';
+
           await db.runTransaction(async tx => {
             const keySnap = await tx.get(keyRef);
             if (!keySnap.exists) { outcome = 'no-key'; return; }
+            const data = keySnap.data();           // { cardId, humanKey?, claimedBy?, claimedAt? }
+            cardId = data.cardId;
 
-            const k = keySnap.data();            // { cardId, humanKey?, claimedBy?, claimedAt? }
-            cardId = k.cardId;
             if (!cardId) { outcome = 'bad-key'; return; }
 
-            // Someone else already took it
-            if (k.claimedBy && k.claimedBy !== uid) { outcome = 'claimed-by-other'; return; }
-
-            const userSnap = await tx.get(userRef);
-            const cards = (userSnap.exists && Array.isArray(userSnap.data().cards)) ? userSnap.data().cards : [];
-            const alreadyHave = cards.includes(cardId);
-
-            if (k.claimedBy === uid) {
-              // key is yours already; we'll ensure card after the tx as well
-              outcome = alreadyHave ? 'owned-again' : 'owned-again-added';
-              if (!alreadyHave) {
-                tx.set(userRef, {
-                  username: (user.email||'').split('@')[0] || 'user',
-                  cards: firebase.firestore.FieldValue.arrayUnion(cardId)
-                }, { merge: true });
-              }
+            // Someone else already claimed this key
+            if (data.claimedBy && data.claimedBy !== uid) {
+              outcome = 'claimed-by-other';
               return;
             }
 
-            // First-time claim
-            if (alreadyHave) { outcome = 'already-have'; return; } // don't consume a duplicate key
+            // THIS KEY WAS ALREADY CLAIMED BY ME
+            if (data.claimedBy === uid) {
+              outcome = 'owned-again';
+              return; // no writes inside the tx — we self-heal after the tx
+            }
 
+            // Not claimed yet → check if I already own the card
+            const userSnap = await tx.get(userRef);
+            const cards = (userSnap.exists && Array.isArray(userSnap.data().cards))
+                          ? userSnap.data().cards : [];
+            const alreadyHave = cards.includes(cardId);
+
+            if (alreadyHave) {
+              // do NOT consume the second key
+              outcome = 'already-have';
+              return;
+            }
+
+            // First time getting this card → claim the key and add to my cards
             tx.update(keyRef, {
               claimedBy: uid,
               claimedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -99,21 +104,16 @@
             outcome = 'owned-new';
           });
 
-          // ---- FORCE-ADD SAFETY NET (idempotent) ----
-          // If we have a cardId and this wasn't an outright failure/foreign claim,
-          // make sure the card is in the user's array. arrayUnion is safe to repeat.
-          if (cardId && !['no-key','bad-key','claimed-by-other'].includes(outcome)) {
-            await userRef.set({ cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
-          }
-
-          // Messages
+          // ---------- UI + self-heal ----------
           if (outcome === 'owned-new') {
             msg(`🎉 Claimed! You are the <b>OWNER</b> of <b>${cardId}</b>.`);
             sub("Redirecting to your collection…");
-          } else if (outcome === 'owned-again-added') {
-            msg(`✅ This key was already yours. We added <b>${cardId}</b> to your collection.`);
-            sub("Opening your collection…");
           } else if (outcome === 'owned-again') {
+            // Self-heal: ensure the user doc lists this card
+            try {
+              await db.collection('users').doc(auth.currentUser.uid)
+                .set({ cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
+            } catch (_) {}
             msg(`✅ You already own <b>${cardId}</b> (same key).`);
             sub("Opening your collection…");
           } else if (outcome === 'already-have') {
@@ -130,8 +130,7 @@
         } catch (e) {
           msg(`❌ Error: ${e?.message || e}`);
         }
-
-        setTimeout(() => location.href = 'card.html', 1200);
+        setTimeout(() => location.href = 'card.html', 1400);
       });
     }
   </script>
