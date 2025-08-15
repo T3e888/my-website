@@ -1,4 +1,6 @@
-// --- Sidebar logic (same for all pages, copy once if you want DRY)
+// card.js
+
+// Sidebar
 function setupSidebar() {
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar = document.getElementById("sidebar");
@@ -26,33 +28,48 @@ function setupSidebar() {
   });
 }
 
+// Firebase
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
 auth.onAuthStateChanged(async function(user) {
   if (!user) return location.href = "login.html";
   setupSidebar();
 
   const docRef = db.collection('users').doc(user.uid);
-  let userData = (await docRef.get()).data();
-  let unlocked = userData.cards || [];
+  const userSnap = await docRef.get();
+  const userData = userSnap.data() || {};
+  const owned = Array.isArray(userData.cards) ? userData.cards.slice() : [];
+
+  // fetch borrowed (shared subcollection)
+  const sharedSnap = await db.collection('users').doc(user.uid).collection('shared').get();
+  const borrowed = new Set(sharedSnap.docs.map(d => d.id)); // doc id == cardId
+
   const grid = document.getElementById("cardGrid");
   grid.innerHTML = "";
   for (let i = 1; i <= 25; ++i) {
     const cid = "card" + i;
     const div = document.createElement("div");
-    div.className = "card " + (unlocked.includes(cid) ? "unlocked" : "locked");
-    if (unlocked.includes(cid)) {
+
+    if (owned.includes(cid)) {
+      div.className = "card unlocked";
       div.style.backgroundImage = `url(assets/cards/${cid}.png)`;
       div.title = `Card ${i}`;
+      div.onclick = () => showModal(`<img src="assets/cards/${cid}.png" alt="Card ${i}" style="max-width:220px;border-radius:12px;"><div style="margin-top:1em;">Card ${i} (owned)</div>`);
+    } else if (borrowed.has(cid)) {
+      div.className = "card borrowed";
+      div.style.backgroundImage = `url(assets/cards/${cid}.png)`;
+      div.title = `Card ${i} — borrowed`;
+      div.onclick = () => showModal(`<img src="assets/cards/${cid}.png" alt="Card ${i}" style="max-width:220px;border-radius:12px;"><div style="margin-top:1em;">Card ${i} (borrowed)</div><div class="muted" style="margin-top:.3em">Borrowed cards will auto-convert to owner after the timer ends on the Share page.</div>`);
     } else {
+      div.className = "card locked";
       div.innerHTML = `<span class="lock-icon">&#128274;</span>`;
     }
+
     div.innerHTML += `<span class="card-num">${i}</span>`;
-    div.onclick = () => {
-      if (unlocked.includes(cid)) {
-        showModal(`<img src="assets/cards/${cid}.png" alt="Card ${i}" style="max-width:220px;border-radius:12px;"><div style="margin-top:1em;">Card ${i}</div>`);
-      }
-    };
     grid.appendChild(div);
   }
+
   function showModal(msg) {
     const modal = document.getElementById("modal");
     modal.innerHTML = `<div class="modal-content">${msg}<br><button class="modal-close">OK</button></div>`;
