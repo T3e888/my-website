@@ -1,4 +1,4 @@
-<!-- redeem.html — Firestore-only, idempotent redeem (adds card even if key was yours before) -->
+<!-- redeem.html — Idempotent redeem + force-add to user.cards -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +24,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
-    // --- Firebase config (same project you already use) ---
     const firebaseConfig = {
       apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
       authDomain: "login-ba993.firebaseapp.com",
@@ -38,7 +37,6 @@
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
-    // --- helpers ---
     const qs  = new URLSearchParams(location.search);
     const key = (qs.get('k') || '').trim();
     const msg = t => document.getElementById('msg').innerHTML = t;
@@ -48,61 +46,46 @@
       msg("❌ Missing key in URL.");
     } else {
       auth.onAuthStateChanged(async (user) => {
-        if (!user) {
-          // send to login and come back to this page
-          location.href = `login.html?k=${encodeURIComponent(key)}`;
-          return;
-        }
+        if (!user) { location.href = `login.html?k=${encodeURIComponent(key)}`; return; }
+
+        const keyRef  = db.collection('cardKeys').doc(key);
+        const userRef = db.collection('users').doc(user.uid);
+        const uid     = user.uid;
+
+        let outcome = 'error';
+        let cardId  = '';
 
         try {
-          const keyRef  = db.collection('cardKeys').doc(key);
-          const userRef = db.collection('users').doc(user.uid);
-          const uid     = user.uid;
-
-          let outcome = 'error';
-          let cardId  = '';
-
-          // --- Transaction: make redeem idempotent ---
+          // Transaction: claim if possible and/or ensure user doc exists
           await db.runTransaction(async tx => {
             const keySnap = await tx.get(keyRef);
             if (!keySnap.exists) { outcome = 'no-key'; return; }
 
-            const data = keySnap.data();          // { cardId, humanKey?, claimedBy?, claimedAt? }
-            cardId = data.cardId;
+            const k = keySnap.data();            // { cardId, humanKey?, claimedBy?, claimedAt? }
+            cardId = k.cardId;
             if (!cardId) { outcome = 'bad-key'; return; }
 
-            // If someone else already claimed this key
-            if (data.claimedBy && data.claimedBy !== uid) {
-              outcome = 'claimed-by-other';
-              return;
-            }
+            // Someone else already took it
+            if (k.claimedBy && k.claimedBy !== uid) { outcome = 'claimed-by-other'; return; }
 
-            // Read current user cards
             const userSnap = await tx.get(userRef);
-            const cards = (userSnap.exists && Array.isArray(userSnap.data().cards))
-                          ? userSnap.data().cards : [];
+            const cards = (userSnap.exists && Array.isArray(userSnap.data().cards)) ? userSnap.data().cards : [];
             const alreadyHave = cards.includes(cardId);
 
-            // If this key was already claimed by me earlier → ensure card is present
-            if (data.claimedBy === uid) {
+            if (k.claimedBy === uid) {
+              // key is yours already; we'll ensure card after the tx as well
+              outcome = alreadyHave ? 'owned-again' : 'owned-again-added';
               if (!alreadyHave) {
                 tx.set(userRef, {
                   username: (user.email||'').split('@')[0] || 'user',
                   cards: firebase.firestore.FieldValue.arrayUnion(cardId)
                 }, { merge: true });
-                outcome = 'owned-again-added';   // fixed missing card
-              } else {
-                outcome = 'owned-again';
               }
               return;
             }
 
-            // First time ever → claim key + add card
-            if (alreadyHave) {
-              // You already have this card from another key; don't consume this key
-              outcome = 'already-have';
-              return;
-            }
+            // First-time claim
+            if (alreadyHave) { outcome = 'already-have'; return; } // don't consume a duplicate key
 
             tx.update(keyRef, {
               claimedBy: uid,
@@ -116,7 +99,14 @@
             outcome = 'owned-new';
           });
 
-          // --- Messages ---
+          // ---- FORCE-ADD SAFETY NET (idempotent) ----
+          // If we have a cardId and this wasn't an outright failure/foreign claim,
+          // make sure the card is in the user's array. arrayUnion is safe to repeat.
+          if (cardId && !['no-key','bad-key','claimed-by-other'].includes(outcome)) {
+            await userRef.set({ cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
+          }
+
+          // Messages
           if (outcome === 'owned-new') {
             msg(`🎉 Claimed! You are the <b>OWNER</b> of <b>${cardId}</b>.`);
             sub("Redirecting to your collection…");
@@ -141,8 +131,7 @@
           msg(`❌ Error: ${e?.message || e}`);
         }
 
-        // Go to the collection either way
-        setTimeout(() => location.href = 'card.html', 1400);
+        setTimeout(() => location.href = 'card.html', 1200);
       });
     }
   </script>
