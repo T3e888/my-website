@@ -1,9 +1,8 @@
-// ========== card.js (robust render, no more cards reset) ==========
-
+// ========== card.js (robust render, no cards reset) ==========
 const byId = (id) => document.getElementById(id);
 const TOTAL_CARDS = 25;
 
-// --- Sidebar (same behavior you had) ---
+// --- Sidebar ---
 function setupSidebar() {
   const toggleBtn = byId("menu-toggle");
   const sidebar   = byId("sidebar");
@@ -19,7 +18,6 @@ function setupSidebar() {
   overlay?.addEventListener("click", close);
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 
-  // close when navigating
   document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
     if (!a.closest("#logout-link")) a.addEventListener("click", close);
   });
@@ -51,8 +49,7 @@ function renderGrid(ownedSet, borrowedSet) {
       card.className = "card unlocked";
       card.style.backgroundImage = `url(assets/cards/${cid}.png)`;
       if (borrowed && !owned) {
-        // visually lighter border for borrowed without needing extra CSS
-        card.style.border    = "2.5px solid #ffcdd2";
+        card.style.border    = "2.5px solid #ffcdd2";                // light red for borrowed
         card.style.boxShadow = "0 4px 18px rgba(255,205,210,.7)";
         card.title = `Card ${i} (borrowed)`;
       } else {
@@ -74,11 +71,11 @@ function renderGrid(ownedSet, borrowedSet) {
     }
 
     card.innerHTML += `<span class="card-num">${i}</span>`;
-    byId("cardGrid").appendChild(card);
+    grid.appendChild(card);
   }
 }
 
-// draw 25 locked tiles immediately so page is never blank
+// draw all locked first so page is never blank
 function renderAllLocked() {
   renderGrid(new Set(), new Set());
 }
@@ -87,51 +84,53 @@ function renderAllLocked() {
 auth.onAuthStateChanged(async (user) => {
   if (!user) { location.href = "login.html"; return; }
   setupSidebar();
-
-  // Always show something first
   renderAllLocked();
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure the user doc exists WITHOUT clearing cards
-  let snap = await docRef.get();
-  if (!snap.exists) {
-    // First time only: create the document with an empty cards array
+  // Ensure user doc exists WITHOUT clearing cards
+  const firstSnap = await docRef.get();
+  if (!firstSnap.exists) {
+    // First time: create with empty cards (only once)
     await docRef.set({
       username: (user.email || "").split("@")[0] || "user",
       cards: [],
       mission: Array(15).fill(false),
       points: 0
-    }); // no merge needed on first create
+    });
   } else {
-    // If username missing, fill it in; DO NOT touch cards here
-    const data = snap.data() || {};
+    // If username missing, fill it; DO NOT touch cards here
+    const data = firstSnap.data() || {};
     if (!data.username) {
-      await docRef.set({ username: (user.email || "").split("@")[0] || "user" }, { merge: true });
+      await docRef.set({
+        username: (user.email || "").split("@")[0] || "user",
+        mission: Array(15).fill(false),
+        points: 0
+      }, { merge: true });
     }
   }
 
-  // Keep two live sets and re-render when either changes
+  // Live sets
   const ownedSet    = new Set();
   const borrowedSet = new Set();
 
-  // Fallback: if listener is slow, do a one-time get after 2s
+  // Fallback one-time get if listener is slow
   let didFirstRender = false;
   setTimeout(async () => {
     if (!didFirstRender) {
       try {
-        const snap2 = await docRef.get();
-        const data2  = snap2.exists ? (snap2.data() || {}) : {};
-        const cards2 = Array.isArray(data2.cards) ? data2.cards : [];
-        ownedSet.clear(); cards2.forEach(c => ownedSet.add(c));
+        const s = await docRef.get();
+        const data  = s.exists ? (s.data() || {}) : {};
+        const cards = Array.isArray(data.cards) ? data.cards : [];
+        ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
         renderGrid(ownedSet, borrowedSet);
-      } catch { /* ignore */ }
+      } catch {}
     }
   }, 2000);
 
   // 1) Live owned cards
-  docRef.onSnapshot((snapLive) => {
-    const data  = snapLive.exists ? (snapLive.data() || {}) : {};
+  docRef.onSnapshot((snap) => {
+    const data  = snap.exists ? (snap.data() || {}) : {};
     const cards = Array.isArray(data.cards) ? data.cards : [];
     ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
     renderGrid(ownedSet, borrowedSet);
@@ -141,7 +140,7 @@ auth.onAuthStateChanged(async (user) => {
     renderGrid(ownedSet, borrowedSet);
   });
 
-  // 2) Live borrowed cards (optional; used by Share feature)
+  // 2) Live borrowed cards (if you use Share feature)
   docRef.collection("shared").onSnapshot((qs) => {
     borrowedSet.clear();
     qs.forEach(d => {
