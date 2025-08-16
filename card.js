@@ -1,9 +1,9 @@
-// ========== card.js (robust render + auto-convert borrowed → owned) ==========
+// ========== card.js (no reset + self-heal) ==========
 
 const byId = (id) => document.getElementById(id);
 const TOTAL_CARDS = 25;
 
-// --- Sidebar (same as before) ---
+/* ---------- Sidebar ---------- */
 function setupSidebar() {
   const toggleBtn = byId("menu-toggle");
   const sidebar   = byId("sidebar");
@@ -19,13 +19,12 @@ function setupSidebar() {
   overlay?.addEventListener("click", close);
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 
-  // close when navigating
   document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
     if (!a.closest("#logout-link")) a.addEventListener("click", close);
   });
 }
 
-// --- Modal helper ---
+/* ---------- Modal ---------- */
 function showModal(html) {
   const modal = byId("modal");
   if (!modal) return;
@@ -34,7 +33,7 @@ function showModal(html) {
   modal.querySelector(".modal-close").onclick = () => modal.classList.remove("active");
 }
 
-// --- Grid renderers ---
+/* ---------- Rendering ---------- */
 function renderGrid(ownedSet, borrowedSet) {
   const grid = byId("cardGrid");
   if (!grid) return;
@@ -44,21 +43,18 @@ function renderGrid(ownedSet, borrowedSet) {
     const cid = `card${i}`;
     const owned    = ownedSet?.has(cid);
     const borrowed = borrowedSet?.has(cid);
-
     const card = document.createElement("div");
 
     if (owned || borrowed) {
       card.className = "card unlocked";
       card.style.backgroundImage = `url(assets/cards/${cid}.png)`;
       if (borrowed && !owned) {
-        // visually lighter border for borrowed
         card.style.border    = "2.5px solid #ffcdd2";
         card.style.boxShadow = "0 4px 18px rgba(255,205,210,.7)";
         card.title = `Card ${i} (borrowed)`;
       } else {
         card.title = `Card ${i}`;
       }
-
       card.addEventListener("click", () => {
         const label = borrowed && !owned
           ? `Card ${i} <small style="color:#b71c1c">(borrowed)</small>`
@@ -78,84 +74,88 @@ function renderGrid(ownedSet, borrowedSet) {
   }
 }
 
-// draw 25 locked tiles immediately so page is never blank
-function renderAllLocked() {
-  renderGrid(new Set(), new Set());
-}
+function renderAllLocked() { renderGrid(new Set(), new Set()); }
 
-/* --- NEW: convert a borrowed card to owned (idempotent) --- */
-async function convertBorrowToOwner(uid, cardId, fromUid){
-  // 1) Add to cards[], 2) delete shared doc
-  await db.runTransaction(async (tx)=>{
-    const uref = db.collection('users').doc(uid);
-    tx.set(uref, { cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
-    tx.delete( uref.collection('shared').doc(cardId) );
-  });
+/* ---------- Self-heal: rebuild cards[] from cardKeys if empty ---------- */
+async function healOwnedCards(uid) {
+  // read claimed keys → cardIds
+  const q = await db.collection('cardKeys').where('claimedBy','==',uid).limit(200).get();
+  if (q.empty) return false;
+  const ids = [];
+  q.forEach(d => { const v = d.data(); if (v && typeof v.cardId === 'string') ids.push(v.cardId); });
+  if (!ids.length) return false;
 
-  // 3) Mark latest shareInbox for this card as converted (optional)
-  const q = await db.collection('shareInbox')
-    .where('toUid','==', uid)
-    .where('cardId','==', cardId)
-    .orderBy('createdAt','desc')
-    .limit(1).get();
-  if (!q.empty){
-    await q.docs[0].ref.update({
-      status: 'converted',
-      acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  const ref = db.collection('users').doc(uid);
+  // union in small batches
+  const BATCH = 10;
+  for (let i=0;i<ids.length;i+=BATCH){
+    const slice = ids.slice(i, i+BATCH);
+    await ref.set({ cards: firebase.firestore.FieldValue.arrayUnion(...slice) }, { merge:true });
   }
+  return true;
 }
 
-// --- Start ---
+/* ---------- Start ---------- */
 auth.onAuthStateChanged(async (user) => {
   if (!user) { location.href = "login.html"; return; }
   setupSidebar();
 
-  // Always show something first
+  // Always show something first so page isn’t blank
   renderAllLocked();
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure user doc exists WITHOUT wiping cards
+  // Ensure the user doc exists **without touching cards[]**
   const firstSnap = await docRef.get();
   if (!firstSnap.exists) {
     await docRef.set({
       username: (user.email || "").split("@")[0] || "user",
-      cards: [],
+      cards: [],                         // only on first create
       mission: Array(15).fill(false),
       points: 0
-    }); // create fresh doc only once
+    });
   } else {
-    const data = firstSnap.data() || {};
-    if (!data.username) {
+    const d = firstSnap.data() || {};
+    if (!d.username) {
       await docRef.set({
         username: (user.email || "").split("@")[0] || "user"
-      }, { merge: true }); // don't touch cards here
+      }, { merge: true });               // do not set cards here
     }
   }
 
-  // Keep two live sets and re-render when either changes
   const ownedSet    = new Set();
   const borrowedSet = new Set();
-
-  // Fallback: if listener is slow, do a one-time get after 2s
   let didFirstRender = false;
+  let healedOnce = false;
+
+  // Fallback one-time get in case realtime is slow
   setTimeout(async () => {
     if (!didFirstRender) {
       try {
-        const snap2 = await docRef.get();
-        const data2  = snap2.exists ? (snap2.data() || {}) : {};
-        const cards2 = Array.isArray(data2.cards) ? data2.cards : [];
-        ownedSet.clear(); cards2.forEach(c => ownedSet.add(c));
+        const snap = await docRef.get();
+        const data  = snap.exists ? (snap.data() || {}) : {};
+        const cards = Array.isArray(data.cards) ? data.cards : [];
+        ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
         renderGrid(ownedSet, borrowedSet);
-      } catch { /* ignore */ }
+      } catch {}
     }
-  }, 2000);
+  }, 1500);
 
-  // 1) Live OWNED cards
-  docRef.onSnapshot((snap) => {
+  // Live owned cards
+  docRef.onSnapshot(async (snap) => {
     const data  = snap.exists ? (snap.data() || {}) : {};
     const cards = Array.isArray(data.cards) ? data.cards : [];
+
+    // If cards is empty, try to self-heal once from cardKeys
+    if (!healedOnce && cards.length === 0) {
+      healedOnce = true;
+      const healed = await healOwnedCards(user.uid);
+      if (healed) {
+        // a following snapshot will re-render with fixed data
+        return;
+      }
+    }
+
     ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
     renderGrid(ownedSet, borrowedSet);
     didFirstRender = true;
@@ -164,24 +164,13 @@ auth.onAuthStateChanged(async (user) => {
     renderGrid(ownedSet, borrowedSet);
   });
 
-  // 2) Live BORROWED cards with auto-convert when expired
-  docRef.collection("shared").onSnapshot(async (qs) => {
+  // Live borrowed cards (optional; used by Share)
+  docRef.collection("shared").onSnapshot((qs) => {
     borrowedSet.clear();
-    const now = Date.now();
-
-    for (const d of qs.docs){
-      const v = d.data() || {};
-      const cid   = v.cardId;
-      const until = v.until?.toDate ? v.until.toDate().getTime() : 0;
-
-      if (cid && until && until <= now){
-        // Borrow expired → make it theirs now
-        await convertBorrowToOwner(user.uid, cid, v.fromUid);
-        continue; // do not display as borrowed
-      }
-      if (typeof cid === "string") borrowedSet.add(cid);
-    }
-
+    qs.forEach(d => {
+      const v = d.data();
+      if (v && typeof v.cardId === "string") borrowedSet.add(v.cardId);
+    });
     renderGrid(ownedSet, borrowedSet);
   }, (err) => {
     console.warn("shared listener error:", err);
