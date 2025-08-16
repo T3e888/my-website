@@ -1,4 +1,4 @@
-// share.js — full share system with username validation, logs, countdown, auto-convert
+// share.js — share system with incoming-share modal for recipient
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
@@ -10,7 +10,7 @@ let currentUid = null;
 let ownedCardsCache = [];
 let didHealFromKeys = false;
 
-/* ===== Sidebar (same as other pages) ===== */
+/* ===== Sidebar ===== */
 function setupSidebar(){
   const toggleBtn = $("menu-toggle");
   const sidebar = $("sidebar");
@@ -39,15 +39,12 @@ function showModal(msg, cb){
 async function getUidByUsername(unameRaw){
   const uname = (unameRaw||"").trim().toLowerCase();
   if (!uname) return null;
-
-  // 1) primary directory
+  // primary directory
   const dir = await db.collection("usernames").doc(uname).get();
   if (dir.exists && dir.data()?.uid) return dir.data().uid;
-
-  // 2) fallback: search users by username field
+  // fallback
   const snap = await db.collection("users").where("username","==",uname).limit(1).get();
   if (!snap.empty) return snap.docs[0].id;
-
   return null;
 }
 async function getUsernameByUid(uid){
@@ -57,14 +54,13 @@ async function getUsernameByUid(uid){
   } catch { return uid.slice(0,6); }
 }
 
-/* ===== Self-heal: sync claimed keys → users/{uid}.cards if empty ===== */
+/* ===== Self-heal cards from claimed keys (if cards[] empty) ===== */
 async function healOwnedCards(uid){
   const q = await db.collection('cardKeys').where('claimedBy','==',uid).limit(200).get();
   if (q.empty) return false;
   const ids = [];
   q.forEach(d => { const v = d.data(); if (v && typeof v.cardId === 'string') ids.push(v.cardId); });
   if (!ids.length) return false;
-
   const ref = db.collection('users').doc(uid);
   const BATCH = 10;
   for (let i=0;i<ids.length;i+=BATCH){
@@ -94,7 +90,7 @@ function renderOwnedCards(cards){
   }
 }
 
-/* ===== Share flow ===== */
+/* ===== Share flow (sender) ===== */
 async function onShareClick(fromUid, cardId){
   const username = ($("toUser").value || "").trim().toLowerCase();
   if (!username) { showModal("Please enter a recipient username."); return; }
@@ -103,15 +99,12 @@ async function onShareClick(fromUid, cardId){
   if (!toUid) { showModal("Username not found."); return; }
   if (toUid === fromUid) { showModal("You can’t share a card to yourself."); return; }
 
-  // Only share truly owned cards
   if (!ownedCardsCache.includes(cardId)) { showModal("Only owned cards can be shared."); return; }
 
-  // Recipient already owns?
   const toDoc = await db.collection("users").doc(toUid).get();
   const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
   if (toCards.includes(cardId)) { showModal("Recipient already owns this card."); return; }
 
-  // Already borrowing?
   const sharedRef = db.collection("users").doc(toUid).collection("shared").doc(cardId);
   const sharedSnap = await sharedRef.get();
   if (sharedSnap.exists){
@@ -127,7 +120,6 @@ async function onShareClick(fromUid, cardId){
     return;
   }
 
-  // Create borrowed doc for 3 days
   const untilTs = new Date(Date.now() + BORROW_MS);
   await sharedRef.set({
     cardId,
@@ -136,7 +128,6 @@ async function onShareClick(fromUid, cardId){
     until: untilTs
   });
 
-  // Add log (no index required approach: simple add)
   await db.collection("shareInbox").add({
     fromUid: fromUid,
     toUid: toUid,
@@ -162,7 +153,6 @@ function fmt(ms){
 let countdownTimer = null;
 
 async function convertToOwner(uid, cardId, fromUid){
-  // Add to cards[] and delete shared/{cardId}
   await db.runTransaction(async (tx)=>{
     const uref = db.collection("users").doc(uid);
     const usnap = await tx.get(uref);
@@ -171,7 +161,7 @@ async function convertToOwner(uid, cardId, fromUid){
     tx.delete( uref.collection("shared").doc(cardId) );
   });
 
-  // Update the latest matching shareInbox item (pick newest client-side)
+  // mark latest log as converted
   const q = await db.collection("shareInbox")
     .where("toUid","==", uid)
     .where("cardId","==", cardId)
@@ -193,42 +183,57 @@ async function convertToOwner(uid, cardId, fromUid){
   showModal(`🎉 Your borrowed <b>${cardId}</b> from <b>@${fromName}</b> is now <b>permanent</b>.`);
 }
 
+/* ===== Real-time borrowed watcher with 'incoming share' modal ===== */
 function watchBorrowed(uid){
   const list = $("borrowedList");
   list.innerHTML = `<div class="hint">Loading…</div>`;
   if (countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
 
   const items = new Map();
+  let initialBorrowedLoaded = false; // <-- NEW
 
   db.collection("users").doc(uid).collection("shared")
     .onSnapshot(async (snap)=>{
+      // build/refresh tiles
       items.clear();
       list.innerHTML = "";
 
       if (snap.empty){
         list.innerHTML = `<div class="hint">You have no borrowed cards right now.</div>`;
-        return;
+      } else {
+        for (const d of snap.docs){
+          const data = d.data();
+          const cardId = data.cardId;
+          const until = data.until?.toDate ? data.until.toDate().getTime() : (Date.now()+BORROW_MS);
+          const fromUid = data.fromUid;
+          const fromName = await getUsernameByUid(fromUid);
+
+          const el = document.createElement("div");
+          el.className = "borrowed";
+          el.innerHTML = `
+            <div class="thumb" style="background-image:url(assets/cards/${cardId}.png)"></div>
+            <div class="meta">
+              <div><b>${cardId}</b> — borrowed from <b>@${fromName}</b></div>
+              <div class="timer" data-card="${cardId}">—</div>
+            </div>`;
+          list.appendChild(el);
+          items.set(cardId, { el, until, fromUid });
+        }
       }
 
-      for (const d of snap.docs){
-        const data = d.data();
-        const cardId = data.cardId;
-        const until = data.until?.toDate ? data.until.toDate().getTime() : (Date.now()+BORROW_MS);
-        const fromUid = data.fromUid;
-        const fromName = await getUsernameByUid(fromUid);
-
-        const el = document.createElement("div");
-        el.className = "borrowed";
-        el.innerHTML = `
-          <div class="thumb" style="background-image:url(assets/cards/${cardId}.png)"></div>
-          <div class="meta">
-            <div><b>${cardId}</b> — borrowed from <b>@${fromName}</b></div>
-            <div class="timer" data-card="${cardId}">—</div>
-          </div>`;
-        list.appendChild(el);
-        items.set(cardId, { el, until, fromUid });
+      // Show "incoming share" ONLY for new docs after first load
+      if (initialBorrowedLoaded){
+        snap.docChanges().forEach(async (chg)=>{
+          if (chg.type === "added"){
+            const data = chg.doc.data();
+            const fromName = await getUsernameByUid(data.fromUid);
+            showModal(`📩 You just received <b>${data.cardId}</b> from <b>@${fromName}</b>.`);
+          }
+        });
       }
+      initialBorrowedLoaded = true; // <-- set after rendering first state
 
+      // single timer updates all tiles
       if (countdownTimer){ clearInterval(countdownTimer); }
       countdownTimer = setInterval(async ()=>{
         const t = Date.now();
@@ -249,7 +254,7 @@ function watchBorrowed(uid){
     });
 }
 
-/* ===== Activity log (no index required — client sorts) ===== */
+/* ===== Activity log (client-side sort) ===== */
 async function renderLog(uid){
   const box = $("logList");
   box.innerHTML = `<div class="hint">Loading…</div>`;
@@ -292,7 +297,7 @@ auth.onAuthStateChanged(async (user)=>{
   currentUid = user.uid;
   setupSidebar();
 
-  // Ensure user doc exists (do NOT wipe cards)
+  // Ensure user doc exists (no wipe)
   const uref = db.collection("users").doc(user.uid);
   const first = await uref.get();
   if (!first.exists){
@@ -304,7 +309,7 @@ auth.onAuthStateChanged(async (user)=>{
     });
   }
 
-  // Live owned cards; if empty once, self-heal from cardKeys
+  // live owned cards (+ one-time heal if empty)
   uref.onSnapshot(async (snap)=>{
     const data  = snap.exists ? (snap.data() || {}) : {};
     const cards = Array.isArray(data.cards) ? data.cards : [];
@@ -312,10 +317,7 @@ auth.onAuthStateChanged(async (user)=>{
     renderOwnedCards(cards);
     if (!didHealFromKeys && cards.length === 0){
       didHealFromKeys = true;
-      const healed = await healOwnedCards(user.uid);
-      if (healed){
-        // onSnapshot will re-render with repaired data
-      }
+      await healOwnedCards(user.uid); // if healed, onSnapshot will update
     }
   });
 
