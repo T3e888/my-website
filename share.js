@@ -1,4 +1,4 @@
-// share.js — share system with incoming-share modal for recipient
+// share.js — share system with incoming-share modal + robust errors
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
@@ -30,6 +30,7 @@ function setupSidebar(){
 /* ===== Modal ===== */
 function showModal(msg, cb){
   const modal = $("modal");
+  if (!modal) { alert(msg.replace(/<[^>]*>/g,"")); return; } // fallback
   modal.innerHTML = `<div class="modal-content">${msg}<br><button class="ok">OK</button></div>`;
   modal.classList.add("active");
   modal.querySelector(".ok").onclick = ()=>{ modal.classList.remove("active"); if(cb) cb(); };
@@ -39,12 +40,19 @@ function showModal(msg, cb){
 async function getUidByUsername(unameRaw){
   const uname = (unameRaw||"").trim().toLowerCase();
   if (!uname) return null;
+
   // primary directory
-  const dir = await db.collection("usernames").doc(uname).get();
-  if (dir.exists && dir.data()?.uid) return dir.data().uid;
-  // fallback
-  const snap = await db.collection("users").where("username","==",uname).limit(1).get();
-  if (!snap.empty) return snap.docs[0].id;
+  try {
+    const dir = await db.collection("usernames").doc(uname).get();
+    if (dir.exists && dir.data()?.uid) return dir.data().uid;
+  } catch(e){ console.warn("usernames read failed:", e); }
+
+  // fallback: look inside /users
+  try {
+    const q = await db.collection("users").where("username","==",uname).limit(1).get();
+    if (!q.empty) return q.docs[0].id;
+  } catch(e){ console.warn("users fallback search failed:", e); }
+
   return null;
 }
 async function getUsernameByUid(uid){
@@ -61,6 +69,7 @@ async function healOwnedCards(uid){
   const ids = [];
   q.forEach(d => { const v = d.data(); if (v && typeof v.cardId === 'string') ids.push(v.cardId); });
   if (!ids.length) return false;
+
   const ref = db.collection('users').doc(uid);
   const BATCH = 10;
   for (let i=0;i<ids.length;i+=BATCH){
@@ -95,48 +104,57 @@ async function onShareClick(fromUid, cardId){
   const username = ($("toUser").value || "").trim().toLowerCase();
   if (!username) { showModal("Please enter a recipient username."); return; }
 
-  const toUid = await getUidByUsername(username);
-  if (!toUid) { showModal("Username not found."); return; }
-  if (toUid === fromUid) { showModal("You can’t share a card to yourself."); return; }
+  try {
+    const toUid = await getUidByUsername(username);
+    if (!toUid) { showModal("Username not found."); return; }
+    if (toUid === fromUid) { showModal("You can’t share a card to yourself."); return; }
 
-  if (!ownedCardsCache.includes(cardId)) { showModal("Only owned cards can be shared."); return; }
+    if (!ownedCardsCache.includes(cardId)) { showModal("Only owned cards can be shared."); return; }
 
-  const toDoc = await db.collection("users").doc(toUid).get();
-  const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
-  if (toCards.includes(cardId)) { showModal("Recipient already owns this card."); return; }
+    // recipient already owns?
+    const toDoc = await db.collection("users").doc(toUid).get();
+    const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
+    if (toCards.includes(cardId)) { showModal("Recipient already owns this card."); return; }
 
-  const sharedRef = db.collection("users").doc(toUid).collection("shared").doc(cardId);
-  const sharedSnap = await sharedRef.get();
-  if (sharedSnap.exists){
-    const d = sharedSnap.data();
-    const until = d?.until?.toDate ? d.until.toDate().getTime() : null;
-    if (until){
-      const ms = until - Date.now();
-      const days = Math.max(0, Math.ceil(ms / DAY));
-      showModal(`They are already borrowing this card.<br>Time left: ~${days} day(s).`);
-    } else {
-      showModal("They are already borrowing this card.");
+    // already borrowing?
+    const sharedRef = db.collection("users").doc(toUid).collection("shared").doc(cardId);
+    const sharedSnap = await sharedRef.get();
+    if (sharedSnap.exists){
+      const d = sharedSnap.data();
+      const until = d?.until?.toDate ? d.until.toDate().getTime() : null;
+      if (until){
+        const ms = until - Date.now();
+        const days = Math.max(0, Math.ceil(ms / DAY));
+        showModal(`They are already borrowing this card.<br>Time left: ~${days} day(s).`);
+      } else {
+        showModal("They are already borrowing this card.");
+      }
+      return;
     }
-    return;
+
+    // create borrowed doc for 3 days
+    const untilTs = new Date(Date.now() + BORROW_MS);
+    await sharedRef.set({
+      cardId,
+      fromUid: fromUid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      until: untilTs
+    });
+
+    // log activity (optional UI uses it)
+    await db.collection("shareInbox").add({
+      fromUid: fromUid,
+      toUid: toUid,
+      cardId: cardId,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: "borrowed"
+    });
+
+    showModal(`✅ Shared <b>${cardId}</b> to <b>@${username}</b> for <b>3 days</b>.`);
+  } catch (e){
+    console.error("Share failed:", e);
+    showModal(`❌ Share failed:<br><small>${e?.message || e}</small>`);
   }
-
-  const untilTs = new Date(Date.now() + BORROW_MS);
-  await sharedRef.set({
-    cardId,
-    fromUid: fromUid,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    until: untilTs
-  });
-
-  await db.collection("shareInbox").add({
-    fromUid: fromUid,
-    toUid: toUid,
-    cardId: cardId,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    status: "borrowed"
-  });
-
-  showModal(`✅ Shared <b>${cardId}</b> to <b>@${username}</b> for <b>3 days</b>.`);
 }
 
 /* ===== Borrowed list + countdown + auto-convert ===== */
@@ -161,7 +179,7 @@ async function convertToOwner(uid, cardId, fromUid){
     tx.delete( uref.collection("shared").doc(cardId) );
   });
 
-  // mark latest log as converted
+  // mark latest log as converted (best-effort)
   const q = await db.collection("shareInbox")
     .where("toUid","==", uid)
     .where("cardId","==", cardId)
@@ -190,11 +208,11 @@ function watchBorrowed(uid){
   if (countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
 
   const items = new Map();
-  let initialBorrowedLoaded = false; // <-- NEW
+  let initialBorrowedLoaded = false;
 
   db.collection("users").doc(uid).collection("shared")
     .onSnapshot(async (snap)=>{
-      // build/refresh tiles
+      // build current UI
       items.clear();
       list.innerHTML = "";
 
@@ -221,19 +239,19 @@ function watchBorrowed(uid){
         }
       }
 
-      // Show "incoming share" ONLY for new docs after first load
+      // show popup for newly added docs (not on first load)
       if (initialBorrowedLoaded){
         snap.docChanges().forEach(async (chg)=>{
           if (chg.type === "added"){
-            const data = chg.doc.data();
-            const fromName = await getUsernameByUid(data.fromUid);
-            showModal(`📩 You just received <b>${data.cardId}</b> from <b>@${fromName}</b>.`);
+            const d = chg.doc.data();
+            const fromName = await getUsernameByUid(d.fromUid);
+            showModal(`📩 You just received <b>${d.cardId}</b> from <b>@${fromName}</b>.`);
           }
         });
       }
-      initialBorrowedLoaded = true; // <-- set after rendering first state
+      initialBorrowedLoaded = true;
 
-      // single timer updates all tiles
+      // countdown updates
       if (countdownTimer){ clearInterval(countdownTimer); }
       countdownTimer = setInterval(async ()=>{
         const t = Date.now();
@@ -251,10 +269,13 @@ function watchBorrowed(uid){
         }
         if (items.size === 0 && countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
       }, 1000);
+    }, (err)=>{
+      console.error("shared listener error:", err);
+      list.innerHTML = `<div class="hint">Couldn’t load borrowed items.</div>`;
     });
 }
 
-/* ===== Activity log (client-side sort) ===== */
+/* ===== Activity log ===== */
 async function renderLog(uid){
   const box = $("logList");
   box.innerHTML = `<div class="hint">Loading…</div>`;
@@ -265,7 +286,6 @@ async function renderLog(uid){
   const rows = [];
   sentQ.forEach(d => rows.push({doc:d, role:"out"}));
   gotQ.forEach(d  => rows.push({doc:d, role:"in"}));
-
   rows.sort((a,b)=>{
     const at = a.doc.data().createdAt?.toMillis?.() || 0;
     const bt = b.doc.data().createdAt?.toMillis?.() || 0;
@@ -309,7 +329,7 @@ auth.onAuthStateChanged(async (user)=>{
     });
   }
 
-  // live owned cards (+ one-time heal if empty)
+  // live owned cards (+ heal once if empty)
   uref.onSnapshot(async (snap)=>{
     const data  = snap.exists ? (snap.data() || {}) : {};
     const cards = Array.isArray(data.cards) ? data.cards : [];
@@ -317,7 +337,7 @@ auth.onAuthStateChanged(async (user)=>{
     renderOwnedCards(cards);
     if (!didHealFromKeys && cards.length === 0){
       didHealFromKeys = true;
-      await healOwnedCards(user.uid); // if healed, onSnapshot will update
+      await healOwnedCards(user.uid); // if healed, onSnapshot will update UI
     }
   });
 
