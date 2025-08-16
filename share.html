@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="share.css" />
 </head>
 <body>
-  <!-- ===== SIDEBAR (same pattern as other pages) ===== -->
+  <!-- Sidebar (same pattern as your site) -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -19,34 +19,33 @@
       <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
       <li class="menu-item"><a href="learn.html">Learn</a></li>
       <li class="menu-item"><a href="profile.html">Profile</a></li>
-      <li class="menu-item"><a class="active" href="share.html">Share</a></li>
+      <li class="menu-item"><a href="share.html" class="active">Share</a></li>
       <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
-  <!-- ===== END SIDEBAR ===== -->
 
   <h1 class="page-title">Share Cards</h1>
-  <p class="subtitle">Lend a card for <b>3 days</b>. After the timer ends, it becomes theirs.</p>
+  <p class="subtitle">Lend a card for <b>3 days</b>. After the timer ends, it becomes theirs automatically.</p>
 
-  <!-- Share box -->
+  <!-- Share form -->
   <section class="panel">
     <h2>Send a Card</h2>
     <div class="share-form">
       <div class="field">
-        <label for="toUser">Recipient username</label>
+        <label for="toUser">Recipient username (lowercase)</label>
         <input id="toUser" type="text" placeholder="their_username" />
-        <div class="hint">Usernames are lowercase. Example: <code>alice</code></div>
+        <div class="hint">Make sure the recipient saved their username on <b>Profile</b>.</div>
       </div>
       <div class="field">
         <label>Your owned cards</label>
         <div id="ownedGrid" class="grid"></div>
-        <div class="hint">Tap a card below to share it to the username above.</div>
+        <div class="hint">Tap one card below to send.</div>
       </div>
     </div>
   </section>
 
-  <!-- Borrowed list -->
+  <!-- Borrowed by you -->
   <section class="panel">
     <h2>Borrowed by You (3-day countdown)</h2>
     <div id="borrowedList" class="borrowed-list"></div>
@@ -58,7 +57,7 @@
     <div id="logList" class="log-list"></div>
   </section>
 
-  <!-- Modal -->
+  <!-- Modal (required) -->
   <div id="modal" class="modal"></div>
 
   <!-- Firebase SDKs -->
@@ -79,4 +78,4 @@
   </script>
   <script src="share.js"></script>
 </body>
-      </html>
+  </html>
