@@ -1,7 +1,9 @@
-// ========== card.js (robust render, no more cards reset) ==========
+// ========== card.js (robust render + auto-convert borrowed → owned) ==========
+
 const byId = (id) => document.getElementById(id);
 const TOTAL_CARDS = 25;
 
+// --- Sidebar (same as before) ---
 function setupSidebar() {
   const toggleBtn = byId("menu-toggle");
   const sidebar   = byId("sidebar");
@@ -17,11 +19,13 @@ function setupSidebar() {
   overlay?.addEventListener("click", close);
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 
+  // close when navigating
   document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
     if (!a.closest("#logout-link")) a.addEventListener("click", close);
   });
 }
 
+// --- Modal helper ---
 function showModal(html) {
   const modal = byId("modal");
   if (!modal) return;
@@ -30,6 +34,7 @@ function showModal(html) {
   modal.querySelector(".modal-close").onclick = () => modal.classList.remove("active");
 }
 
+// --- Grid renderers ---
 function renderGrid(ownedSet, borrowedSet) {
   const grid = byId("cardGrid");
   if (!grid) return;
@@ -46,12 +51,14 @@ function renderGrid(ownedSet, borrowedSet) {
       card.className = "card unlocked";
       card.style.backgroundImage = `url(assets/cards/${cid}.png)`;
       if (borrowed && !owned) {
+        // visually lighter border for borrowed
         card.style.border    = "2.5px solid #ffcdd2";
         card.style.boxShadow = "0 4px 18px rgba(255,205,210,.7)";
         card.title = `Card ${i} (borrowed)`;
       } else {
         card.title = `Card ${i}`;
       }
+
       card.addEventListener("click", () => {
         const label = borrowed && !owned
           ? `Card ${i} <small style="color:#b71c1c">(borrowed)</small>`
@@ -71,38 +78,67 @@ function renderGrid(ownedSet, borrowedSet) {
   }
 }
 
-function renderAllLocked() { renderGrid(new Set(), new Set()); }
+// draw 25 locked tiles immediately so page is never blank
+function renderAllLocked() {
+  renderGrid(new Set(), new Set());
+}
 
+/* --- NEW: convert a borrowed card to owned (idempotent) --- */
+async function convertBorrowToOwner(uid, cardId, fromUid){
+  // 1) Add to cards[], 2) delete shared doc
+  await db.runTransaction(async (tx)=>{
+    const uref = db.collection('users').doc(uid);
+    tx.set(uref, { cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
+    tx.delete( uref.collection('shared').doc(cardId) );
+  });
+
+  // 3) Mark latest shareInbox for this card as converted (optional)
+  const q = await db.collection('shareInbox')
+    .where('toUid','==', uid)
+    .where('cardId','==', cardId)
+    .orderBy('createdAt','desc')
+    .limit(1).get();
+  if (!q.empty){
+    await q.docs[0].ref.update({
+      status: 'converted',
+      acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
+
+// --- Start ---
 auth.onAuthStateChanged(async (user) => {
   if (!user) { location.href = "login.html"; return; }
   setupSidebar();
+
+  // Always show something first
   renderAllLocked();
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Create if missing, but NEVER clear cards again
-  const first = await docRef.get();
-  if (!first.exists) {
+  // Ensure user doc exists WITHOUT wiping cards
+  const firstSnap = await docRef.get();
+  if (!firstSnap.exists) {
     await docRef.set({
       username: (user.email || "").split("@")[0] || "user",
       cards: [],
       mission: Array(15).fill(false),
       points: 0
-    });
+    }); // create fresh doc only once
   } else {
-    const data = first.data() || {};
+    const data = firstSnap.data() || {};
     if (!data.username) {
       await docRef.set({
-        username: (user.email || "").split("@")[0] || "user",
-        mission: Array(15).fill(false),
-        points: 0
-      }, { merge: true });
+        username: (user.email || "").split("@")[0] || "user"
+      }, { merge: true }); // don't touch cards here
     }
   }
 
+  // Keep two live sets and re-render when either changes
   const ownedSet    = new Set();
   const borrowedSet = new Set();
 
+  // Fallback: if listener is slow, do a one-time get after 2s
   let didFirstRender = false;
   setTimeout(async () => {
     if (!didFirstRender) {
@@ -112,21 +148,43 @@ auth.onAuthStateChanged(async (user) => {
         const cards2 = Array.isArray(data2.cards) ? data2.cards : [];
         ownedSet.clear(); cards2.forEach(c => ownedSet.add(c));
         renderGrid(ownedSet, borrowedSet);
-      } catch {}
+      } catch { /* ignore */ }
     }
   }, 2000);
 
-  docRef.onSnapshot((snapLive) => {
-    const data  = snapLive.exists ? (snapLive.data() || {}) : {};
+  // 1) Live OWNED cards
+  docRef.onSnapshot((snap) => {
+    const data  = snap.exists ? (snap.data() || {}) : {};
     const cards = Array.isArray(data.cards) ? data.cards : [];
     ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
     renderGrid(ownedSet, borrowedSet);
     didFirstRender = true;
-  }, () => renderGrid(ownedSet, borrowedSet));
-
-  docRef.collection("shared").onSnapshot((qs) => {
-    borrowedSet.clear();
-    qs.forEach(d => { const v = d.data(); if (v && typeof v.cardId === "string") borrowedSet.add(v.cardId); });
+  }, (err) => {
+    console.warn("users doc listener error:", err);
     renderGrid(ownedSet, borrowedSet);
-  }, () => renderGrid(ownedSet, borrowedSet));
+  });
+
+  // 2) Live BORROWED cards with auto-convert when expired
+  docRef.collection("shared").onSnapshot(async (qs) => {
+    borrowedSet.clear();
+    const now = Date.now();
+
+    for (const d of qs.docs){
+      const v = d.data() || {};
+      const cid   = v.cardId;
+      const until = v.until?.toDate ? v.until.toDate().getTime() : 0;
+
+      if (cid && until && until <= now){
+        // Borrow expired → make it theirs now
+        await convertBorrowToOwner(user.uid, cid, v.fromUid);
+        continue; // do not display as borrowed
+      }
+      if (typeof cid === "string") borrowedSet.add(cid);
+    }
+
+    renderGrid(ownedSet, borrowedSet);
+  }, (err) => {
+    console.warn("shared listener error:", err);
+    renderGrid(ownedSet, borrowedSet);
+  });
 });
