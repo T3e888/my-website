@@ -1,4 +1,4 @@
-// share.js — Share cards for 3 days, auto-convert to owner, live notifications
+ // share.js — Share cards for 3 days, auto-convert to owner, live notifications + inbox fallback
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
@@ -48,7 +48,7 @@ async function getUsernameByUid(uid){
   } catch { return uid.slice(0,6); }
 }
 
-// ---------- Heal: cardKeys → users/{uid}.cards (one-time safety) ----------
+// ---------- Heal: cardKeys → users/{uid}.cards ----------
 async function healOwnedCards(uid){
   const q = await db.collection('cardKeys').where('claimedBy','==',uid).limit(200).get();
   if (q.empty) return false;
@@ -85,7 +85,7 @@ function renderOwnedCards(cards){
   }
 }
 
-// ---------- Share flow ----------
+// ---------- Share flow (with fallback) ----------
 async function onShareClick(fromUid, cardId){
   const username = ($("toUser").value || "").trim().toLowerCase();
   if (!username) { showModal("Please enter a recipient username."); return; }
@@ -95,7 +95,6 @@ async function onShareClick(fromUid, cardId){
     if (!toUid) { showModal("Username not found."); return; }
     if (toUid === fromUid) { showModal("You can’t share a card to yourself."); return; }
 
-    // Only true owners can share
     if (!ownedCardsCache.includes(cardId)) { showModal("Only owned cards can be shared."); return; }
 
     // Recipient already owns?
@@ -103,15 +102,11 @@ async function onShareClick(fromUid, cardId){
     const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
     if (toCards.includes(cardId)) { showModal("Recipient already owns this card."); return; }
 
-    // Already borrowing?
     const sharedRef = db.collection("users").doc(toUid).collection("shared").doc(cardId);
     const sharedSnap = await sharedRef.get();
-    if (sharedSnap.exists){
-      showModal("They are already borrowing this card.");
-      return;
-    }
+    if (sharedSnap.exists){ showModal("They are already borrowing this card."); return; }
 
-    // Create borrowed doc (3 days) — IMPORTANT: Timestamp type & allowed keys only
+    // Try DIRECT share first
     const untilTs = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + BORROW_MS));
     try {
       await sharedRef.set({
@@ -120,27 +115,36 @@ async function onShareClick(fromUid, cardId){
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         until: untilTs
       });
-    } catch (e) {
-      console.error("Share failed at BORROWED-DOC step:", e);
-      showModal(`❌ Share failed (creating borrowed doc):<br><small>${e?.message || e}</small>`);
+
+      // Log as borrowed
+      try {
+        await db.collection("shareInbox").add({
+          fromUid: fromUid,
+          toUid: toUid,
+          cardId: cardId,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          status: "borrowed"
+        });
+      } catch (e) { console.warn("shareInbox add failed:", e); }
+
+      showModal(`✅ You successfully shared <b>${cardId}</b> with <b>@${username}</b>.`);
       return;
-    }
-
-    // Log the share (best effort)
-    try {
-      await db.collection("shareInbox").add({
-        fromUid: fromUid,
-        toUid: toUid,
-        cardId: cardId,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        status: "borrowed"
-      });
     } catch (e) {
-      console.warn("shareInbox add failed:", e);
+      // FALLBACK: inbox handshake (recipient will self-create borrowed doc)
+      if (e?.code === "permission-denied") {
+        await db.collection("shareInbox").add({
+          fromUid: fromUid,
+          toUid: toUid,
+          cardId: cardId,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          status: "pending"
+        });
+        showModal(`✅ Share request sent to <b>@${username}</b>.<br>They will receive <b>${cardId}</b> within seconds when they open <b>Share</b> page.`);
+        return;
+      }
+      console.error("Share failed at DIRECT step:", e);
+      showModal(`❌ Share failed:<br><small>${e?.message || e}</small>`);
     }
-
-    // ✅ sender success
-    showModal(`✅ You successfully shared <b>${cardId}</b> with <b>@${username}</b>.`);
   } catch (e){
     console.error("Share failed:", e);
     showModal(`❌ Share failed:<br><small>${e?.message || e}</small>`);
@@ -159,7 +163,6 @@ function fmt(ms){
 }
 
 let countdownTimer = null;
-// prevent repeating "📩 received" modal after reload
 function seenKey(key){ const k=`seen_${currentUid}_${key}`; return localStorage.getItem(k) === '1'; }
 function markSeen(key){ const k=`seen_${currentUid}_${key}`; localStorage.setItem(k,'1'); }
 
@@ -172,7 +175,7 @@ async function convertToOwner(uid, cardId, fromUid){
     tx.delete( uref.collection("shared").doc(cardId) );
   });
 
-  // Update last log entry to converted
+  // Update last log to converted
   const q = await db.collection("shareInbox")
     .where("toUid","==", uid)
     .where("cardId","==", cardId)
@@ -197,7 +200,6 @@ function watchBorrowed(uid){
 
   db.collection("users").doc(uid).collection("shared")
     .onSnapshot(async (snap)=>{
-      const firstLoad = items.size === 0;
       items.clear();
       list.innerHTML = "";
 
@@ -213,7 +215,7 @@ function watchBorrowed(uid){
         const fromUid = data.fromUid;
         const fromName = await getUsernameByUid(fromUid);
 
-        // 📩 one-time “you received …” notification
+        // 📩 received notice (once)
         const notifKey = `received_${cardId}_${d.id}`;
         if (!seenKey(notifKey)){
           showModal(`📩 You received <b>${cardId}</b> from <b>@${fromName}</b>.<br>It will become permanently yours in <b>72 hours</b>.`);
@@ -255,6 +257,44 @@ function watchBorrowed(uid){
     });
 }
 
+// ---------- Inbox handshake (recipient auto-accepts) ----------
+function watchInboxPending(uid){
+  db.collection("shareInbox")
+    .where("toUid","==", uid)
+    .where("status","==","pending")
+    .orderBy("createdAt","desc")
+    .limit(30)
+    .onSnapshot(async (snap)=>{
+      for (const d of snap.docs){
+        const data = d.data();
+        const { fromUid, cardId } = data || {};
+        if (!fromUid || !cardId) continue;
+
+        const sharedRef = db.collection("users").doc(uid).collection("shared").doc(cardId);
+        const exists = await sharedRef.get();
+        if (exists.exists) {
+          // already have borrowed doc → mark borrowed
+          await d.ref.update({ status: "borrowed" }).catch(()=>{});
+          continue;
+        }
+
+        // Create borrowed entry as the recipient
+        const untilTs = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + BORROW_MS));
+        try {
+          await sharedRef.set({
+            cardId,
+            fromUid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            until: untilTs
+          });
+          await d.ref.update({ status: "borrowed" });
+        } catch (e) {
+          console.warn("recipient failed to create borrowed doc:", e);
+        }
+      }
+    });
+}
+
 // ---------- Activity log (live) ----------
 function renderLogLive(uid){
   const box = $("logList");
@@ -276,8 +316,11 @@ function renderLogLive(uid){
     function row(d, role){
       const data = d.data();
       const status = data.status || "borrowed";
-      const badgeClass = status === "converted" ? "converted" : (status === "borrowed" ? "borrowed" : "sent");
-      const who = role === "out" ? `to @${d._toName || data.toUid.slice(0,6)}` : `from @${d._fromName || data.fromUid.slice(0,6)}`;
+      const badgeClass = status === "converted" ? "converted"
+                         : status === "borrowed" ? "borrowed"
+                         : "sent";
+      const who = role === "out" ? `to @${d._toName || data.toUid.slice(0,6)}`
+                                 : `from @${d._fromName || data.fromUid.slice(0,6)}`;
       const when = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : "";
       return `<div class="log-item">
         <div><b>${data.cardId}</b> ${who}<br><small>${when}</small></div>
@@ -336,10 +379,14 @@ auth.onAuthStateChanged(async (user)=>{
     if (!didHealFromKeys && cards.length === 0){
       didHealFromKeys = true;
       const healed = await healOwnedCards(user.uid);
-      if (healed){ /* will re-render via onSnapshot */ }
+      if (healed){ /* re-renders via onSnapshot */ }
     }
   });
 
+  // NEW: accept pending shares automatically if cross-write is blocked
+  watchInboxPending(user.uid);
+
+  // Borrowed countdown + live logs
   watchBorrowed(user.uid);
   renderLogLive(user.uid);
 });
