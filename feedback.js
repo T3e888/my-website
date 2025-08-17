@@ -1,49 +1,46 @@
-// feedback.js — stars + feedback + BEFAST + claim reward (card25 +5pts)
+// feedback.js — stars + feedback + BEFAST + claim reward (card25 +5pts) — ROBUST VERSION
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const $ = (id) => document.getElementById(id);
 
-// ===== Sidebar (same pattern as your other pages) =====
+/* ---------- Sidebar ---------- */
 function setupSidebar(){
   const toggleBtn = $("menu-toggle");
   const sidebar   = $("sidebar");
   const overlay   = $("overlay");
   const closeBtn  = $("close-sidebar");
   const logout    = $("logout-link");
-
   const open  = ()=>{ sidebar.classList.add("open"); overlay.classList.add("active"); };
   const close = ()=>{ sidebar.classList.remove("open"); overlay.classList.remove("active"); };
-
   toggleBtn?.addEventListener("click", open);
   closeBtn?.addEventListener("click", close);
   overlay?.addEventListener("click", close);
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 }
 
-// ===== Modal =====
+/* ---------- Modal ---------- */
 function showModal(html, cb) {
   const modal = $("modal");
-  if (!modal) return;
+  if (!modal) return alert(html.replace(/<[^>]+>/g,''));
   modal.innerHTML = `<div class="modal-content">${html}<br><button class="ok">OK</button></div>`;
   modal.classList.add("active");
   modal.querySelector(".ok").onclick = () => { modal.classList.remove("active"); cb?.(); };
 }
 
-// ===== State =====
+/* ---------- State ---------- */
 let uid = null;
 let starsChosen = 0;
 let flags = { feedbackDone:false, befastDone:false, feedbackAwardGiven:false };
 
-// ===== UI helpers =====
+/* ---------- UI helpers ---------- */
 function paintStars(n){
   document.querySelectorAll("#starBar .star").forEach(el=>{
     const v = Number(el.dataset.v);
     if (v <= n) el.classList.remove("dim"); else el.classList.add("dim");
   });
 }
-
 function updateProgress(){
   const note = $("progressNote");
   const allDone = flags.feedbackDone && flags.befastDone;
@@ -57,62 +54,53 @@ function updateProgress(){
   else claimBtn.classList.add("hidden");
 }
 
-// ===== Save Feedback =====
+/* ---------- Save: Feedback (BATCH) ---------- */
 async function saveFeedback(){
   const message = ($("feedbackText").value || "").trim();
-  if (!starsChosen || starsChosen < 1 || starsChosen > 5) {
-    showModal("Please choose a star rating (1–5).");
-    return;
-  }
-  if (!message) {
-    showModal("Please write some feedback.");
-    return;
-  }
-  const ref = db.collection("feedbacks").doc(uid);
+  if (!starsChosen || starsChosen < 1 || starsChosen > 5) { showModal("Please choose a star rating (1–5)."); return; }
+  if (!message) { showModal("Please write some feedback."); return; }
+
   const now = firebase.firestore.FieldValue.serverTimestamp();
+  const batch = db.batch();
 
-  await ref.set({
-    stars: starsChosen,
-    message,
-    createdAt: now,
-    updatedAt: now
-  });
+  const fbRef = db.collection("feedbacks").doc(uid);
+  batch.set(fbRef, { stars: starsChosen, message, createdAt: now, updatedAt: now }, { merge: true });
 
-  await db.collection("users").doc(uid).set({
-    'flags.feedbackDone': true
-  }, { merge: true });
+  const userRef = db.collection("users").doc(uid);
+  batch.set(userRef, { flags: { feedbackDone: true } }, { merge: true });
+
+  await batch.commit();
 
   flags.feedbackDone = true;
   updateProgress();
   showModal("✅ Thank you for your feedback! Saved successfully.");
 }
 
-// ===== Save BEFAST knowledge =====
+/* ---------- Save: BEFAST / Knowledge (BATCH) ---------- */
 async function saveBeFast(){
   const answerText = ($("beFastText").value || "").trim();
   if (!answerText) { showModal("Please write what you know about stroke/BEFAST."); return; }
 
-  const ref = db.collection("strokeAnswers").doc(uid);
   const now = firebase.firestore.FieldValue.serverTimestamp();
+  const batch = db.batch();
 
-  await ref.set({
-    answerText,
-    createdAt: now,
-    updatedAt: now
-  });
+  const ansRef = db.collection("strokeAnswers").doc(uid);
+  batch.set(ansRef, { answerText, createdAt: now, updatedAt: now }, { merge: true });
 
-  await db.collection("users").doc(uid).set({
-    'flags.befastDone': true
-  }, { merge: true });
+  const userRef = db.collection("users").doc(uid);
+  batch.set(userRef, { flags: { befastDone: true } }, { merge: true });
+
+  await batch.commit();
 
   flags.befastDone = true;
   updateProgress();
   showModal("✅ Thank you for sharing your knowledge about stroke/BEFAST.");
 }
 
-// ===== Claim reward (transaction) =====
+/* ---------- Claim reward (Transaction, FLAG SELF-HEAL) ---------- */
 async function claimReward(){
   let result = "noop";
+
   await db.runTransaction(async (tx)=>{
     const uref = db.collection("users").doc(uid);
     const usnap = await tx.get(uref);
@@ -120,12 +108,27 @@ async function claimReward(){
     const f = data.flags || {};
 
     if (f.feedbackAwardGiven) { result = "already"; return; }
-    if (!(f.feedbackDone && f.befastDone)) { result = "not-ready"; return; }
 
+    // check flags OR fall back to existence of the two docs
+    let ready = !!(f.feedbackDone && f.befastDone);
+
+    if (!ready) {
+      const fbSnap  = await tx.get(db.collection("feedbacks").doc(uid));
+      const ansSnap = await tx.get(db.collection("strokeAnswers").doc(uid));
+      if (fbSnap.exists && ansSnap.exists) {
+        ready = true;
+        // fix flags while granting
+        tx.set(uref, { flags: { feedbackDone: true, befastDone: true } }, { merge: true });
+      }
+    }
+
+    if (!ready) { result = "not-ready"; return; }
+
+    // idempotent grant
     tx.set(uref, {
       points: firebase.firestore.FieldValue.increment(5),
-      cards: firebase.firestore.FieldValue.arrayUnion('card25'),
-      'flags.feedbackAwardGiven': true
+      cards:  firebase.firestore.FieldValue.arrayUnion('card25'),
+      flags:  { feedbackAwardGiven: true }
     }, { merge: true });
 
     result = "claimed";
@@ -134,10 +137,7 @@ async function claimReward(){
   if (result === "claimed") {
     flags.feedbackAwardGiven = true;
     updateProgress();
-    showModal("🎉 Congratulations! You earned <b>+5 points</b> and unlocked <b>Event Card #25</b>.", () => {
-      // stay here, or go to collection:
-      // location.href = 'card.html';
-    });
+    showModal("🎉 Congratulations! You earned <b>+5 points</b> and unlocked <b>Event Card #25</b>.");
   } else if (result === "already") {
     showModal("You have already claimed this reward.");
   } else if (result === "not-ready") {
@@ -145,29 +145,31 @@ async function claimReward(){
   }
 }
 
-// ===== Initial load =====
+/* ---------- Initial load ---------- */
 auth.onAuthStateChanged(async (user)=>{
   if (!user) { location.href = "login.html?next=feedback.html"; return; }
   uid = user.uid;
   setupSidebar();
 
-  // Ensure users/{uid} exists (don’t touch other fields)
   const uref = db.collection("users").doc(uid);
-  const usnap = await uref.get();
-  if (!usnap.exists) {
-    await uref.set({
-      username: (user.email||"").split("@")[0] || "user",
-      points: 0,
-      cards: [],
-      flags: { feedbackDone:false, befastDone:false, feedbackAwardGiven:false }
-    }, { merge: true });
-  } else {
-    const data = usnap.data() || {};
-    flags = Object.assign({ feedbackDone:false, befastDone:false, feedbackAwardGiven:false }, data.flags || {});
-  }
-  updateProgress();
 
-  // Prefill existing feedback / answer (optional quality-of-life)
+  // Create if missing (merge so we never wipe anything)
+  await uref.set({
+    username: (user.email||"").split("@")[0] || "user",
+    points: 0,
+    cards: [],
+    flags: { feedbackDone:false, befastDone:false, feedbackAwardGiven:false }
+  }, { merge: true });
+
+  // Live flags (so leaving/returning page always reflects reality)
+  uref.onSnapshot((snap)=>{
+    const data = snap.exists ? (snap.data() || {}) : {};
+    const serverFlags = Object.assign({ feedbackDone:false, befastDone:false, feedbackAwardGiven:false }, data.flags || {});
+    flags = serverFlags;
+    updateProgress();
+  });
+
+  // Prefill existing feedback / knowledge (for convenience)
   const fb = await db.collection("feedbacks").doc(uid).get();
   if (fb.exists) {
     const d = fb.data();
