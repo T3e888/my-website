@@ -41,6 +41,9 @@
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
+    // Persist session reliably
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
     const qs  = new URLSearchParams(location.search);
     const key = (qs.get('k') || '').trim();
     const msg = t => document.getElementById('msg').innerHTML = t;
@@ -52,7 +55,7 @@
       auth.onAuthStateChanged(async (user) => {
         if (!user) {
           // Send to login and return here afterwards
-          location.href = `login.html?k=${encodeURIComponent(key)}`;
+          location.replace(`login.html?k=${encodeURIComponent(key)}`);
           return;
         }
 
@@ -68,21 +71,18 @@
             const keySnap = await tx.get(keyRef);
             if (!keySnap.exists) { outcome = 'no-key'; return; }
 
-            const k = keySnap.data();      // { cardId, humanKey?, claimedBy?, claimedAt? }
+            const k = keySnap.data();      // { cardId, humanKey?/humankey?, claimedBy?, claimedAt? }
             cardId = k.cardId;
             if (!cardId) { outcome = 'bad-key'; return; }
 
             // Read user once
             const userSnap = await tx.get(userRef);
-            const cards = (userSnap.exists && Array.isArray(userSnap.data().cards))
-                          ? userSnap.data().cards : [];
+            const userData = userSnap.exists ? (userSnap.data() || {}) : {};
+            const cards = Array.isArray(userData.cards) ? userData.cards : [];
             const alreadyHave = cards.includes(cardId);
 
             // Key is already claimed by someone else
-            if (k.claimedBy && k.claimedBy !== uid) {
-              outcome = 'claimed-by-other';
-              return;
-            }
+            if (k.claimedBy && k.claimedBy !== uid) { outcome = 'claimed-by-other'; return; }
 
             // Key already claimed by ME
             if (k.claimedBy === uid) {
@@ -90,9 +90,7 @@
                 outcome = 'owned-again';
               } else {
                 // SELF-HEAL: key belongs to me but my cards[] missed this card
-                tx.set(userRef, {
-                  cards: firebase.firestore.FieldValue.arrayUnion(cardId)
-                }, { merge: true });
+                tx.set(userRef, { cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
                 outcome = 'repaired';
               }
               return;
@@ -136,15 +134,18 @@
             sub("Ask them to share it with you.");
           } else if (outcome === 'no-key') {
             msg("❌ Key not found.");
+          } else if (outcome === 'bad-key') {
+            msg("❌ Invalid key document (missing cardId).");
           } else {
             msg("❌ Invalid key.");
           }
         } catch (e) {
+          // Permission/other error details
           msg(`❌ Error: ${e?.message || e}`);
         }
 
         // Go back to collection
-        setTimeout(() => location.href = 'card.html', 1400);
+        setTimeout(() => location.replace('card.html'), 1400);
       });
     }
   </script>
