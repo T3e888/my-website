@@ -76,9 +76,8 @@ function renderGrid(ownedSet, borrowedSet) {
 
 function renderAllLocked() { renderGrid(new Set(), new Set()); }
 
-/* ---------- Self-heal: rebuild cards[] from cardKeys if empty ---------- */
+/* ---------- Self-heal from cardKeys ---------- */
 async function healOwnedCards(uid) {
-  // read claimed keys → cardIds
   const q = await db.collection('cardKeys').where('claimedBy','==',uid).limit(200).get();
   if (q.empty) return false;
   const ids = [];
@@ -86,13 +85,39 @@ async function healOwnedCards(uid) {
   if (!ids.length) return false;
 
   const ref = db.collection('users').doc(uid);
-  // union in small batches
-  const BATCH = 10;
-  for (let i=0;i<ids.length;i+=BATCH){
-    const slice = ids.slice(i, i+BATCH);
+  for (let i=0;i<ids.length;i+=10){
+    const slice = ids.slice(i, i+10);
     await ref.set({ cards: firebase.firestore.FieldValue.arrayUnion(...slice) }, { merge:true });
   }
   return true;
+}
+
+/* ---------- Self-heal for feedback reward (card25 + +5) ---------- */
+async function ensureFeedbackAwardApplied(uid, data){
+  const flags = data.flags || {};
+  if (!flags.feedbackAwardGiven) return;
+
+  const cards = Array.isArray(data.cards) ? data.cards : [];
+  const hasCard25 = cards.includes('card25');
+
+  if (hasCard25) {
+    // mark that it’s already applied so we never double-fix
+    if (!flags.feedbackAwardPatched) {
+      await db.collection('users').doc(uid).set({ flags: { feedbackAwardPatched: true } }, { merge: true });
+    }
+    return;
+  }
+
+  // If award was given but card is missing (e.g., doc got overwritten),
+  // restore card25 and the +5 once, then mark as patched.
+  await db.collection('users').doc(uid).set({
+    cards:  firebase.firestore.FieldValue.arrayUnion('card25'),
+    points: firebase.firestore.FieldValue.increment(5),
+    flags: {
+      feedbackAwardPatched: true,
+      pointsFromFeedbackApplied: true
+    }
+  }, { merge: true });
 }
 
 /* ---------- Start ---------- */
@@ -100,27 +125,24 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) { location.href = "login.html"; return; }
   setupSidebar();
 
-  // Always show something first so page isn’t blank
   renderAllLocked();
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure the user doc exists **without touching cards[]**
+  // Ensure the user doc exists (never wipe existing fields)
   const firstSnap = await docRef.get();
   if (!firstSnap.exists) {
     await docRef.set({
       username: (user.email || "").split("@")[0] || "user",
-      cards: [],                         // only on first create
+      cards: [],
       mission: Array(15).fill(false),
-      points: 0
-    });
-  } else {
-    const d = firstSnap.data() || {};
-    if (!d.username) {
-      await docRef.set({
-        username: (user.email || "").split("@")[0] || "user"
-      }, { merge: true });               // do not set cards here
-    }
+      points: 0,
+      flags: { feedbackDone:false, befastDone:false, feedbackAwardGiven:false }
+    }, { merge: true });
+  } else if (!(firstSnap.data() || {}).username) {
+    await docRef.set({
+      username: (user.email || "").split("@")[0] || "user"
+    }, { merge: true });
   }
 
   const ownedSet    = new Set();
@@ -128,7 +150,6 @@ auth.onAuthStateChanged(async (user) => {
   let didFirstRender = false;
   let healedOnce = false;
 
-  // Fallback one-time get in case realtime is slow
   setTimeout(async () => {
     if (!didFirstRender) {
       try {
@@ -146,14 +167,13 @@ auth.onAuthStateChanged(async (user) => {
     const data  = snap.exists ? (snap.data() || {}) : {};
     const cards = Array.isArray(data.cards) ? data.cards : [];
 
-    // If cards is empty, try to self-heal once from cardKeys
+    // Self-heal feedback award if needed
+    ensureFeedbackAwardApplied(user.uid, data).catch(()=>{});
+
     if (!healedOnce && cards.length === 0) {
       healedOnce = true;
       const healed = await healOwnedCards(user.uid);
-      if (healed) {
-        // a following snapshot will re-render with fixed data
-        return;
-      }
+      if (healed) return; // will re-render on next snapshot
     }
 
     ownedSet.clear(); cards.forEach(c => ownedSet.add(c));
