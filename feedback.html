@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Feedback & BEFAST</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="share.css" />
+  <style>
+    /* Star bar only — local to this page */
+    .stars { display:inline-flex; gap:8px; cursor:pointer; user-select:none }
+    .star  { font-size:28px; line-height:1; color:#ddd; transition:transform .08s }
+    .star.on { color:#ffc107 }
+    .star:active { transform:scale(.95) }
+    textarea { width:100%; min-height:110px; resize:vertical }
+    .hidden { display:none }
+  </style>
+</head>
+<body>
+  <!-- Sidebar (same pattern as your site) -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon"><span></span><span></span><span></span></span>
+  </button>
+  <nav id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="share.html">Share</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item"><a href="learn.html">Learn</a></li>
+      <li class="menu-item"><a href="feedback.html" class="active">Feedback & BEFAST</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+    </ul>
+  </nav>
+  <div id="overlay" class="overlay"></div>
+
+  <h1 class="page-title">Feedback & BEFAST</h1>
+  <p class="subtitle">Complete both sections to earn <b>+5 points</b> and unlock <b>Event Card #25</b>.</p>
+
+  <!-- 1) Rating + feedback -->
+  <section class="panel">
+    <h2>1) Give a Rating & Feedback</h2>
+    <div class="field">
+      <label>Your rating</label><br/>
+      <div id="starBar" class="stars" aria-label="Star rating (1 to 5)"></div>
+      <div class="hint">Tap to select 1–5 stars</div>
+    </div>
+    <div class="field">
+      <label for="feedbackText">Your feedback</label>
+      <textarea id="feedbackText" placeholder="Type your feedback"></textarea>
+    </div>
+    <button id="saveFeedbackBtn">Save feedback</button>
+  </section>
+
+  <!-- 2) Stroke / BEFAST knowledge -->
+  <section class="panel">
+    <h2>2) What do you know about BEFAST?</h2>
+    <div class="hint" style="margin-bottom:8px">
+      <b>BEFAST</b> = <b>B</b>alance, <b>E</b>yes, <b>F</b>ace, <b>A</b>rm, <b>S</b>peech, <b>T</b>ime.
+      Share anything you know — there are no right or wrong answers.
+    </div>
+    <div class="field">
+      <label for="beFastText">Write what you know</label>
+      <textarea id="beFastText" placeholder="Write what you know about stroke/BEFAST"></textarea>
+    </div>
+    <button id="saveBeFastBtn">Save knowledge</button>
+  </section>
+
+  <!-- 3) Progress & Claim -->
+  <section class="panel">
+    <h2>Progress</h2>
+    <div id="progressNote" class="hint">Loading…</div>
+    <button id="claimRewardBtn" class="hidden">Claim +5 points & Event Card</button>
+  </section>
+
+  <!-- Modal (reuse share.css styles) -->
+  <div id="modal" class="modal"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="feedback.js?v=1"></script>
+</body>
+      </html>
