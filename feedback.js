@@ -1,11 +1,14 @@
-// feedback.js — persistent progress + auto-reconcile flags + single-claim reward
+// feedback.js — stars + feedback + BEFAST + claim reward (card25 +5pts)
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const $ = (id) => document.getElementById(id);
 
-// ===== Sidebar (unchanged) =====
+// Ensure auth persists across tabs/sessions
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
+// ===== Sidebar =====
 function setupSidebar(){
   const toggleBtn = $("menu-toggle");
   const sidebar   = $("sidebar");
@@ -68,27 +71,23 @@ async function saveFeedback(){
     showModal("Please write some feedback.");
     return;
   }
+
   const ref = db.collection("feedbacks").doc(uid);
   const now = firebase.firestore.FieldValue.serverTimestamp();
 
-  // Keep createdAt on first write; update updatedAt afterwards
-  const prev = await ref.get();
-  if (prev.exists){
-    await ref.update({ stars: starsChosen, message, updatedAt: now });
-  } else {
-    await ref.set({ stars: starsChosen, message, createdAt: now, updatedAt: now });
-  }
+  await ref.set({
+    stars: starsChosen,
+    message,
+    createdAt: now,
+    updatedAt: now
+  });
 
-  // Use update() with dotted path so flags persist correctly
+  // Use update() for dot-path safety
   await db.collection("users").doc(uid).update({
     "flags.feedbackDone": true
-  }).catch(async (e)=>{
-    if (String(e).includes("NOT_FOUND")) {
-      await db.collection("users").doc(uid).set({
-        flags: { feedbackDone:true, befastDone:false, feedbackAwardGiven:false },
-        points: 0, cards: []
-      }, { merge:true });
-    } else { throw e; }
+  }).catch(async () => {
+    // if user doc doesn't exist yet
+    await db.collection("users").doc(uid).set({ flags: { feedbackDone: true } }, { merge: true });
   });
 
   flags.feedbackDone = true;
@@ -104,22 +103,16 @@ async function saveBeFast(){
   const ref = db.collection("strokeAnswers").doc(uid);
   const now = firebase.firestore.FieldValue.serverTimestamp();
 
-  const prev = await ref.get();
-  if (prev.exists){
-    await ref.update({ answerText, updatedAt: now });
-  } else {
-    await ref.set({ answerText, createdAt: now, updatedAt: now });
-  }
+  await ref.set({
+    answerText,
+    createdAt: now,
+    updatedAt: now
+  });
 
   await db.collection("users").doc(uid).update({
     "flags.befastDone": true
-  }).catch(async (e)=>{
-    if (String(e).includes("NOT_FOUND")) {
-      await db.collection("users").doc(uid).set({
-        flags: { feedbackDone:false, befastDone:true, feedbackAwardGiven:false },
-        points: 0, cards: []
-      }, { merge:true });
-    } else { throw e; }
+  }).catch(async () => {
+    await db.collection("users").doc(uid).set({ flags: { befastDone: true } }, { merge: true });
   });
 
   flags.befastDone = true;
@@ -127,59 +120,27 @@ async function saveBeFast(){
   showModal("✅ Thank you for sharing your knowledge about stroke/BEFAST.");
 }
 
-// ===== Reconcile on load (AUTO-PERSIST PROGRESS) =====
-// If user already has feedbacks/{uid} or strokeAnswers/{uid},
-// but flags are false, flip them to true so progress survives reloads.
-async function reconcileFlags(uid){
-  const [fbSnap, ansSnap, userSnap] = await Promise.all([
-    db.collection("feedbacks").doc(uid).get(),
-    db.collection("strokeAnswers").doc(uid).get(),
-    db.collection("users").doc(uid).get()
-  ]);
-
-  const haveFb  = fbSnap.exists;
-  const haveAns = ansSnap.exists;
-
-  const currentFlags = (userSnap.exists && userSnap.data().flags) ? userSnap.data().flags : {};
-  const wantFeedbackDone = !!haveFb;
-  const wantBefastDone   = !!haveAns;
-
-  const needUpdate =
-    currentFlags.feedbackDone !== wantFeedbackDone ||
-    currentFlags.befastDone   !== wantBefastDone   ||
-    typeof currentFlags.feedbackAwardGiven !== "boolean";
-
-  if (needUpdate) {
-    const patch = {};
-    patch["flags.feedbackDone"]      = wantFeedbackDone;
-    patch["flags.befastDone"]        = wantBefastDone;
-    if (typeof currentFlags.feedbackAwardGiven !== "boolean") {
-      patch["flags.feedbackAwardGiven"] = false;
-    }
-    await db.collection("users").doc(uid).set(patch, { merge: true });
-  }
-}
-
-// ===== Claim reward (transaction, one-time) =====
+// ===== Claim reward (transaction) =====
 async function claimReward(){
-  // Double-check flags derived from docs before claim
-  await reconcileFlags(uid);
-
   let result = "noop";
   await db.runTransaction(async (tx)=>{
     const uref = db.collection("users").doc(uid);
     const usnap = await tx.get(uref);
     const data = usnap.exists ? (usnap.data() || {}) : {};
-    const f = Object.assign({ feedbackDone:false, befastDone:false, feedbackAwardGiven:false }, data.flags || {});
+    const f = data.flags || {};
 
-    if (!f.feedbackDone || !f.befastDone) { result = "not-ready"; return; }
     if (f.feedbackAwardGiven) { result = "already"; return; }
+    if (!(f.feedbackDone && f.befastDone)) { result = "not-ready"; return; }
 
-    tx.update(uref, {
+    tx.set(uref, {
       points: firebase.firestore.FieldValue.increment(5),
       cards: firebase.firestore.FieldValue.arrayUnion('card25'),
-      "flags.feedbackAwardGiven": true
-    });
+      flags: {
+        feedbackAwardGiven: true,
+        feedbackAwardPatched: true,          // marker so other pages know it's applied
+        pointsFromFeedbackApplied: true
+      }
+    }, { merge: true });
 
     result = "claimed";
   });
@@ -187,7 +148,10 @@ async function claimReward(){
   if (result === "claimed") {
     flags.feedbackAwardGiven = true;
     updateProgress();
-    showModal("🎉 Congratulations! You earned <b>+5 points</b> and unlocked <b>Event Card #25</b>.");
+    showModal("🎉 Congratulations! You earned <b>+5 points</b> and unlocked <b>Event Card #25</b>.", () => {
+      // stay here, or go to collection:
+      // location.href = 'card.html';
+    });
   } else if (result === "already") {
     showModal("You have already claimed this reward.");
   } else if (result === "not-ready") {
@@ -201,9 +165,8 @@ auth.onAuthStateChanged(async (user)=>{
   uid = user.uid;
   setupSidebar();
 
+  // Ensure users/{uid} exists (don't touch cards[] if doc already exists)
   const uref = db.collection("users").doc(uid);
-
-  // Ensure minimal doc exists (don’t overwrite existing content)
   const usnap = await uref.get();
   if (!usnap.exists) {
     await uref.set({
@@ -212,34 +175,22 @@ auth.onAuthStateChanged(async (user)=>{
       cards: [],
       flags: { feedbackDone:false, befastDone:false, feedbackAwardGiven:false }
     }, { merge: true });
-  }
-
-  // AUTO-REPAIR flags from existing docs so progress persists across reloads
-  await reconcileFlags(uid);
-
-  // Live flags listener = progress keeps in sync
-  uref.onSnapshot((snap)=>{
-    const data = snap.exists ? (snap.data() || {}) : {};
+  } else {
+    const data = usnap.data() || {};
     flags = Object.assign({ feedbackDone:false, befastDone:false, feedbackAwardGiven:false }, data.flags || {});
-    updateProgress();
-  });
+  }
+  updateProgress();
 
-  // Prefill stars/feedback if present
-  try {
-    const fb = await db.collection("feedbacks").doc(uid).get();
-    if (fb.exists) {
-      const d = fb.data();
-      starsChosen = Number(d.stars || 0);
-      if (starsChosen) paintStars(starsChosen);
-      $("feedbackText").value = d.message || "";
-    }
-  } catch {}
-
-  // Prefill BEFAST if present
-  try {
-    const ans = await db.collection("strokeAnswers").doc(uid).get();
-    if (ans.exists) $("beFastText").value = ans.data().answerText || "";
-  } catch {}
+  // Prefill existing feedback / answer (optional QoL)
+  const fb = await db.collection("feedbacks").doc(uid).get();
+  if (fb.exists) {
+    const d = fb.data();
+    starsChosen = Number(d.stars || 0);
+    paintStars(starsChosen);
+    $("feedbackText").value = d.message || "";
+  }
+  const ans = await db.collection("strokeAnswers").doc(uid).get();
+  if (ans.exists) $("beFastText").value = ans.data().answerText || "";
 
   // Bind stars + buttons
   document.querySelectorAll("#starBar .star").forEach(el=>{
