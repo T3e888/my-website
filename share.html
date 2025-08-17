@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="share.css" />
 </head>
 <body>
-  <!-- Sidebar (same pattern as your site) -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -29,7 +28,6 @@
   <h1 class="page-title">Share Cards</h1>
   <p class="subtitle">Lend a card for <b>3 days</b>. After the timer ends, it becomes theirs automatically.</p>
 
-  <!-- Share form -->
   <section class="panel">
     <h2>Send a Card</h2>
     <div class="share-form">
@@ -46,22 +44,18 @@
     </div>
   </section>
 
-  <!-- Borrowed by you -->
   <section class="panel">
     <h2>Borrowed by You (3-day countdown)</h2>
     <div id="borrowedList" class="borrowed-list"></div>
   </section>
 
-  <!-- Activity log -->
   <section class="panel">
     <h2>Share Activity</h2>
     <div id="logList" class="log-list"></div>
   </section>
 
-  <!-- Modal (required) -->
   <div id="modal" class="modal"></div>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -77,6 +71,8 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
-  <script src="share.js?v=20"></script>
+
+  <!-- bump version to avoid cache -->
+  <script src="share.js?v=21"></script>
 </body>
-  </html>
+</html>
