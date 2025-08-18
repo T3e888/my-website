@@ -1,0 +1,80 @@
+<!-- unlock.html — spend points to unlock a random event card (21–24) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Unlock Event Cards</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Reuse your existing styles (sidebar, panels, modal, grid, etc.) -->
+  <link rel="stylesheet" href="share.css" />
+  <style>
+    /* Minimal page-specific tweaks */
+    .stats{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;color:#b71c1c;font-weight:800}
+    .primary{background:#e53935;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-size:1rem;font-weight:800;cursor:pointer}
+    .primary:disabled{opacity:.5;cursor:not-allowed}
+    .grid.tiny{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:12px}
+    .tile{position:relative;border:2px solid #ffd3d9;border-radius:14px;overflow:hidden;background:#fff}
+    .tile img{display:block;width:100%;aspect-ratio:5/7;object-fit:cover}
+    .tile .cap{position:absolute;left:8px;bottom:8px;background:#fff;color:#b71c1c;border-radius:999px;padding:2px 8px;font-weight:800;font-size:.9rem}
+    .tile.locked{opacity:.7}
+    .tile.owned{box-shadow:0 4px 14px rgba(255,205,210,.7)}
+    .cost-pill{display:inline-block;margin-left:8px;background:#fff2;color:#fff;padding:2px 8px;border-radius:999px;font-weight:700}
+  </style>
+</head>
+<body>
+  <!-- Sidebar (same pattern as your site) -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon"><span></span><span></span><span></span></span>
+  </button>
+  <nav id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="share.html">Share</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item"><a href="learn.html">Learn</a></li>
+      <li class="menu-item"><a href="profile.html">Profile</a></li>
+      <li class="menu-item"><a href="feedback.html">Comment</a></li>
+      <li class="menu-item"><a href="unlock.html" class="active">Unlock</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+    </ul>
+  </nav>
+  <div id="overlay" class="overlay"></div>
+
+  <h1 class="page-title">Unlock Event Cards</h1>
+  <p class="subtitle">Spend points to unlock a random card (21–24). No duplicates.</p>
+
+  <section class="panel">
+    <div class="stats">
+      <div>Your points: <b id="pointsValue">—</b></div>
+      <div>Owned event cards: <span id="ownedCount">0</span>/4</div>
+    </div>
+
+    <button id="unlockBtn" class="primary">Unlock <span id="costPill" class="cost-pill">5 🧠</span></button>
+    <div id="hint" class="hint"></div>
+
+    <div id="eventGrid" class="grid tiny"></div>
+  </section>
+
+  <!-- Modal (reuse existing styles) -->
+  <div id="modal" class="modal"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="unlock.js?v=1"></script>
+</body>
+</html>
