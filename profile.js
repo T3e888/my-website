@@ -1,4 +1,4 @@
-// profile.js
+// profile.js (Thai UI)
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
@@ -33,7 +33,6 @@ async function ensureUsernameMapping(uid, uname) {
   uname = uname.trim().toLowerCase();
   if (!uname) return;
   try {
-    // create/update if free or already mine (rules enforce)
     await db.collection("usernames").doc(uname).set({ uid, username: uname }, { merge: true });
   } catch (e) {
     // ignore if taken by someone else; UI handles on rename
@@ -43,10 +42,9 @@ async function ensureUsernameMapping(uid, uname) {
 async function renameUsernameMapping(uid, oldU, newU) {
   oldU = (oldU||"").trim().toLowerCase();
   newU = (newU||"").trim().toLowerCase();
-  if (!newU) throw new Error("Username required");
+  if (!newU) throw new Error("ต้องระบุชื่อผู้ใช้");
   if (oldU === newU) return;
 
-  // if old mapping is mine, delete it
   if (oldU) {
     try {
       const oldSnap = await db.collection("usernames").doc(oldU).get();
@@ -56,7 +54,6 @@ async function renameUsernameMapping(uid, oldU, newU) {
     } catch {}
   }
 
-  // create new mapping (rules ensure it's free or mine)
   await db.collection("usernames").doc(newU).set({ uid, username: newU });
 }
 
@@ -66,7 +63,7 @@ auth.onAuthStateChanged(async (user) => {
   setupSidebar();
 
   $("uid").textContent        = user.uid;
-  $("email").textContent      = user.email || "(no email)";
+  $("email").textContent      = user.email || "(ไม่มีอีเมล)";
   $("displayName").textContent= (user.email||"").split("@")[0];
 
   const docRef = db.collection("users").doc(user.uid);
@@ -88,7 +85,6 @@ auth.onAuthStateChanged(async (user) => {
   $("about").value         = data.about || "";
   $("points").textContent  = String(data.points || 0);
 
-  // Create mapping if missing
   await ensureUsernameMapping(user.uid, currentUname);
 
   // Render cards
@@ -101,19 +97,19 @@ auth.onAuthStateChanged(async (user) => {
         const label = cId.replace(/card/i,"Card ");
         return `<div class="cardItem"><img src="${img}" alt="${label}" /><div class="muted">${label}</div></div>`;
       }).join("")
-    : `<div class="muted">No cards yet.</div>`;
+    : `<div class="muted">ยังไม่มีการ์ด</div>`;
 
   // Save username (also update /usernames mapping)
   $("saveUserBtn").onclick = async () => {
     const newName = $("username").value.trim().toLowerCase();
     $("saveUserMsg").textContent = "";
-    if (!newName) { $("saveUserMsg").textContent = "Enter a username."; return; }
+    if (!newName) { $("saveUserMsg").textContent = "กรุณากรอกชื่อผู้ใช้"; return; }
 
     try {
       await renameUsernameMapping(user.uid, currentUname, newName);
       await docRef.set({ username: newName }, { merge: true });
       $("displayName").textContent = newName;
-      toast("Username updated");
+      toast("อัปเดตชื่อผู้ใช้แล้ว");
     } catch (e) {
       $("saveUserMsg").textContent = e.message || String(e);
     }
@@ -125,7 +121,7 @@ auth.onAuthStateChanged(async (user) => {
     $("saveAboutMsg").textContent = "";
     try {
       await docRef.set({ about }, { merge: true });
-      toast("Saved");
+      toast("บันทึกแล้ว");
     } catch (e) {
       $("saveAboutMsg").textContent = e.message || String(e);
     }
@@ -136,14 +132,14 @@ auth.onAuthStateChanged(async (user) => {
     const cur = $("curPass").value;
     const nw  = $("newPass").value;
     $("passMsg").textContent = "";
-    if (!cur || !nw) { $("passMsg").textContent = "Fill both fields."; return; }
+    if (!cur || !nw) { $("passMsg").textContent = "กรุณากรอกให้ครบทั้งสองช่อง"; return; }
 
     try {
       const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
       await user.reauthenticateWithCredential(cred);
       await user.updatePassword(nw);
       $("curPass").value = ""; $("newPass").value = "";
-      toast("Password changed");
+      toast("เปลี่ยนรหัสผ่านแล้ว");
     } catch (e) {
       $("passMsg").textContent = e.message || String(e);
     }
