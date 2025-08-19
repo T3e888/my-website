@@ -1,4 +1,4 @@
-// unlock.js — spend points to unlock a random event card (21–24), no duplicates
+// unlock.js — ใช้พอยท์ปลดล็อกการ์ดอีเวนต์แบบสุ่ม (21–24), ไม่ซ้ำ
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
@@ -7,7 +7,7 @@ const COST = 5;
 
 const $ = id => document.getElementById(id);
 
-/* ===== Sidebar (same pattern as your other pages) ===== */
+/* ===== Sidebar (เหมือนหน้าอื่น ๆ) ===== */
 function setupSidebar(){
   const toggleBtn = $("menu-toggle");
   const sidebar   = $("sidebar");
@@ -31,7 +31,7 @@ function setupSidebar(){
 /* ===== Modal ===== */
 function showModal(html, cb){
   const m = $('modal'); if(!m) return;
-  m.innerHTML = `<div class="modal-content">${html}<br><button class="ok">OK</button></div>`;
+  m.innerHTML = `<div class="modal-content">${html}<br><button class="ok">ตกลง</button></div>`;
   m.classList.add('active');
   m.querySelector('.ok').onclick = ()=>{ m.classList.remove('active'); cb?.(); };
 }
@@ -40,7 +40,7 @@ function showModal(html, cb){
 function renderGrid(cards){
   const owned = new Set(Array.isArray(cards) ? cards : []);
   $('eventGrid').innerHTML = POOL.map(c=>{
-    const n = c.replace('card','Card ');
+    const n = c.replace('card','การ์ด ');
     const has = owned.has(c);
     const cls = has ? 'owned' : 'locked';
     return `<div class="tile ${cls}">
@@ -56,7 +56,7 @@ auth.onAuthStateChanged(async user=>{
   setupSidebar();
 
   const uref = db.collection('users').doc(user.uid);
-  // Ensure doc exists (don’t overwrite existing points/cards)
+  // สร้างเอกสารครั้งแรก (ไม่ทับ points/cards เดิม)
   const first = await uref.get();
   if(!first.exists){
     await uref.set({
@@ -66,7 +66,7 @@ auth.onAuthStateChanged(async user=>{
     }, { merge: true });
   }
 
-  // Live points + cards
+  // อัปเดตคะแนน/การ์ดแบบเรียลไทม์
   let busy = false;
   $('costPill').textContent = `${COST} 🧠`;
 
@@ -85,8 +85,8 @@ auth.onAuthStateChanged(async user=>{
     $('unlockBtn').disabled = busy || (points < COST) || allUnlocked;
 
     $('hint').textContent =
-      allUnlocked ? 'You already own all event cards.' :
-      (points < COST) ? `You need ${COST} points to unlock.` : '';
+      allUnlocked ? 'คุณมีการ์ดอีเวนต์ครบทุกใบแล้ว' :
+      (points < COST) ? `ต้องการพอยท์อย่างน้อย ${COST} เพื่อปลดล็อก` : '';
   }, err=>{
     console.warn('users doc listener error:', err);
   });
@@ -118,16 +118,16 @@ auth.onAuthStateChanged(async user=>{
       });
 
       showModal(`
-        🎉 You unlocked <b>${picked.replace('card','Card ')}</b>!<br>
+        🎉 คุณปลดล็อก <b>${picked.replace('card','การ์ด ')}</b> แล้ว!<br>
         <img src="assets/cards/${picked}.png" alt="${picked}" style="max-width:200px;margin-top:10px;border-radius:12px;">
       `);
     }catch(e){
-      if(e?.message==='NOT_ENOUGH_POINTS'){ showModal('Not enough points.'); }
-      else if(e?.message==='ALL_UNLOCKED'){ showModal('You already own all event cards.'); }
-      else { showModal('❌ Error: ' + (e?.message||e)); }
+      if(e?.message==='NOT_ENOUGH_POINTS'){ showModal('พอยท์ไม่เพียงพอ'); }
+      else if(e?.message==='ALL_UNLOCKED'){ showModal('คุณมีการ์ดอีเวนต์ครบทุกใบแล้ว'); }
+      else { showModal('❌ ข้อผิดพลาด: ' + (e?.message||e)); }
     }finally{
       busy = false;
-      // Button state will re-enable via onSnapshot if allowed
+      // ปุ่มจะถูกรีเฟรชสภาพผ่าน onSnapshot อีกที
     }
   };
 });
