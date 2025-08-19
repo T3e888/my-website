@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Quiz Zone</title>
+  <title>โซนแบบทดสอบ</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="mission.css" />
 </head>
@@ -14,14 +14,14 @@
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
     <ul class="menu">
-      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
-      <li class="menu-item"><a href="share.html">Share</a></li>
-      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
-      <li class="menu-item"><a href="unlock.html">Unlock</a></li>
-      <li class="menu-item"><a href="learn.html">Learn</a></li>
-      <li class="menu-item"><a href="profile.html">Profile</a></li>
-      <li class="menu-item"><a href="feedback.html">Comment</a></li>
-      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+      <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
+      <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
+      <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
+      <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
+      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
+      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
+      <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">ออกจากระบบ</a></li>
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
@@ -32,12 +32,12 @@
     🧠 <span id="pointsNum">0</span>
   </div>
 
-  <h1 class="page-title">Quiz Zone</h1>
-  <p class="subtitle">Pass checkpoints in order. 10/10 question to pass checkpoint.</p>
+  <h1 class="page-title">โซนแบบทดสอบ</h1>
+  <p class="subtitle">ผ่านด่านตามลำดับ ต้องตอบถูก <b>10/10</b> ข้อจึงจะผ่าน</p>
 
   <!-- Path -->
   <ul id="path" class="path"></ul>
-  <div id="allDone" class="all-done hidden">🎉 All checkpoints complete!</div>
+  <div id="allDone" class="all-done hidden">🎉 คุณทำครบทุกด่านแล้ว!</div>
 
   <!-- Quiz Modal -->
   <div id="quizModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
@@ -61,7 +61,7 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- App -->
-  <script src="mission.js"></script>
+  <!-- App (cache-busted) -->
+  <script src="mission.js?v=th-1"></script>
 </body>
 </html>
