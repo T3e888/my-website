@@ -28,58 +28,58 @@ function setupSidebar(){
 
 // Content slides (shortened to keep file small; you can expand freely)
 const SLIDES = [
-  { title:"Basic Knowledge about Stroke",
-    brief:"What stroke is and why time matters.",
+  { title:"ความรู้พื้นฐานเกี่ยวกับโรคหลอดเลือดสมอง (Stroke)",
+    brief:"Stroke คืออะไร และทำไมเวลาถึงสำคัญ",
     html: `
-      <h2>Basic Knowledge about Stroke</h2>
-      <p><b>Stroke</b> = the brain lacks blood flow or has bleeding → sudden malfunction. It’s a medical emergency.</p>
+      <h2>ความรู้พื้นฐานเกี่ยวกับโรคหลอดเลือดสมอง (Stroke)</h2>
+      <p><b>Stroke</b> = ภาวะที่สมองขาดเลือดหรือมีเลือดออก → ทำให้สมองทำงานผิดปกติแบบเฉียบพลัน ถือเป็นภาวะฉุกเฉินทางการแพทย์</p>
       <ul>
-        <li><b>Ischemic</b> (≈80–85%): vessel blocked → low blood flow.</li>
-        <li><b>Hemorrhagic</b> (≈15–20%): vessel ruptures → bleeding.</li>
+        <li><b>ชนิดตีบ/อุดตัน (Ischemic)</b> (≈80–85%): หลอดเลือดสมองถูกอุดตัน → เลือดไปเลี้ยงสมองน้อยลง</li>
+        <li><b>ชนิดแตก (Hemorrhagic)</b> (≈15–20%): หลอดเลือดสมองแตก → เลือดออกในสมอง</li>
       </ul>
-      <p><b>TIA</b> = stroke-like symptoms that disappear within 24 hours → warning stroke → see a doctor.</p>
-      <p>Brain blood supply from carotid & vertebral arteries. Damage can begin in ~4–5 minutes without blood.</p>
-      <p><i>Summary:</i> Time = Brain. Call emergency immediately.</p>`
+      <p><b>TIA</b> = อาการเหมือน Stroke แต่หายไปใน 24 ชั่วโมง → ถือเป็นสัญญาณเตือน ต้องรีบพบแพทย์</p>
+      <p>เลือดไปเลี้ยงสมองมาจากหลอดเลือด Carotid และ Vertebral หากขาดเลือด สมองจะเริ่มเสียหายใน ~4–5 นาที</p>
+      <p><i>สรุป:</i> เวลา = สมอง รีบโทรขอความช่วยเหลือฉุกเฉินทันที</p>`
   },
-  { title:"Causes & Risk Factors",
-    brief:"Blockage, rupture, and what increases risk.",
+  { title:"สาเหตุและปัจจัยเสี่ยง",
+    brief:"การอุดตัน การแตก และสิ่งที่เพิ่มความเสี่ยง",
     html: `
-      <h2>Causes & Risk Factors</h2>
-      <p><b>Blockage</b>: clot in brain/neck or from heart (e.g., atrial fibrillation).</p>
-      <p><b>Rupture</b>: weak vessel walls from long-term high blood pressure, aneurysm.</p>
-      <p><b>Controllable</b>: high BP, smoking, diabetes, high cholesterol, alcohol, obesity/inactivity, stress/sleep.</p>
-      <p><b>Uncontrollable</b>: age, family history, gender.</p>
-      <p>Control BP/sugar/cholesterol, quit smoking, exercise → lower risk.</p>`
+      <h2>สาเหตุและปัจจัยเสี่ยง</h2>
+      <p><b>การอุดตัน</b>: ลิ่มเลือดที่สมอง/คอ หรือมาจากหัวใจ (เช่น ภาวะหัวใจเต้นผิดจังหวะ atrial fibrillation)</p>
+      <p><b>การแตก</b>: ผนังหลอดเลือดอ่อนแอ จากความดันโลหิตสูงเรื้อรัง หรือหลอดเลือดโป่งพอง (aneurysm)</p>
+      <p><b>ปัจจัยเสี่ยงที่ควบคุมได้</b>: ความดันสูง, สูบบุหรี่, เบาหวาน, ไขมันสูง, ดื่มแอลกอฮอล์, โรคอ้วน/ไม่ออกกำลังกาย, ความเครียด/นอนน้อย</p>
+      <p><b>ปัจจัยเสี่ยงที่ควบคุมไม่ได้</b>: อายุ, ประวัติครอบครัว, เพศ</p>
+      <p>ควบคุมความดัน/น้ำตาล/ไขมัน, เลิกบุหรี่, ออกกำลังกาย → ลดความเสี่ยงได้</p>`
   },
-  { title:"Prevention & Self-Care",
-    brief:"Daily habits that protect your brain.",
+  { title:"การป้องกันและการดูแลตัวเอง",
+    brief:"พฤติกรรมประจำวันเพื่อปกป้องสมอง",
     html: `
-      <h2>Prevention & Self-Care</h2>
-      <p>Eat heart-healthy, exercise 150 min/week, quit smoking, limit alcohol.</p>
-      <p>Control weight & waist, sleep 7–9h, manage stress, hydrate.</p>
-      <p>Regular check-ups + follow doctor’s advice.</p>`
+      <h2>การป้องกันและการดูแลตัวเอง</h2>
+      <p>กินอาหารที่ดีต่อหัวใจ, ออกกำลังกายอย่างน้อย 150 นาที/สัปดาห์, เลิกสูบบุหรี่, จำกัดการดื่มแอลกอฮอล์</p>
+      <p>ควบคุมน้ำหนักและรอบเอว, นอน 7–9 ชั่วโมง, จัดการความเครียด, ดื่มน้ำเพียงพอ</p>
+      <p>ตรวจสุขภาพเป็นประจำ + ปฏิบัติตามคำแนะนำแพทย์</p>`
   },
-  { title:"Warning Signs & First Aid (BEFAST)",
-    brief:"Recognize and act fast.",
+  { title:"สัญญาณเตือนและการปฐมพยาบาล (BEFAST)",
+    brief:"รู้จักอาการและลงมืออย่างรวดเร็ว",
     html: `
-      <h2>BEFAST: Warning Signs</h2>
+      <h2>BEFAST: สัญญาณเตือน</h2>
       <ul>
-        <li><b>B</b>alance problems</li>
-        <li><b>E</b>yes: vision loss/double vision</li>
-        <li><b>F</b>ace drooping</li>
-        <li><b>A</b>rm weakness</li>
-        <li><b>S</b>peech difficulty</li>
-        <li><b>T</b>ime to call 1669 immediately</li>
+        <li><b>B</b>alance: การทรงตัวผิดปกติ</li>
+        <li><b>E</b>yes: ตามัว/มองเห็นซ้อน</li>
+        <li><b>F</b>ace: หน้าเบี้ยว</li>
+        <li><b>A</b>rm: แขนขาอ่อนแรง</li>
+        <li><b>S</b>peech: พูดไม่ชัด/พูดไม่ได้</li>
+        <li><b>T</b>Time: รีบโทร 1669 ทันที</li>
       </ul>
-      <p>Quick test: smile / raise both arms / say a short sentence. If abnormal → call an ambulance.</p>`
+      <p>การทดสอบง่าย ๆ: ให้ยิ้ม / ยกแขนทั้งสองข้าง / พูดประโยคสั้น ๆ หากผิดปกติ → โทรเรียกรถพยาบาลทันที</p>`
   },
-  { title:"Treatment & Recovery",
-    brief:"What hospitals do and how to recover.",
+  { title:"การรักษาและการฟื้นฟู",
+    brief:"โรงพยาบาลทำอะไรและการฟื้นตัวหลังป่วย",
     html: `
-      <h2>Treatment & Recovery</h2>
-      <p>CT/MRI to see block vs bleed → different treatments (clot-buster vs stop bleeding).</p>
-      <p>Rehab: physical, speech, and occupational therapy; healthy food, rest, and family encouragement.</p>
-      <p>Prevent another stroke: control BP/sugar/cholesterol, exercise, keep appointments.</p>`
+      <h2>การรักษาและการฟื้นฟู</h2>
+      <p>ตรวจ CT/MRI เพื่อแยกภาวะอุดตันหรือแตก → วิธีรักษาต่างกัน (ยาละลายลิ่มเลือด vs หยุดเลือด)</p>
+      <p>การฟื้นฟู: กายภาพบำบัด, ฝึกพูด, ฝึกอาชีพ; อาหารที่ดี, การพักผ่อน, กำลังใจจากครอบครัว</p>
+      <p>ป้องกัน Stroke ซ้ำ: ควบคุมความดัน/น้ำตาล/ไขมัน, ออกกำลังกาย, พบแพทย์ตามนัด</p>`
   }
 ];
 
