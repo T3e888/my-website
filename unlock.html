@@ -1,14 +1,14 @@
-<!-- unlock.html — spend points to unlock a random event card (21–24) -->
+<!-- unlock.html — ใช้พอยท์ปลดล็อกการ์ดอีเวนต์แบบสุ่ม (21–24) -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Unlock Event Cards</title>
+  <title>ปลดล็อกการ์ดอีเวนต์</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- Reuse your existing styles (sidebar, panels, modal, grid, etc.) -->
+  <!-- ใช้สไตล์เดียวกับหน้าอื่น (sidebar, panel, modal, grid) -->
   <link rel="stylesheet" href="share.css" />
   <style>
-    /* Minimal page-specific tweaks */
+    /* ปรับเฉพาะหน้านี้นิดหน่อย */
     .stats{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;color:#b71c1c;font-weight:800}
     .primary{background:#e53935;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-size:1rem;font-weight:800;cursor:pointer}
     .primary:disabled{opacity:.5;cursor:not-allowed}
@@ -22,41 +22,41 @@
   </style>
 </head>
 <body>
-  <!-- Sidebar (same pattern as your site) -->
+  <!-- Sidebar เหมือนหน้าอื่น -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
     <ul class="menu">
-      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
-      <li class="menu-item"><a href="share.html">Share</a></li>
-      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
-      <li class="menu-item"><a href="learn.html">Learn</a></li>
-      <li class="menu-item"><a href="profile.html">Profile</a></li>
-      <li class="menu-item"><a href="feedback.html">Comment</a></li>
-      <li class="menu-item"><a href="unlock.html" class="active">Unlock</a></li>
-      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+      <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
+      <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
+      <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
+      <li class="menu-item"><a href="unlock.html" class="active">สุ่มรางวัล</a></li>
+      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
+      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
+      <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">ล็อกเอาท์</a></li>
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
 
-  <h1 class="page-title">Unlock Event Cards</h1>
-  <p class="subtitle">Spend points to unlock a random card (21–24). No duplicates.</p>
+  <h1 class="page-title">ปลดล็อกการ์ดอีเวนต์</h1>
+  <p class="subtitle">ใช้พอยท์เพื่อปลดล็อกการ์ดแบบสุ่ม (21–24) โดย <b>ไม่ซ้ำ</b></p>
 
   <section class="panel">
     <div class="stats">
-      <div>Your points: <b id="pointsValue">—</b></div>
-      <div>Owned event cards: <span id="ownedCount">0</span>/4</div>
+      <div>พอยท์ของคุณ: <b id="pointsValue">—</b></div>
+      <div>การ์ดอีเวนต์ที่มีแล้ว: <span id="ownedCount">0</span>/4</div>
     </div>
 
-    <button id="unlockBtn" class="primary">Unlock <span id="costPill" class="cost-pill">5 🧠</span></button>
+    <button id="unlockBtn" class="primary">ปลดล็อก <span id="costPill" class="cost-pill">5 🧠</span></button>
     <div id="hint" class="hint"></div>
 
     <div id="eventGrid" class="grid tiny"></div>
   </section>
 
-  <!-- Modal (reuse existing styles) -->
+  <!-- โมดัล (ใช้สไตล์ร่วม) -->
   <div id="modal" class="modal"></div>
 
   <!-- Firebase SDKs -->
@@ -75,6 +75,6 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
-  <script src="unlock.js?v=1"></script>
+  <script src="unlock.js?v=th-2"></script>
 </body>
 </html>
