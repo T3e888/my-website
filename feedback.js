@@ -64,11 +64,11 @@ function updateProgress(){
 async function saveFeedback(){
   const message = ($("feedbackText").value || "").trim();
   if (!starsChosen || starsChosen < 1 || starsChosen > 5) {
-    showModal("Please choose a star rating (1–5).");
+    showModal("ให้คะแนนเราหน่อยน้าา(1-5 ดาว)🥺");
     return;
   }
   if (!message) {
-    showModal("Please write some feedback.");
+    showModal("บอกคำแนะนำหรือแสดงความคิดเห็นให้เราหน่อยน้าา🥺");
     return;
   }
 
@@ -92,13 +92,13 @@ async function saveFeedback(){
 
   flags.feedbackDone = true;
   updateProgress();
-  showModal("✅ Thank you for your feedback! Saved successfully.");
+  showModal("✅ ขอขอบคุณมากตอนนี้ ข้อความของคุณถูกส่งเรียบร้อย.");
 }
 
 // ===== Save BEFAST knowledge =====
 async function saveBeFast(){
   const answerText = ($("beFastText").value || "").trim();
-  if (!answerText) { showModal("Please write what you know about stroke/BEFAST."); return; }
+  if (!answerText) { showModal("ช่วยบอกสิ่งที่คุณรู้ให้เราฟังหน่อยได้ไหม🙂"); return; }
 
   const ref = db.collection("strokeAnswers").doc(uid);
   const now = firebase.firestore.FieldValue.serverTimestamp();
@@ -117,7 +117,7 @@ async function saveBeFast(){
 
   flags.befastDone = true;
   updateProgress();
-  showModal("✅ Thank you for sharing your knowledge about stroke/BEFAST.");
+  showModal("✅ ขอขอบคุณสำหรับการแบ่งปันความรู้ให้กับเรา");
 }
 
 // ===== Claim reward (transaction) =====
@@ -148,7 +148,7 @@ async function claimReward(){
   if (result === "claimed") {
     flags.feedbackAwardGiven = true;
     updateProgress();
-    showModal("🎉 Congratulations! You earned <b>+5 points</b> and unlocked <b>Event Card #25</b>.", () => {
+    showModal("🎉 ยินดีด้วยคุณได้รับรางวัล <b>+5 points</b> และปลดล็อค <b>การ์ดEventลับ #25</b>.", () => {
       // stay here, or go to collection:
       // location.href = 'card.html';
     });
