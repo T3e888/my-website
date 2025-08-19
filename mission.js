@@ -13,7 +13,7 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) return location.href = "login.html";
   setupSidebar();
   try { await buildPath(user); }
-  catch (e) { log("buildPath error:", e); toast("Small loading error. Refresh and try again."); }
+  catch (e) { log("buildPath error:", e); toast("มีข้อผิดพลาดเล็กน้อย กรุณารีเฟรชแล้วลองใหม่"); }
 });
 
 // ====== Sidebar ======
@@ -36,7 +36,7 @@ function setupSidebar() {
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 }
 
-// ====== QUESTION BANKS ======
+// ====== QUESTION BANKS (ยังเป็นอังกฤษตามเดิม) ======
 const Q1_BASIC = [
   { q:"How many main types of stroke are there?", opts:["One","Two: Ischemic & Hemorrhagic","Three","Four"], a:1 },
   { q:"What does 'stroke' mean?", opts:[
@@ -176,7 +176,7 @@ function nodeElement(index, state){
   li.className = `node ${state}`;
   li.innerHTML = `
     <div class="badge">${state==="done"?"✓":index+1}</div>
-    <div class="label">Checkpoint ${index+1}</div>
+    <div class="label">ด่าน ${index+1}</div>
   `;
   return li;
 }
@@ -224,7 +224,7 @@ async function buildPath(user){
     const li = nodeElement(i, state);
     const btn = li.querySelector(".badge");
     if (state==="active") btn.addEventListener("click", ()=>startQuiz(i, docRef, completed));
-    if (state==="locked") btn.addEventListener("click", ()=>toast("Pass previous checkpoints first."));
+    if (state==="locked") btn.addEventListener("click", ()=>toast("กรุณาผ่านด่านก่อนหน้าให้ครบก่อน"));
     path.appendChild(li);
   }
 }
@@ -243,7 +243,7 @@ function startQuiz(levelIdx, docRef, completed){
     box.innerHTML = `
       <button class="close-x" id="closeX" aria-label="Close">×</button>
       <div class="q-header">
-        <div class="q-title" id="quizTitle">Checkpoint ${levelIdx+1}</div>
+        <div class="q-title" id="quizTitle">ด่าน ${levelIdx+1}</div>
         <div class="q-progress">${idx+1}/10</div>
       </div>
       <div class="q-body">${q.q}</div>
@@ -251,8 +251,8 @@ function startQuiz(levelIdx, docRef, completed){
         ${q.opts.map((t,i)=>`<div class="q-option" data-i="${i}">${t}</div>`).join("")}
       </div>
       <div class="q-actions">
-        ${idx>0?'<button class="btn btn-grey" id="backBtn">Back</button>':''}
-        <button class="btn btn-red" id="nextBtn">${idx<9?'Next':'Finish'}</button>
+        ${idx>0?'<button class="btn btn-grey" id="backBtn">ย้อนกลับ</button>':''}
+        <button class="btn btn-red" id="nextBtn">${idx<9?'ถัดไป':'เสร็จสิ้น'}</button>
       </div>
     `;
     modal.classList.add("show");
@@ -287,10 +287,10 @@ function startQuiz(levelIdx, docRef, completed){
         box.innerHTML = `
           <button class="close-x" id="closeX2" aria-label="Close">×</button>
           <div class="center">
-            <h2 class="q-title">🎉 Perfect! 10/10</h2>
-            <p>You passed Checkpoint ${levelIdx+1}.</p>
-            <p>+1 🧠 point ${firstTime?'(first time)':'(already awarded earlier)'}</p>
-            <button class="btn btn-red" id="okBtn">OK</button>
+            <h2 class="q-title">🎉 เยี่ยมมาก! ตอบถูก 10/10</h2>
+            <p>คุณผ่านด่านที่ ${levelIdx+1} แล้ว</p>
+            <p>+1 🧠 คะแนน ${firstTime?'(ครั้งแรก)':'(เคยได้รับแล้ว)'}</p>
+            <button class="btn btn-red" id="okBtn">ตกลง</button>
           </div>`;
         document.getElementById("closeX2").onclick=()=>modal.classList.remove("show");
         document.getElementById("okBtn").onclick = ()=>location.reload();
@@ -298,11 +298,11 @@ function startQuiz(levelIdx, docRef, completed){
         box.innerHTML = `
           <button class="close-x" id="closeX3" aria-label="Close">×</button>
           <div class="center">
-            <h2 class="q-title">Keep going!</h2>
-            <p>You scored <b>${correct}/10</b>. You must get <b>10/10</b> to pass.</p>
+            <h2 class="q-title">สู้ต่อไป!</h2>
+            <p>คุณได้ <b>${correct}/10</b> ต้องได้ <b>10/10</b> ถึงจะผ่านด่าน</p>
             <div class="q-actions" style="justify-content:center">
-              <button class="btn btn-grey" id="closeBtn">Close</button>
-              <button class="btn btn-red" id="retryBtn">Try again</button>
+              <button class="btn btn-grey" id="closeBtn">ปิด</button>
+              <button class="btn btn-red" id="retryBtn">ลองอีกครั้ง</button>
             </div>
           </div>`;
         document.getElementById("closeX3").onclick=()=>modal.classList.remove("show");
@@ -325,9 +325,9 @@ function toast(msg){
   box.innerHTML = `
     <button class="close-x" id="closeNoticeX" aria-label="Close">×</button>
     <div class="center">
-      <h3 class="q-title">Notice</h3>
+      <h3 class="q-title">แจ้งเตือน</h3>
       <p>${msg}</p>
-      <button class="btn btn-red" id="closeNotice">OK</button>
+      <button class="btn btn-red" id="closeNotice">ตกลง</button>
     </div>`;
   modal.classList.add("show");
   document.getElementById("closeNoticeX").onclick = ()=>modal.classList.remove("show");
