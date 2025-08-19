@@ -1,33 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Login</title>
+  <title>เข้าสู่ระบบ</title>
   <link rel="stylesheet" href="login.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 </head>
 <body>
   <div class="bg-gradient"></div>
   <div class="auth-card">
-    <h1>Login</h1>
+    <h1>เข้าสู่ระบบ</h1>
     <form id="loginForm" autocomplete="off">
-      <input type="text" id="login-username" placeholder="Username" autocomplete="username" required>
+      <input type="text" id="login-username" placeholder="ชื่อผู้ใช้" autocomplete="username" required>
       <div class="password-row">
-        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
+        <input type="password" id="login-password" placeholder="รหัสผ่าน" autocomplete="current-password" required>
         <button type="button" id="toggleLoginPassword" tabindex="-1"><i class="fa fa-eye"></i></button>
       </div>
-      <button type="submit" class="main-btn">Login</button>
+      <button type="submit" class="main-btn">เข้าสู่ระบบ</button>
     </form>
     <div class="auth-link">
-      No account?
-      <a href="register.html">Register here</a>
+      ยังไม่มีบัญชี?
+      <a href="register.html">สมัครสมาชิกที่นี่</a>
     </div>
   </div>
+
+  <!-- Modal ภาษาไทย -->
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <span id="loginModalMsg"></span>
-      <button id="loginModalBtn">OK</button>
+      <button id="loginModalBtn">ตกลง</button>
     </div>
   </div>
 
@@ -35,7 +37,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <!-- NEW: Functions SDK for redeem -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
   <script>
     const firebaseConfig = {
