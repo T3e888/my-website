@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Your Profile</title>
+  <title>โปรไฟล์ของคุณ</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="profile.css" />
 </head>
@@ -14,20 +14,20 @@
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
     <ul class="menu">
-      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
-      <li class="menu-item"><a href="share.html">Share</a></li>
-      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
-      <li class="menu-item"><a href="unlock.html">Unlock</a></li>
-      <li class="menu-item"><a href="learn.html">Learn</a></li>
-      <li class="menu-item"><a href="profile.html" class="active">Profile</a></li>
-      <li class="menu-item"><a href="feedback.html">Comment</a></li>
-      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
+      <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
+      <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
+      <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
+      <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
+      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
+      <li class="menu-item"><a href="profile.html" class="active">โปรไฟล์</a></li>
+      <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">ล็อกเอาท์</a></li>
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
   <!-- /Sidebar -->
 
-  <h1 class="page-title">Your Profile</h1>
+  <h1 class="page-title">โปรไฟล์ของคุณ</h1>
 
   <div class="wrap">
     <!-- Overview -->
@@ -36,17 +36,17 @@
         <div class="col">
           <div class="big" id="displayName">—</div>
           <div class="muted">UID: <span id="uid">—</span></div>
-          <div class="muted">Email: <span id="email">—</span></div>
+          <div class="muted">อีเมล: <span id="email">—</span></div>
           <div class="stats">
-            <b>Points:</b> <span id="points">0</span>
-            <span class="pill"><span id="cardsCount">0</span> cards</span>
+            <b>คะแนน:</b> <span id="points">0</span>
+            <span class="pill"><span id="cardsCount">0</span> ใบ</span>
           </div>
         </div>
         <div class="col">
-          <label>About me</label>
-          <textarea id="about" placeholder="Write something about you…"></textarea>
+          <label>เกี่ยวกับฉัน</label>
+          <textarea id="about" placeholder="พิมพ์แนะนำตัวสั้น ๆ..."></textarea>
           <div class="actions">
-            <button class="btn btn-red" id="saveAboutBtn">Save</button>
+            <button class="btn btn-red" id="saveAboutBtn">บันทึก</button>
             <span class="muted" id="saveAboutMsg"></span>
           </div>
         </div>
@@ -57,17 +57,17 @@
     <section class="card">
       <div class="row">
         <div class="col">
-          <label>Username (shown in app)</label>
+          <label>ชื่อผู้ใช้ (แสดงในแอป)</label>
           <input id="username" type="text" placeholder="yourname" />
           <div class="actions">
-            <button class="btn btn-red" id="saveUserBtn">Update Username</button>
+            <button class="btn btn-red" id="saveUserBtn">อัปเดตชื่อผู้ใช้</button>
             <span class="muted" id="saveUserMsg"></span>
           </div>
         </div>
         <div class="col">
-          <label>Quick actions</label>
+          <label>การทำงานด่วน</label>
           <div class="actions">
-            <button class="btn btn-grey" id="signOutBtn">Sign out</button>
+            <button class="btn btn-grey" id="signOutBtn">ออกจากระบบ</button>
           </div>
         </div>
       </div>
@@ -77,23 +77,23 @@
     <section class="card">
       <div class="row">
         <div class="col">
-          <label>Current password</label>
+          <label>รหัสผ่านปัจจุบัน</label>
           <input id="curPass" type="password" autocomplete="current-password" />
         </div>
         <div class="col">
-          <label>New password</label>
+          <label>รหัสผ่านใหม่</label>
           <input id="newPass" type="password" autocomplete="new-password" />
         </div>
       </div>
       <div class="actions">
-        <button class="btn btn-red" id="changePassBtn">Change Password</button>
+        <button class="btn btn-red" id="changePassBtn">เปลี่ยนรหัสผ่าน</button>
         <span class="muted" id="passMsg"></span>
       </div>
     </section>
 
     <!-- Your owned cards -->
     <section class="card">
-      <div class="topBar"><b>Your Cards</b></div>
+      <div class="topBar"><b>การ์ดของคุณ</b></div>
       <div id="cardsGrid" class="grid"></div>
     </section>
   </div>
@@ -116,6 +116,6 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
-  <script src="profile.js"></script>
+  <script src="profile.js?v=th-1"></script>
 </body>
 </html>
