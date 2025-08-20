@@ -4,8 +4,8 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const $ = (id) => document.getElementById(id);
-const DAY = 24*60*60*1000;
-const BORROW_MS = 3*DAY;
+const DAY = 24 * 60 * 60 * 1000;
+const BORROW_MS = 3 * DAY;
 
 let currentUid = null;
 let ownedCardsCache = [];
@@ -73,6 +73,7 @@ function renderOwnedCards(cards){
 async function createBorrowDoc(toUid, fromUid, cardId){
   const untilTs = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + BORROW_MS));
   const ref = db.collection("users").doc(toUid).collection("shared").doc(cardId);
+  // Must match security rules: only these 4 fields
   await ref.set({
     cardId,
     fromUid,
@@ -178,9 +179,9 @@ function watchBorrowed(uid){
         if (!tEl) continue;
         if (remain > 0){
           const s = Math.floor(remain/1000);
-          const h = String(Math.floor(s/3600)).padStart(2,'0');
-          const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
-          const ss= String(s%60).padStart(2,'0');
+          const h  = String(Math.floor(s/3600)).padStart(2,'0');
+          const m  = String(Math.floor((s%3600)/60)).padStart(2,'0');
+          const ss = String(s%60).padStart(2,'0');
           tEl.textContent = `เวลาคงเหลือ: ${h}:${m}:${ss}`;
         }else{
           tEl.textContent = "กำลังเปลี่ยนสถานะเป็นเจ้าของ…";
