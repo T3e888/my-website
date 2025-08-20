@@ -3,7 +3,7 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const POOL = ['card21','card22','card23','card24'];
-const COST = 5;
+const COST =20;
 
 const $ = id => document.getElementById(id);
 
