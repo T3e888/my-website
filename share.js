@@ -102,22 +102,24 @@ async function onShareClick(fromUid, cardId){
     const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
     if (toCards.includes(cardId)){ showModal("ผู้รับเป็นเจ้าของการ์ดนี้อยู่แล้ว"); return; }
 
-    // ผู้รับกำลังยืมอยู่แล้ว?
-    const sharedDoc = await db.collection("users").doc(toUid).collection("shared").doc(cardId).get();
-    if (sharedDoc.exists){ showModal("ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว"); return; }
+    // ✅ No more pre-read of /users/{toUid}/shared/{cardId}
+    // We just try to create. Rules will block duplicates.
 
-    // สร้างรายการยืม
     try{
       await createBorrowDoc(toUid, fromUid, cardId);
     }catch(e){
       const code = e?.code || "";
       const msg  = e?.message || e;
       console.error("borrowed-doc create failed:", e);
-      showModal(`❌ แบ่งปันไม่สำเร็จ (สร้างรายการยืม):<br><small>${code} – ${msg}</small>`);
+      if (code === "permission-denied") {
+        showModal("ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว หรือคุณไม่มีสิทธิ์สร้างรายการนี้");
+      } else {
+        showModal(`❌ แบ่งปันไม่สำเร็จ (สร้างรายการยืม):<br><small>${code} – ${msg}</small>`);
+      }
       return;
     }
 
-    // บันทึกล็อก (พยายามบันทึก แม้กฎจะบล็อกก็ไม่เป็นไร)
+    // บันทึกล็อก (best-effort)
     try{
       await db.collection("shareInbox").add({
         fromUid,
