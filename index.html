@@ -1,30 +1,60 @@
+<!DOCTYPE html>
+<html lang="th">
 <head>
-    <!-- ... ส่วนหัวของเอกสาร (head) ที่มีโค้ดเดิม ... -->
-    <style>
-        /* เพิ่ม CSS สำหรับปุ่มทดสอบหน้า Login */
-        .test-login-btn {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            background-color: #E74C3C; /* พื้นหลังสีแดงโทนตามธีม */
-            color: #FFFFFF;           /* ตัวอักษรสีขาว */
-            padding: 8px 12px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: bold;
-            z-index: 1000;  /* ให้อยู่ด้านบน เพื่อไม่ให้เนื้อหาอื่นบัง */
-        }
-        .test-login-btn:hover {
-            background-color: #C0392B; /* สีแดงเข้มขึ้นเมื่อเอาเมาส์ชี้ */
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Stroke Card Adventure — Sign in</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- SEO -->
+  <meta name="description" content="Sign in to Stroke Card Adventure to collect, share, and learn.">
+  <link rel="canonical" href="https://strokecardadventure.github.io/my-website/">
+  <meta property="og:title" content="Stroke Card Adventure — Sign in">
+  <meta property="og:description" content="Sign in to start collecting and sharing cards.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://strokecardadventure.github.io/my-website/">
+
+  <!-- Prevent caching so redirect is always fresh -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- Immediate fallback redirect if JS is disabled -->
+  <meta http-equiv="refresh" content="0; url=login.html">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#b91c1c">
+  <link rel="apple-touch-icon" href="assets/icons/pwa-192.png">
+
+  <style>
+    /* Minimal nice-looking fallback while redirecting */
+    :root { color-scheme: light dark; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Thai", sans-serif; }
+    .wrap { min-height:100vh; display:grid; place-items:center; text-align:center; padding:24px; }
+    .card { max-width:520px; border:1px solid rgba(0,0,0,.08); border-radius:16px; padding:28px; box-shadow:0 6px 24px rgba(0,0,0,.06);}
+    .btn { display:inline-block; margin-top:12px; padding:10px 16px; border-radius:12px; text-decoration:none; border:1px solid currentColor; }
+  </style>
 </head>
 <body>
-    <!-- ... โค้ด HTML ส่วนเนื้อหาของหน้า card.html เดิม ... -->
-    
-    <!-- เพิ่มปุ่มสำหรับทดสอบหน้า Login: เริ่ม -->
-    <a href="login.html" class="test-login-btn">ทดสอบหน้า Login</a>
-    <!-- เพิ่มปุ่มสำหรับทดสอบหน้า Login: สิ้นสุด -->
-    
-    <!-- ... โค้ดส่วนอื่นๆ ของหน้า card.html ... -->
+  <div class="wrap">
+    <div class="card">
+      <h1>กำลังพาไปหน้าเข้าสู่ระบบ…</h1>
+      <p>If you’re not redirected automatically, tap the button below.</p>
+      <p><a class="btn" href="login.html">Go to Login</a></p>
+    </div>
+  </div>
+
+  <!-- Register PWA service worker (safe to run even on redirect page) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+  </script>
+
+  <!-- Hard redirect to login every time -->
+  <script>
+    // Use replace() so index.html doesn't stay in history
+    location.replace('login.html');
+  </script>
 </body>
+</html>
