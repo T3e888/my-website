@@ -37,116 +37,120 @@ function setupSidebar() {
 }
 
 // ====== QUESTION BANKS (ยังเป็นอังกฤษตามเดิม) ======
+// ====== QUESTION BANKS (TH) ======
 const Q1_BASIC = [
-  { q:"How many main types of stroke are there?", opts:["One","Two: Ischemic & Hemorrhagic","Three","Four"], a:1 },
-  { q:"What does 'stroke' mean?", opts:[
-      "A muscle injury","Sudden brain problem from blocked or bleeding vessels",
-      "Only a headache","A broken bone"], a:1 },
-  { q:"Which statement is TRUE?", opts:[
-      "Ischemic = bleeding, Hemorrhagic = blockage",
-      "Ischemic = blockage, Hemorrhagic = bleeding",
-      "Both are the same","Neither harms the brain"], a:1 },
-  { q:"TIA is…", opts:[
-      "A permanent stroke","A mini-stroke that warns of higher risk",
-      "A heart attack","A migraine"], a:1 },
-  { q:"Why called 'cerebrovascular' disease?", opts:[
-      "Because it’s about the lungs","Because it’s about brain blood vessels",
-      "Because it’s about the stomach","Because it’s about skin"], a:1 },
-  { q:"Is stroke an emergency?", opts:["No","Only if painful","Yes, every minute matters","Only for older people"], a:2 },
-  { q:"Main arteries that supply the brain?", opts:[
-      "Carotid & vertebral arteries","Radial & ulnar arteries",
-      "Femoral & popliteal","Aorta only"], a:0 },
-  { q:"Permanent damage can begin after ~… of no blood flow.", opts:["30–60 min","4–5 min","1–2 days","10–12 hours"], a:1 },
-  { q:"Can young people have a stroke?", opts:["Never","Yes, if risk factors exist","Only athletes","Only smokers"], a:1 },
-  { q:"In Thailand, cases are…", opts:[
-      "Decreasing","Increasing with aging & risky habits","Gone","Unknown"], a:1 },
+  { q:"โรคหลอดเลือดสมองมีชนิดหลักกี่ชนิด?",
+    opts:["หนึ่งชนิด","สองชนิด: อุดตัน (Ischemic) และแตก (Hemorrhagic)","สามชนิด","สี่ชนิด"], a:1 },
+  { q:"คำว่า “Stroke” หมายถึงอะไร?",
+    opts:["อาการบาดเจ็บของกล้ามเนื้อ","ปัญหาสมองเฉียบพลันจากหลอดเลือดอุดตันหรือแตก","แค่ปวดศีรษะ","กระดูกหัก"], a:1 },
+  { q:"ข้อใดถูกต้อง?",
+    opts:["Ischemic = เลือดออก, Hemorrhagic = อุดตัน","Ischemic = อุดตัน, Hemorrhagic = เลือดออก","ทั้งสองอย่างเหมือนกัน","ไม่มีผลต่อสมอง"], a:1 },
+  { q:"TIA คือ…",
+    opts:["ภาวะหลอดเลือดสมองถาวร","ภาวะมินิสโตรก/ชั่วคราว เป็นสัญญาณเตือนความเสี่ยงสูง","หัวใจวาย","ไมเกรน"], a:1 },
+  { q:"เหตุใดจึงเรียกว่าโรค ‘cerebrovascular’?",
+    opts:["เกี่ยวกับปอด","เกี่ยวกับหลอดเลือดของสมอง","เกี่ยวกับกระเพาะอาหาร","เกี่ยวกับผิวหนัง"], a:1 },
+  { q:"สโตรกถือเป็นภาวะฉุกเฉินหรือไม่?",
+    opts:["ไม่ใช่","เฉพาะเวลาปวดมาก","ใช่ ทุกนาทีมีค่า","เฉพาะผู้สูงอายุเท่านั้น"], a:2 },
+  { q:"หลอดเลือดหลักที่ไปเลี้ยงสมองคือข้อใด?",
+    opts:["Carotid และ Vertebral","Radial และ Ulnar","Femoral และ Popliteal","Aorta อย่างเดียว"], a:0 },
+  { q:"สมองเริ่มเสียหายถาวรได้หลังขาดเลือดประมาณ…",
+    opts:["30–60 นาที","4–5 นาที","1–2 วัน","10–12 ชั่วโมง"], a:1 },
+  { q:"คนหนุ่มสาวเป็นสโตรกได้ไหม?",
+    opts:["ไม่มีทาง","ได้ หากมีปัจจัยเสี่ยง","เฉพาะนักกีฬา","เฉพาะคนสูบบุหรี่"], a:1 },
+  { q:"สถานการณ์ในประเทศไทยเป็นอย่างไร?",
+    opts:["ลดลง","แนวโน้มเพิ่มขึ้นตามสังคมสูงวัยและพฤติกรรมเสี่ยง","ไม่มีแล้ว","ไม่ทราบ"], a:1 },
 ];
 
 const Q2_CAUSES = [
-  { q:"Most important risk for hemorrhagic stroke?", opts:["Low BP","High BP","Low sugar","Cold weather"], a:1 },
-  { q:"Which heart condition raises stroke risk?", opts:["Atrial fibrillation","Athlete’s heart","Healthy valve","Bradycardia"], a:0 },
-  { q:"High blood pressure increases risk because…", opts:[
-      "It strengthens vessels","It damages vessel walls","It thins the blood","It cools the brain"], a:1 },
-  { q:"Smoking does what?", opts:[
-      "Protects vessels","Has no effect","Damages vessels & increases clotting","Cures stroke"], a:2 },
-  { q:"Diabetes relates to stroke because…", opts:[
-      "It repairs vessels","It damages small vessels & speeds narrowing","It prevents clots","It lowers cholesterol"], a:1 },
-  { q:"High cholesterol…", opts:[
-      "Creates fatty plaques that narrow arteries","Thins blood","Is always harmless","Prevents blockage"], a:0 },
-  { q:"Atrial fibrillation can…", opts:[
-      "Form heart clots that travel to the brain","Stop clots forming","Lower BP","Cure diabetes"], a:0 },
-  { q:"Excess alcohol may…", opts:[
-      "Lower BP","Raise BP & cause rhythm problems","Prevent stroke","Improve sleep only"], a:1 },
-  { q:"Chronic stress…", opts:[
-      "Has no link","Can raise BP & unhealthy habits","Cures anxiety","Prevents clots"], a:1 },
-  { q:"Which are controllable risks?", opts:[
-      "Age & genetics","Diet, exercise, BP, smoking","Gender only","Height"], a:1 },
+  { q:"ปัจจัยสำคัญที่สุดของสโตรกชนิดเลือดออกคือ?",
+    opts:["ความดันต่ำ","ความดันโลหิตสูง","น้ำตาลต่ำ","อากาศหนาว"], a:1 },
+  { q:"ภาวะหัวใจข้อใดเพิ่มความเสี่ยงสโตรก?",
+    opts:["หัวใจเต้นผิดจังหวะชนิด Atrial Fibrillation","หัวใจนักกีฬา","ลิ้นหัวใจปกติ","หัวใจเต้นช้า (Bradycardia)"], a:0 },
+  { q:"เหตุใดความดันโลหิตสูงจึงเพิ่มความเสี่ยง?",
+    opts:["ทำให้หลอดเลือดแข็งแรง","ทำลายผนังหลอดเลือด","ทำให้เลือดใส","ทำให้สมองเย็น"], a:1 },
+  { q:"การสูบบุหรี่มีผลอย่างไร?",
+    opts:["ปกป้องหลอดเลือด","ไม่กระทบ","ทำลายหลอดเลือดและกระตุ้นการเกิดลิ่มเลือด","รักษาสโตรกได้"], a:2 },
+  { q:"เบาหวานสัมพันธ์กับสโตรกเพราะ…",
+    opts:["ซ่อมแซมหลอดเลือด","ทำลายหลอดเลือดเล็กและเร่งการตีบแคบ","ป้องกันลิ่มเลือด","ลดคอเลสเตอรอล"], a:1 },
+  { q:"คอเลสเตอรอลสูง…",
+    opts:["ทำให้เกิดคราบไขมันอุดตันหลอดเลือด","ทำให้เลือดใส","ไม่เป็นอันตรายเสมอไป","ป้องกันการอุดตัน"], a:0 },
+  { q:"Atrial fibrillation อาจ…",
+    opts:["ทำให้เกิดลิ่มเลือดในหัวใจแล้วหลุดไปอุดสมอง","หยุดการเกิดลิ่มเลือด","ลดความดันโลหิต","รักษาเบาหวาน"], a:0 },
+  { q:"ดื่มแอลกอฮอล์มากเกินไปอาจ…",
+    opts:["ลดความดัน","เพิ่มความดันและรบกวนจังหวะหัวใจ","ป้องกันสโตรก","แค่ทำให้ง่วง"], a:1 },
+  { q:"ความเครียดเรื้อรัง…",
+    opts:["ไม่เกี่ยวข้อง","ทำให้ความดันสูงและพฤติกรรมสุขภาพแย่ลง","รักษาความกังวล","ป้องกันลิ่มเลือด"], a:1 },
+  { q:"ข้อใดคือปัจจัยเสี่ยงที่ควบคุมได้?",
+    opts:["อายุและพันธุกรรม","อาหาร การออกกำลังกาย ความดัน การสูบบุหรี่","แค่เพศ","ส่วนสูง"], a:1 },
 ];
 
 const Q3_PREVENT = [
-  { q:"A stroke-smart diet focuses on…", opts:[
-      "Fried foods & salt","Fruits/veg, whole grains, fish, less salt/sugar","Only meat","Only supplements"], a:1 },
-  { q:"Recommended activity per week?", opts:[
-      "150 min moderate + strength 2 days","30 min total","None if young","Only weekends"], a:0 },
-  { q:"Controlling BP helps because…", opts:[
-      "It prevents vessel damage","It makes you taller","It changes blood type","It lowers vision"], a:0 },
-  { q:"Quit smoking effect on stroke risk?", opts:[
-      "No change","Falls a lot in 1–2 yrs; near non-smoker ~5 yrs","Increases risk","Only helps lungs"], a:1 },
-  { q:"Health check-ups help by…", opts:[
-      "Giving free snacks","Detecting & treating risks early","Making you sleepy","Raising BP"], a:1 },
-  { q:"Overweight/obesity…", opts:[
-      "Lower risk","No effect","Raise risk via BP, diabetes, cholesterol","Only cosmetic"], a:2 },
-  { q:"Control blood sugar to…", opts:[
-      "Damage vessels","Prevent vessel damage","Gain weight","Change eye color"], a:1 },
-  { q:"Too little sleep…", opts:[
-      "May raise BP & stress","Is always safe","Cures stress","Prevents clots"], a:0 },
-  { q:"Managing stress helps by…", opts:[
-      "Keeping BP healthy & habits better","Ruining sleep","Raising cholesterol","Causing clots"], a:0 },
-  { q:"Hydration…", opts:[
-      "Hurts circulation","Helps overall health & circulation","Causes stroke","Replaces exercise"], a:1 },
+  { q:"อาหารแบบไหนเหมาะกับการป้องกันสโตรก?",
+    opts:["ของทอดและเค็มจัด","ผักผลไม้ ธัญพืชไม่ขัดสี ปลา ลดหวาน/เค็ม","กินแต่เนื้อ","พึ่งอาหารเสริมอย่างเดียว"], a:1 },
+  { q:"การออกกำลังกายที่แนะนำต่อสัปดาห์คือ?",
+    opts:["อย่างน้อย 150 นาที/สัปดาห์ (ระดับปานกลาง) + เวท 2 วัน","รวม 30 นาที","ไม่ต้อง หากยังเด็ก","ออกเฉพาะเสาร์–อาทิตย์"], a:0 },
+  { q:"ควบคุมความดันช่วยเพราะ…",
+    opts:["ป้องกันการทำลายหลอดเลือด","ทำให้ตัวสูงขึ้น","เปลี่ยนกรุ๊ปเลือด","ทำให้สายตาลดลง"], a:0 },
+  { q:"เลิกสูบบุหรี่ส่งผลต่อความเสี่ยงสโตรกอย่างไร?",
+    opts:["ไม่เปลี่ยน","ลดลงมากใน 1–2 ปี และใกล้เคียงคนไม่สูบใน ~5 ปี","เสี่ยงเพิ่ม","ช่วยแค่ปอด"], a:1 },
+  { q:"ตรวจสุขภาพสม่ำเสมอช่วยโดย…",
+    opts:["ได้ของกินเล่นฟรี","คัดกรองและรักษาปัจจัยเสี่ยงตั้งแต่เนิ่น ๆ","ทำให้ง่วง","เพิ่มความดัน"], a:1 },
+  { q:"น้ำหนักเกิน/อ้วน…",
+    opts:["ลดความเสี่ยง","ไม่กระทบ","เพิ่มความเสี่ยงผ่านความดัน เบาหวาน ไขมันสูง","เป็นเรื่องความสวยงามเท่านั้น"], a:2 },
+  { q:"ควบคุมน้ำตาลในเลือดเพื่อ…",
+    opts:["ทำลายหลอดเลือด","ป้องกันการทำลายหลอดเลือด","เพิ่มน้ำหนัก","เปลี่ยนสีตา"], a:1 },
+  { q:"การนอนน้อยเกินไป…",
+    opts:["อาจทำให้ความดันและความเครียดสูงขึ้น","ปลอดภัยเสมอ","รักษาความเครียด","ป้องกันลิ่มเลือด"], a:0 },
+  { q:"การจัดการความเครียดช่วยโดย…",
+    opts:["ทำให้ความดันปกติและพฤติกรรมสุขภาพดีขึ้น","ทำลายการนอน","เพิ่มคอเลสเตอรอล","ทำให้เกิดลิ่มเลือด"], a:0 },
+  { q:"การดื่มน้ำเพียงพอ…",
+    opts:["ทำให้การไหลเวียนแย่ลง","ช่วยสุขภาพและการไหลเวียนโดยรวม","ทำให้เกิดสโตรก","ทดแทนการออกกำลังกายได้"], a:1 },
 ];
 
 const Q4_BEFAST = [
-  { q:"BEFAST stands for…", opts:[
+  { q:"BEFAST ย่อมาจากอะไร?",
+    opts:[
       "Brain, Eye, Feet, Arms, Speech, Talk",
       "Balance, Eyes, Face, Arms, Speech, Time",
       "Breathe, Eat, Fast, Act, Sit, Talk",
-      "Blink, Ear, Face, Abdomen, Sleep, Time"], a:1 },
-  { q:"B = ?", opts:["Breath","Balance problems","Bones","Belief"], a:1 },
-  { q:"E = ?", opts:["Ears ache","Eyes: sudden vision problems","Energy low","Elbows weak"], a:1 },
-  { q:"F = ?", opts:["Fever","Face drooping","Foot pain","Food allergy"], a:1 },
-  { q:"A = ?", opts:["Arm weakness","Ankle sprain","Asthma","Anemia"], a:0 },
-  { q:"S = ?", opts:["Sleepiness","Speech trouble","Sweating","Sunburn"], a:1 },
-  { q:"T = ?", opts:["Tomorrow","Time to call emergency","Tea time","Take a nap"], a:1 },
-  { q:"If BEFAST signs appear you should…", opts:[
-      "Wait at home","Call 1669 immediately","Drink water","Search YouTube"], a:1 },
-  { q:"Why is time critical?", opts:[
-      "Brain survives forever","Earlier treatment saves brain","Ambulances like speed","It isn’t"], a:1 },
-  { q:"Why not wait for symptoms to go away?", opts:[
-      "It’s safer to delay","Delays treatment → permanent damage","Hospitals are closed","Water will fix it"], a:1 },
+      "Blink, Ear, Face, Abdomen, Sleep, Time"
+    ], a:1 },
+  { q:"B = ?", opts:["Breath","ปัญหาการทรงตัว (Balance)","Bones","Belief"], a:1 },
+  { q:"E = ?", opts:["ปวดหู","ตา: มองเห็นผิดปกติ/ตามัวเฉียบพลัน","พลังงานต่ำ","ศอกอ่อนแรง"], a:1 },
+  { q:"F = ?", opts:["ไข้","หน้าเบี้ยว","ปวดเท้า","แพ้อาหาร"], a:1 },
+  { q:"A = ?", opts:["แขนขาอ่อนแรง","ข้อเท้าเคล็ด","หืด","โลหิตจาง"], a:0 },
+  { q:"S = ?", opts:["ง่วงนอน","พูดไม่ชัด/สื่อสารลำบาก","เหงื่อออก","ผิวไหม้แดด"], a:1 },
+  { q:"T = ?", opts:["พรุ่งนี้ค่อยไป","ถึงเวลาโทรฉุกเฉิน","พักดื่มชา","งีบ"], a:1 },
+  { q:"หากพบสัญญาณ BEFAST ควร…",
+    opts:["รอดูที่บ้าน","โทร 1669 ทันที","ดื่มน้ำ","หาดูใน YouTube"], a:1 },
+  { q:"เหตุใดเวลาเป็นสิ่งสำคัญ?",
+    opts:["สมองทนได้ตลอดไป","รักษาได้เร็ว สมองเสียหายน้อยลง","รถพยาบาลชอบความเร็ว","ไม่สำคัญ"], a:1 },
+  { q:"ทำไมไม่ควรรอให้อาการหายเอง?",
+    opts:["รอปลอดภัยกว่า","ยิ่งช้า ยิ่งเสี่ยงเสียถาวร","โรงพยาบาลปิด","ดื่มน้ำก็หาย"], a:1 },
 ];
 
 const Q5_TREAT = [
-  { q:"First thing if someone may have a stroke?", opts:[
-      "Give food","Call for help and get to hospital fast","Let them sleep","Massage"], a:1 },
-  { q:"Why reach hospital quickly?", opts:[
-      "Better chance of effective treatment & recovery","To pay bills earlier","To avoid paperwork","No reason"], a:0 },
-  { q:"What machine checks the type of stroke?", opts:["Ultrasound","CT/MRI","X-ray of leg","Thermometer"], a:1 },
-  { q:"If a vessel is blocked, doctors may…", opts:[
-      "Give clot-busting medicine","Give sleeping pills","Do nothing","Only ice"], a:0 },
-  { q:"If a vessel bursts, doctors…", opts:[
-      "Let it bleed","Stop bleeding (sometimes surgery)","Give candy","Send home"], a:1 },
-  { q:"Why physical therapy after stroke?", opts:[
-      "To regain strength & movement","To learn cooking","No reason","To avoid friends"], a:0 },
-  { q:"Who helps with speech problems?", opts:[
-      "Dentist","Speech therapist","Chef","Pilot"], a:1 },
-  { q:"Healthy food during recovery…", opts:[
-      "Slows healing","Provides nutrients for healing","Blocks blood flow","Is useless"], a:1 },
-  { q:"Family encouragement…", opts:[
-      "Doesn’t matter","Helps motivation to recover","Harms recovery","Replaces medicine"], a:1 },
-  { q:"To prevent another stroke, people should…", opts:[
-      "Ignore BP","Eat healthy, exercise, control BP, see doctor","Only rest forever","Avoid water"], a:1 },
-];
+  { q:"เมื่อสงสัยว่าใครเป็นสโตรก ควรทำสิ่งแรกคือ?",
+    opts:["ให้กินอาหาร","โทรขอความช่วยเหลือและรีบนำส่งโรงพยาบาล","ปล่อยให้นอนพัก","นวด"], a:1 },
+  { q:"ทำไมต้องไปโรงพยาบาลให้เร็ว?",
+    opts:["เพิ่มโอกาสรักษาได้ผลและฟื้นตัวดี","ไปจ่ายเงินเร็วขึ้น","เลี่ยงเอกสาร","ไม่มีเหตุผล"], a:0 },
+  { q:"เครื่องมือใดใช้ตรวจแยกชนิดสโตรก?",
+    opts:["อัลตราซาวด์","CT/MRI","เอกซเรย์ขา","วัดอุณหภูมิ"], a:1 },
+  { q:"ถ้าเส้นเลือดอุดตัน แพทย์อาจ…",
+    opts:["ให้ยาละลายลิ่มเลือด","ให้ยานอนหลับ","ไม่ทำอะไร","ประคบเย็นอย่างเดียว"], a:0 },
+  { q:"ถ้าเส้นเลือดแตก แพทย์จะ…",
+    opts:["ปล่อยให้เลือดออก","หยุดเลือด (บางกรณีผ่าตัด)","ให้ขนม","ให้กลับบ้าน"], a:1 },
+  { q:"ทำไมต้องกายภาพบำบัดหลังสโตรก?",
+    opts:["เพื่อฟื้นกำลังและการเคลื่อนไหว","เพื่อฝึกทำอาหาร","ไม่มีเหตุผล","เพื่อเลี่ยงการพบเพื่อน"], a:0 },
+  { q:"ใครช่วยดูแลปัญหาการพูด?",
+    opts:["ทันตแพทย์","นักแก้ไขการพูด","เชฟ","นักบิน"], a:1 },
+  { q:"อาหารที่ดีช่วงฟื้นตัว…",
+    opts:["ทำให้หายช้า","ให้สารอาหารช่วยซ่อมแซมร่างกาย","อุดตันท่อน้ำเหลือง","ไม่มีประโยชน์"], a:1 },
+  { q:"กำลังใจจากครอบครัว…",
+    opts:["ไม่สำคัญ","ช่วยสร้างแรงจูงใจในการฟื้นตัว","เป็นโทษต่อการรักษา","ทดแทนยาได้"], a:1 },
+  { q:"เพื่อป้องกันสโตรกซ้ำ ควร…",
+    opts:["เมินความดันโลหิต","กินดี ออกกำลัง คุมความดัน พบแพทย์ตามนัด","พักผ่อนอย่างเดียวตลอดไป","งดดื่มน้ำ"], a:1 },
+];      
 
 // Category map: 1–3 → Q1, 4–6 → Q2, 7–9 → Q3, 10–12 → Q4, 13–15 → Q5
 function categoryForLevel(levelIdx){ return Math.floor(levelIdx / 3) + 1; } // 1..5
