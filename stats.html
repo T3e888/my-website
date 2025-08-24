@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>สถิติคำถาม</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="share.css" />
+  <style>
+    .cols{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:900px){ .cols{grid-template-columns:1fr 1fr} }
+    .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:12px}
+    .row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:8px 4px}
+    .row:last-child{border-bottom:none}
+    .muted{color:#666}
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon"><span></span><span></span><span></span></span>
+  </button>
+  <nav id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
+      <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
+      <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
+      <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
+      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
+      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
+      <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">ล็อกเอาท์</a></li>
+      <li class="menu-item"><a href="leaderboard.html">ตารางคะแนน</a></li>
+      <li class="menu-item"><a href="stats.html" class="active">สถิติคำถาม</a></li>
+    </ul>
+  </nav>
+  <div id="overlay" class="overlay"></div>
+
+  <h1 class="page-title">📊 สถิติคำถาม</h1>
+  <p class="subtitle">รวมจากคำตอบทั้งหมดใน <code>/questionStats/*/answers</code></p>
+
+  <section class="panel">
+    <div class="cols">
+      <div class="card">
+        <h3>❌ ถูกน้อย (ยาก)</h3>
+        <div id="hard"><div class="muted">กำลังโหลด…</div></div>
+      </div>
+      <div class="card">
+        <h3>✅ ถูกมาก (ง่าย)</h3>
+        <div id="easy"><div class="muted">กำลังโหลด…</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <script>
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    function setupSidebar(){
+      const openBtn = document.getElementById("menu-toggle");
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      const closeBtn= document.getElementById("close-sidebar");
+      const open = ()=>{ sidebar.classList.add("open"); overlay.classList.add("active"); };
+      const close= ()=>{ sidebar.classList.remove("open"); overlay.classList.remove("active"); };
+      openBtn?.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      overlay?.addEventListener("click", close);
+      document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
+        if (!a.closest("#logout-link")) a.addEventListener("click", close);
+      });
+      document.getElementById("logout-link")?.addEventListener("click",(e)=>{
+        e.preventDefault(); auth.signOut().then(()=>location.href="login.html");
+      });
+    }
+
+    function pct(n){ return Math.round(n*100); }
+    function row(q){  // q = {qid, acc, correct, total}
+      return `<div class="row"><div><b>${q.qid}</b></div><div>${pct(q.acc)}% (${q.correct}/${q.total})</div></div>`;
+    }
+
+    async function loadStats(){
+      document.getElementById('hard').innerHTML = '<div class="muted">กำลังโหลด…</div>';
+      document.getElementById('easy').innerHTML = '<div class="muted">กำลังโหลด…</div>';
+
+      try{
+        const cg = await db.collectionGroup('answers').orderBy('createdAt','desc').limit(5000).get();
+        const map = new Map(); // qid -> {correct,total}
+        cg.forEach(doc=>{
+          const qid = doc.ref.parent.parent.id; // parent question id
+          const v = doc.data() || {};
+          const e = map.get(qid) || {correct:0,total:0};
+          e.total  += 1;
+          e.correct+= v.correct ? 1 : 0;
+          map.set(qid, e);
+        });
+
+        const arr = [];
+        map.forEach((v,qid)=> arr.push({qid, correct:v.correct, total:v.total, acc: v.correct / v.total}));
+
+        const hard = arr.slice().sort((a,b)=> a.acc-b.acc).slice(0,10);
+        const easy = arr.slice().sort((a,b)=> b.acc-a.acc).slice(0,10);
+
+        document.getElementById('hard').innerHTML = hard.length ? hard.map(row).join('') : '<div class="muted">ยังไม่มีข้อมูล</div>';
+        document.getElementById('easy').innerHTML = easy.length ? easy.map(row).join('') : '<div class="muted">ยังไม่มีข้อมูล</div>';
+      }catch(e){
+        document.getElementById('hard').innerHTML = `<div class="muted">โหลดไม่สำเร็จ: ${e.message||e}</div>`;
+        document.getElementById('easy').innerHTML = '';
+      }
+    }
+
+    auth.onAuthStateChanged(u=>{
+      if (!u){ location.href='login.html'; return; }
+      setupSidebar();
+      loadStats();
+    });
+  </script>
+</body>
+  </html>
