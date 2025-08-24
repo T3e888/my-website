@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>ตารางคะแนน</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="share.css" />
+  <style>
+    .tabs{display:flex;gap:8px;margin:8px 0 16px;flex-wrap:wrap}
+    .tabs .btn{padding:8px 12px;border:1px solid #ddd;background:#fff;border-radius:10px;cursor:pointer}
+    .tabs .btn.active{border-color:#b91c1c}
+    .board{border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #eee}
+    .row:last-child{border-bottom:none}
+    .sub{font-size:12px;color:#666}
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon"><span></span><span></span><span></span></span>
+  </button>
+  <nav id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <ul class="menu">
+      <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
+      <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
+      <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
+      <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
+      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
+      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
+      <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">ล็อกเอาท์</a></li>
+      <li class="menu-item"><a href="leaderboard.html" class="active">ตารางคะแนน</a></li>
+      <li class="menu-item"><a href="stats.html">สถิติคำถาม</a></li>
+    </ul>
+  </nav>
+  <div id="overlay" class="overlay"></div>
+
+  <h1 class="page-title">🏆 ตารางคะแนน</h1>
+
+  <section class="panel">
+    <div class="tabs">
+      <button id="tabPoints" class="btn active">Points</button>
+      <button id="tabQuizzes" class="btn">Quizzes</button>
+      <button id="tabStreak" class="btn">Streak</button>
+    </div>
+    <div id="board" class="board">
+      <div class="row">กำลังโหลด…</div>
+    </div>
+  </section>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
+      authDomain: "login-ba993.firebaseapp.com",
+      projectId: "login-ba993",
+      storageBucket: "login-ba993.appspot.com",
+      messagingSenderId: "86689747767",
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
+      measurementId: "G-33LJCV1MD8"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <script>
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    function setupSidebar(){
+      const openBtn = document.getElementById("menu-toggle");
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      const closeBtn= document.getElementById("close-sidebar");
+      const open = ()=>{ sidebar.classList.add("open"); overlay.classList.add("active"); };
+      const close= ()=>{ sidebar.classList.remove("open"); overlay.classList.remove("active"); };
+      openBtn?.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      overlay?.addEventListener("click", close);
+      document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
+        if (!a.closest("#logout-link")) a.addEventListener("click", close);
+      });
+      document.getElementById("logout-link")?.addEventListener("click",(e)=>{
+        e.preventDefault(); auth.signOut().then(()=>location.href="login.html");
+      });
+    }
+
+    const board = document.getElementById('board');
+    const tabs = { tabPoints:'points', tabQuizzes:'quizCount', tabStreak:'quizStreak' };
+
+    function paintRow(i,u,byKey){
+      const name = (u.username||"").toString() || (u.uid||"").slice(0,6) || "user";
+      const main = u[byKey] ?? 0;
+      const sub  = `pts:${u.points||0} • quizzes:${u.quizCount||0} • 🔥${u.quizStreak||0}`;
+      return `<div class="row"><div><b>#${i}</b> @${name}<div class="sub">${sub}</div></div><div style="font-weight:700">${main}</div></div>`;
+    }
+
+    async function load(by='points'){
+      board.innerHTML = '<div class="row">กำลังโหลด…</div>';
+      try{
+        const snap = await db.collection('users').orderBy(by,'desc').limit(100).get();
+        if (snap.empty){ board.innerHTML = '<div class="row">ยังไม่มีข้อมูล</div>'; return; }
+        let i=1, html='';
+        snap.forEach(d=>{
+          const u = d.data() || {}; u.uid = d.id;
+          html += paintRow(i++, u, by);
+        });
+        board.innerHTML = html;
+      }catch(e){
+        board.innerHTML = `<div class="row">โหลดไม่สำเร็จ: ${e.message||e}</div>`;
+      }
+    }
+
+    for (const id in tabs){
+      document.getElementById(id).onclick = (ev)=>{
+        document.querySelectorAll('.tabs .btn').forEach(b=>b.classList.remove('active'));
+        ev.currentTarget.classList.add('active');
+        load(tabs[id]);
+      };
+    }
+
+    auth.onAuthStateChanged(u=>{
+      if (!u){ location.href='login.html'; return; }
+      setupSidebar();
+      load('points');
+    });
+  </script>
+</body>
+        </html>
