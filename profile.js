@@ -27,18 +27,14 @@ const $ = (id) => document.getElementById(id);
 const toastEl = $("toast");
 function toast(t){ toastEl.textContent = t; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"), 1600); }
 
-// maintains /usernames mapping safely
 async function ensureUsernameMapping(uid, uname) {
   if (!uname) return;
   uname = uname.trim().toLowerCase();
   if (!uname) return;
   try {
     await db.collection("usernames").doc(uname).set({ uid, username: uname }, { merge: true });
-  } catch (e) {
-    // ignore if taken by someone else; UI handles on rename
-  }
+  } catch (e) {}
 }
-
 async function renameUsernameMapping(uid, oldU, newU) {
   oldU = (oldU||"").trim().toLowerCase();
   newU = (newU||"").trim().toLowerCase();
@@ -53,7 +49,6 @@ async function renameUsernameMapping(uid, oldU, newU) {
       }
     } catch {}
   }
-
   await db.collection("usernames").doc(newU).set({ uid, username: newU });
 }
 
@@ -68,12 +63,15 @@ auth.onAuthStateChanged(async (user) => {
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure user doc exists + seed
+  // Ensure user doc exists + seed (add quizCount/quizStreak)
   await docRef.set({
     username: (user.email||"").split("@")[0],
     cards: [],
     mission: Array(15).fill(false),
-    points: 0
+    points: 0,
+    quizCount: 0,
+    quizStreak: 0,
+    quizLastYmd: null
   }, { merge: true });
 
   // Load
@@ -84,6 +82,8 @@ auth.onAuthStateChanged(async (user) => {
   $("username").value      = currentUname;
   $("about").value         = data.about || "";
   $("points").textContent  = String(data.points || 0);
+  $("quizCount").textContent  = String(data.quizCount || 0);
+  $("quizStreak").textContent = String(data.quizStreak || 0);
 
   await ensureUsernameMapping(user.uid, currentUname);
 
@@ -99,7 +99,7 @@ auth.onAuthStateChanged(async (user) => {
       }).join("")
     : `<div class="muted">ยังไม่มีการ์ด</div>`;
 
-  // Save username (also update /usernames mapping)
+  // Save username
   $("saveUserBtn").onclick = async () => {
     const newName = $("username").value.trim().toLowerCase();
     $("saveUserMsg").textContent = "";
@@ -127,7 +127,7 @@ auth.onAuthStateChanged(async (user) => {
     }
   };
 
-  // Change password (re-auth)
+  // Change password
   $("changePassBtn").onclick = async () => {
     const cur = $("curPass").value;
     const nw  = $("newPass").value;
