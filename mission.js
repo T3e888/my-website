@@ -309,20 +309,19 @@ function startQuiz(levelIdx, docRef, completed){
       const correct = answers.reduce((sum,ans,i)=> sum + (ans===questions[i].a ? 1 : 0), 0);
       const firstTime = !completed[levelIdx];
 
-      // --- write per-question attempt stats ---
+      // --- write per-question attempt stats (parallel, faster) ---
       try{
-        // each attempt becomes its own doc (auto-id)
-        for (let i=0;i<10;i++){
-          const qid = questions[i].id; // e.g., B1-01
-          await db.collection('questionStats').doc(qid)
+        const writes = questions.map((q, i) =>
+          db.collection('questionStats').doc(q.id)
             .collection('answers')
             .add({
               uid: CURRENT_USER.uid,
-              correct: (answers[i] === questions[i].a),
+              correct: (answers[i] === q.a),
               level: levelIdx+1,
               createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
+            })
+        );
+        await Promise.all(writes);
       }catch(e){ log("questionStats write failed:", e); }
 
       if (correct === 10){
@@ -336,7 +335,7 @@ function startQuiz(levelIdx, docRef, completed){
           await docRef.set({ mission: completed }, {merge:true});
         }
 
-        // quizCount + daily streak (count every successful 10/10)
+        // quizCount + daily streak (count successful 10/10 only)
         try{
           const uSnap = await docRef.get();
           const uData = uSnap.data() || {};
@@ -407,4 +406,4 @@ function toast(msg){
   modal.classList.add("show");
   document.getElementById("closeNoticeX").onclick = ()=>modal.classList.remove("show");
   document.getElementById("closeNotice").onclick  = ()=>modal.classList.remove("show");
-  }
+   }
