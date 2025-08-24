@@ -4,6 +4,7 @@ const db   = firebase.firestore();
 
 const LEVEL_COUNT = 15; // 15 checkpoints
 let CURRENT_POINTS = 0;
+let CURRENT_USER = null; // for writing stats
 
 // tiny safe logger
 const log = (...a) => { try { console.log(...a); } catch(_){} };
@@ -11,6 +12,7 @@ const log = (...a) => { try { console.log(...a); } catch(_){} };
 // ====== Start ======
 auth.onAuthStateChanged(async (user) => {
   if (!user) return location.href = "login.html";
+  CURRENT_USER = user;
   setupSidebar();
   try { await buildPath(user); }
   catch (e) { log("buildPath error:", e); toast("มีข้อผิดพลาดเล็กน้อย กรุณารีเฟรชแล้วลองใหม่"); }
@@ -36,7 +38,6 @@ function setupSidebar() {
   logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
 }
 
-// ====== QUESTION BANKS (ยังเป็นอังกฤษตามเดิม) ======
 // ====== QUESTION BANKS (TH) ======
 const Q1_BASIC = [
   { q:"โรคหลอดเลือดสมองมีชนิดหลักกี่ชนิด?",
@@ -150,7 +151,15 @@ const Q5_TREAT = [
     opts:["ไม่สำคัญ","ช่วยสร้างแรงจูงใจในการฟื้นตัว","เป็นโทษต่อการรักษา","ทดแทนยาได้"], a:1 },
   { q:"เพื่อป้องกันสโตรกซ้ำ ควร…",
     opts:["เมินความดันโลหิต","กินดี ออกกำลัง คุมความดัน พบแพทย์ตามนัด","พักผ่อนอย่างเดียวตลอดไป","งดดื่มน้ำ"], a:1 },
-];      
+];
+
+// --- attach stable IDs to each question for stats ---
+function tagBank(tag, bank){ bank.forEach((q,i)=>{ if(!q.id) q.id = `${tag}-${String(i+1).padStart(2,'0')}`; }); }
+tagBank("B1", Q1_BASIC);
+tagBank("B2", Q2_CAUSES);
+tagBank("B3", Q3_PREVENT);
+tagBank("B4", Q4_BEFAST);
+tagBank("B5", Q5_TREAT);
 
 // Category map: 1–3 → Q1, 4–6 → Q2, 7–9 → Q3, 10–12 → Q4, 13–15 → Q5
 function categoryForLevel(levelIdx){ return Math.floor(levelIdx / 3) + 1; } // 1..5
@@ -168,7 +177,8 @@ function shuffle(arr){
 function pickQuestionsForCheckpoint(levelIdx){
   const cat = categoryForLevel(levelIdx);
   const bank = bankForCategory(cat);
-  return shuffle(bank).slice(0, 10).map(q => ({...q}));
+  // deep-copy and keep stable id
+  return shuffle(bank).slice(0, 10).map(q => ({ q: q.q, opts: q.opts.slice(), a: q.a, id: q.id }));
 }
 function renderPoints(n){
   CURRENT_POINTS = n|0;
@@ -185,6 +195,21 @@ function nodeElement(index, state){
   return li;
 }
 
+// streak helpers (daily)
+const ymd = (d)=> {
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${da}`;
+};
+function isYesterday(prevYmd, todayYmd){
+  if (!prevYmd) return false;
+  const [py,pm,pd] = prevYmd.split('-').map(n=>parseInt(n,10));
+  const [ty,tm,td] = todayYmd.split('-').map(n=>parseInt(n,10));
+  const prev = new Date(py, pm-1, pd);
+  const today= new Date(ty, tm-1, td);
+  const diffDays = Math.round((today - prev) / (24*60*60*1000));
+  return diffDays === 1;
+}
+
 // ====== Build the path ======
 async function buildPath(user){
   const path = document.getElementById("path");
@@ -199,7 +224,11 @@ async function buildPath(user){
       username:(user.email||"").split("@")[0],
       cards:[],
       mission:Array(LEVEL_COUNT).fill(false),
-      points:0
+      points:0,
+      // seed new fields
+      quizCount: 0,
+      quizStreak: 0,
+      quizLastYmd: null
     }, {merge:true});
   }
 
@@ -207,7 +236,7 @@ async function buildPath(user){
   let completed = Array.isArray(data.mission) ? data.mission.slice(0, LEVEL_COUNT) : Array(LEVEL_COUNT).fill(false);
   while (completed.length < LEVEL_COUNT) completed.push(false);
 
-  // ✅ Normalize Firestore: ensure 15 items actually stored (fixes older 10-slot users)
+  // ensure 15 items stored (fixes older 10-slot users)
   if (!Array.isArray(data.mission) || data.mission.length !== LEVEL_COUNT) {
     await docRef.set({ mission: completed }, { merge: true });
   }
@@ -280,14 +309,56 @@ function startQuiz(levelIdx, docRef, completed){
       const correct = answers.reduce((sum,ans,i)=> sum + (ans===questions[i].a ? 1 : 0), 0);
       const firstTime = !completed[levelIdx];
 
+      // --- write per-question attempt stats ---
+      try{
+        // each attempt becomes its own doc (auto-id)
+        for (let i=0;i<10;i++){
+          const qid = questions[i].id; // e.g., B1-01
+          await db.collection('questionStats').doc(qid)
+            .collection('answers')
+            .add({
+              uid: CURRENT_USER.uid,
+              correct: (answers[i] === questions[i].a),
+              level: levelIdx+1,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+      }catch(e){ log("questionStats write failed:", e); }
+
       if (correct === 10){
         completed[levelIdx] = true;
+
+        // points: only once per level (keep old logic)
         if (firstTime){
           await docRef.set({ mission: completed, points: firebase.firestore.FieldValue.increment(1) }, {merge:true});
           renderPoints(CURRENT_POINTS + 1);
         } else {
           await docRef.set({ mission: completed }, {merge:true});
         }
+
+        // quizCount + daily streak (count every successful 10/10)
+        try{
+          const uSnap = await docRef.get();
+          const uData = uSnap.data() || {};
+          const today = ymd(new Date());
+          let streak = (uData.quizStreak|0) || 0;
+          const last  = uData.quizLastYmd || null;
+
+          if (last === today) {
+            // already counted today -> keep streak
+          } else if (isYesterday(last, today)) {
+            streak = (streak|0) + 1;
+          } else {
+            streak = 1;
+          }
+
+          await docRef.set({
+            quizCount: firebase.firestore.FieldValue.increment(1),
+            quizStreak: streak,
+            quizLastYmd: today
+          }, { merge: true });
+        }catch(e){ log("streak update error:", e); }
+
         box.innerHTML = `
           <button class="close-x" id="closeX2" aria-label="Close">×</button>
           <div class="center">
@@ -336,4 +407,4 @@ function toast(msg){
   modal.classList.add("show");
   document.getElementById("closeNoticeX").onclick = ()=>modal.classList.remove("show");
   document.getElementById("closeNotice").onclick  = ()=>modal.classList.remove("show");
-    }
+  }
