@@ -1,0 +1,33 @@
+/* global.css — puts your pink pattern behind all pages */
+
+:root{
+  /* Make text readable; tweak alpha or set to 0 to remove */
+  --bg-overlay: rgba(255,255,255,.65);
+  /* Tile size of the pattern (adjust to taste: 220–360 works well) */
+  --tile: 320px;
+}
+
+html, body { height: 100%; }
+body { margin: 0; background: #fbe9ea; }
+
+/* Pattern image fixed behind everything */
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("assets/bg-pattern.png");
+  background-repeat: repeat;
+  background-size: var(--tile) var(--tile);
+  background-position: center;
+  z-index: -2;
+}
+
+/* Soft overlay so text & cards pop on top */
+body::after{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  z-index: -1;
+  pointer-events: none;
+}
