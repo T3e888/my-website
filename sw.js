@@ -1,6 +1,6 @@
 // sw.js — Service Worker for Stroke Card Adventure
 // Bump this version whenever you change cached files:
-const CACHE = "sca-v4";
+const CACHE = "sca-v5";
 
 const CORE_ASSETS = [
   "./",
@@ -18,8 +18,10 @@ const CORE_ASSETS = [
   "./feedback.html",
   "./unlock.html",
   "./redeem.html",
+  "./leaderboard.html",     // ← added (offline)
 
-  // CSS (add/remove as your repo has)
+  // CSS
+  "./global.css",           // ← added (background + layout)
   "./login.css",
   "./register.css",
   "./card.css",
@@ -28,8 +30,9 @@ const CORE_ASSETS = [
   "./learn.css",
   "./profile.css",
   "./feedback.css",
+  "./leaderboard.css",      // ← add if you have it
 
-  // JS (add/remove as your repo has)
+  // JS
   "./login.js",
   "./register.js",
   "./card.js",
@@ -40,6 +43,7 @@ const CORE_ASSETS = [
   "./feedback.js",
   "./unlock.js",
   "./sponsor.js",
+  "./leaderboard.js",       // ← add if you have it
 
   // Icons
   "./assets/icons/pwa-192.png",
@@ -65,24 +69,39 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch strategy
+// Fetch: cache-first for same-origin; runtime cache for images (cards)
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Only handle GET
   if (req.method !== "GET") return;
 
-  // Same-origin: cache-first for pages & assets
+  // Same-origin
   if (url.origin === location.origin) {
-    event.respondWith(
-      caches.match(req).then((cached) => cached || fetch(req))
-    );
+    // Runtime cache card images (no need to list all files)
+    const isCardImage =
+      req.destination === "image" ||
+      url.pathname.includes("/assets/cards/");
+
+    if (isCardImage) {
+      event.respondWith(
+        caches.match(req).then((cached) =>
+          cached ||
+          fetch(req).then((resp) => {
+            const copy = resp.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+            return resp;
+          })
+        )
+      );
+      return;
+    }
+
+    // Default cache-first for pages & assets
+    event.respondWith(caches.match(req).then((cached) => cached || fetch(req)));
     return;
   }
 
   // Cross-origin (Firebase/Auth/etc.): network-first with cache fallback
-  event.respondWith(
-    fetch(req).catch(() => caches.match(req))
-  );
+  event.respondWith(fetch(req).catch(() => caches.match(req)));
 });
