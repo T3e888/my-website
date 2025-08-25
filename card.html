@@ -3,10 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <title>คลังการ์ดของคุณ</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <!-- PWA: Manifest & Icons -->
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#b91c1c">
-<link rel="apple-touch-icon" href="assets/icons/pwa-192.png">
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
+
+<!-- Favicon (optional but recommended) -->
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png">
+
+<!-- iOS (Add to Home Screen) -->
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="StrokeCards">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- (Older Android Chrome hint; harmless elsewhere) -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="StrokeCards">
+
+<!-- Service Worker -->
+<script>
+  (function () {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => {
+          // Optional: listen for updates and auto-reload on new version
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            nw && nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('New version ready.');
+                // location.reload(); // uncomment if you want auto-refresh on updates
+              }
+            });
+          });
+        })
+        .catch(err => console.warn('SW register failed:', err));
+    }
+  })();
+</script>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="global.css?v=1">
   <link rel="stylesheet" href="card.css">
@@ -63,6 +98,7 @@
   <script src="card.js"></script>
 </body>
 </html>
+
 
 
 
