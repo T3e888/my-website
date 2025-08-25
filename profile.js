@@ -87,17 +87,21 @@ auth.onAuthStateChanged(async (user) => {
 
   await ensureUsernameMapping(user.uid, currentUname);
 
-  // Render cards
+  // Render cards (null-safe if #cardsGrid does not exist)
   const cards = Array.isArray(data.cards) ? data.cards : [];
-  $("cardsCount").textContent = String(cards.length);
+  const cardsCountEl = $("cardsCount");
+  if (cardsCountEl) cardsCountEl.textContent = String(cards.length);
+
   const grid = $("cardsGrid");
-  grid.innerHTML = cards.length
-    ? cards.map(cId => {
-        const img = `assets/cards/${cId}.png`;
-        const label = cId.replace(/card/i,"Card ");
-        return `<div class="cardItem"><img src="${img}" alt="${label}" /><div class="muted">${label}</div></div>`;
-      }).join("")
-    : `<div class="muted">ยังไม่มีการ์ด</div>`;
+  if (grid) {
+    grid.innerHTML = cards.length
+      ? cards.map(cId => {
+          const img = `assets/cards/${cId}.png`;
+          const label = cId.replace(/card/i,"Card ");
+          return `<div class="cardItem"><img src="${img}" alt="${label}" /><div class="muted">${label}</div></div>`;
+        }).join("")
+      : `<div class="muted">ยังไม่มีการ์ด</div>`;
+  }
 
   // Save username
   $("saveUserBtn").onclick = async () => {
