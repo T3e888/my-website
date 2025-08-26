@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><title>Play PvE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#b91c1c">
+<link rel="stylesheet" href="global.css">
+<script>if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
+</head><body>
+<header class="header">
+  <a class="icon-btn" href="play-menu.html">←</a>
+  <h1 class="title">Play PvE</h1>
+  <span class="icon-btn" style="opacity:.2"> </span>
+</header>
+<main class="content">
+  <div class="tile">Game scene placeholder. (Hook Phaser or Unity export here.)</div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="app.js"></script>
+<script>app.requireAuth();</script>
+</body></html>
