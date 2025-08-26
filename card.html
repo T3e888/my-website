@@ -4,25 +4,20 @@
   <meta charset="UTF-8">
   <title>คลังการ์ดของคุณ</title>
   <!-- PWA: Manifest & Icons -->
-<!-- PWA: Manifest & Icons (GitHub Pages subpath-safe) -->
+<!-- PWA: Manifest & Icons -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#b91c1c">
 
-<!-- Favicon (optional) -->
+<!-- iOS Add to Home Screen -->
+<link rel="apple-touch-icon" href="assets/icons/pwa-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- Optional favicons -->
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
 
-<!-- iOS Add to Home Screen -->
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="StrokeCards">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- (Harmless hint for older Android Chrome) -->
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="StrokeCards">
-
-<!-- Service Worker (relative path, so scope is /my-website/) -->
+<!-- Service Worker (relative path for GitHub Pages subfolder) -->
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(err =>
@@ -86,6 +81,7 @@
   <script src="card.js"></script>
 </body>
 </html>
+
 
 
 
