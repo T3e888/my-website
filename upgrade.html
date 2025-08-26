@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><title>Upgrade</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#b91c1c">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="stylesheet" href="global.css">
+<script>if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
+</head><body>
+<header class="header">
+  <button id="menu-btn" class="icon-btn">☰</button>
+  <h1 class="title">Upgrade</h1>
+  <a class="icon-btn" href="leaderboard.html">🏆</a>
+</header>
+<aside class="sidebar">
+  <div class="brand"><img src="assets/logo.png" alt=""><div>Stroke Card Adventure</div></div>
+  <nav class="menu">
+    <a id="m-play" href="play-menu.html">Play</a>
+    <a id="m-cards" href="mycards.html">My cards</a>
+    <a id="m-mission" href="mission.html">Mission</a>
+    <a id="m-shop" href="unlock.html">Shop</a>
+    <a id="m-profile" href="profile.html">Profile</a>
+    <a id="m-comment" href="feedback.html">Comment</a>
+  </nav>
+  <button class="logout-btn" onclick="app.doLogout()">Logout</button>
+</aside>
+<div class="backdrop"></div>
+
+<main class="content">
+  <a class="small-link" href="mycards.html">← Back to my cards</a>
+  <div class="tile title-tile">Upgrade</div>
+  <div class="tile muted" style="height:120px">3 exp style — +HP / DEF / ATK</div>
+  <div class="circle-row">
+    <div class="circle"></div><div class="circle"></div><div class="circle"></div>
+  </div>
+  <div class="side-by">
+    <div class="tile" style="width:160px">Card1 (preview)</div>
+    <div class="tile" style="flex:1">Stat</div>
+  </div>
+  <h3>Card all</h3>
+  <div class="slots">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="app.js"></script>
+<script>app.requireAuth().then(()=>app.setActive('m-cards'));</script>
+</body></html>
