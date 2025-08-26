@@ -1,13 +1,14 @@
 // sw.js — Service Worker for Stroke Card Adventure
 // Bump this version whenever you change cached files:
-const CACHE = "sca-v6";
+const CACHE = "sca-v10";
 
 const CORE_ASSETS = [
+  // Root / PWA
   "./",
   "./index.html",
   "./manifest.webmanifest",
 
-  // Pages
+  // Pages (existing)
   "./login.html",
   "./register.html",
   "./card.html",
@@ -19,11 +20,21 @@ const CORE_ASSETS = [
   "./unlock.html",
   "./redeem.html",
   "./leaderboard.html",
-  "./stats.html",              // include if the page exists
+  "./stats.html",
 
-  // CSS (include versioned URL actually used by pages)
+  // NEW pages (play + cards hub)
+  "./play-menu.html",
+  "./mycards.html",
+  "./mycharacter.html",
+  "./upgrade.html",
+  "./merge.html",
+  "./mutation.html",
+  "./collection.html",
+  "./play.html",            // keep if you added a placeholder/game page
+
+  // CSS (include the exact URLs your pages load)
   "./global.css",
-  "./global.css?v=1",          // ← important: your pages request this exact URL
+  "./global.css?v=1",
   "./login.css",
   "./register.css",
   "./card.css",
@@ -32,9 +43,10 @@ const CORE_ASSETS = [
   "./learn.css",
   "./profile.css",
   "./feedback.css",
-  "./leaderboard.css",         // include if present
+  "./leaderboard.css",
 
-  // JS (include versioned URL actually used by pages)
+  // JS (include exact URLs your pages load)
+  "./app.js",
   "./login.js",
   "./register.js",
   "./card.js",
@@ -42,24 +54,34 @@ const CORE_ASSETS = [
   "./mission.js",
   "./learn.js",
   "./profile.js",
-  "./profile.js?v=th-2",       // ← important: profile.html uses this
+  "./profile.js?v=th-2",
   "./feedback.js",
   "./unlock.js",
   "./sponsor.js",
-  "./leaderboard.js",          // include if present
+  "./leaderboard.js",
 
-  // Icons
+  // Icons / images used by head or UI
   "./assets/icons/pwa-192.png",
-  "./assets/icons/pwa-512.png"
+  "./assets/icons/pwa-512.png",
+  "./assets/icons/favicon-16.png",
+  "./assets/icons/favicon-32.png",
+  "./assets/logo.png"
 ];
 
-// Install: pre-cache assets
+// Install: pre-cache (tolerant to 404s/missing files)
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE)
-      .then((cache) => cache.addAll(CORE_ASSETS))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.allSettled(
+      CORE_ASSETS.map(async (url) => {
+        try {
+          const resp = await fetch(url, { cache: "no-cache" });
+          if (resp && resp.ok) await cache.put(url, resp.clone());
+        } catch (_e) { /* ignore missing */ }
+      })
+    );
+    await self.skipWaiting();
+  })());
 });
 
 // Activate: clear old caches
@@ -72,34 +94,35 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch: cache-first for same-origin; runtime cache for images (cards)
+// Fetch: cache-first for same-origin; runtime cache for images (cards, icons)
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  const url = new URL(req.url);
-
   if (req.method !== "GET") return;
+
+  const url = new URL(req.url);
 
   // Same-origin
   if (url.origin === location.origin) {
-    // Runtime cache card images (no need to list all files)
-    const isCardImage =
-      req.destination === "image" || url.pathname.includes("/assets/cards/");
+    // Runtime cache for images (no need to enumerate file names)
+    const isImage =
+      req.destination === "image" ||
+      /\/assets\/(cards|icons|partners)\//.test(url.pathname);
 
-    if (isCardImage) {
+    if (isImage) {
       event.respondWith(
         caches.match(req).then((cached) =>
           cached ||
-          fetch(req).then((resp) => {
-            const copy = resp.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-            return resp;
-          })
+            fetch(req).then((resp) => {
+              const copy = resp.clone();
+              caches.open(CACHE).then((c) => c.put(req, copy));
+              return resp;
+            })
         )
       );
       return;
     }
 
-    // Default cache-first for pages & static assets
+    // Default: cache-first for pages & static assets
     event.respondWith(caches.match(req).then((cached) => cached || fetch(req)));
     return;
   }
