@@ -1,6 +1,6 @@
 // sw.js — Service Worker for Stroke Card Adventure
 // Bump this version whenever you change cached files:
-const CACHE = "sca-v5";
+const CACHE = "sca-v6";
 
 const CORE_ASSETS = [
   "./",
@@ -18,10 +18,12 @@ const CORE_ASSETS = [
   "./feedback.html",
   "./unlock.html",
   "./redeem.html",
-  "./leaderboard.html",     // ← added (offline)
+  "./leaderboard.html",
+  "./stats.html",              // include if the page exists
 
-  // CSS
-  "./global.css",           // ← added (background + layout)
+  // CSS (include versioned URL actually used by pages)
+  "./global.css",
+  "./global.css?v=1",          // ← important: your pages request this exact URL
   "./login.css",
   "./register.css",
   "./card.css",
@@ -30,9 +32,9 @@ const CORE_ASSETS = [
   "./learn.css",
   "./profile.css",
   "./feedback.css",
-  "./leaderboard.css",      // ← add if you have it
+  "./leaderboard.css",         // include if present
 
-  // JS
+  // JS (include versioned URL actually used by pages)
   "./login.js",
   "./register.js",
   "./card.js",
@@ -40,10 +42,11 @@ const CORE_ASSETS = [
   "./mission.js",
   "./learn.js",
   "./profile.js",
+  "./profile.js?v=th-2",       // ← important: profile.html uses this
   "./feedback.js",
   "./unlock.js",
   "./sponsor.js",
-  "./leaderboard.js",       // ← add if you have it
+  "./leaderboard.js",          // include if present
 
   // Icons
   "./assets/icons/pwa-192.png",
@@ -80,8 +83,7 @@ self.addEventListener("fetch", (event) => {
   if (url.origin === location.origin) {
     // Runtime cache card images (no need to list all files)
     const isCardImage =
-      req.destination === "image" ||
-      url.pathname.includes("/assets/cards/");
+      req.destination === "image" || url.pathname.includes("/assets/cards/");
 
     if (isCardImage) {
       event.respondWith(
@@ -97,7 +99,7 @@ self.addEventListener("fetch", (event) => {
       return;
     }
 
-    // Default cache-first for pages & assets
+    // Default cache-first for pages & static assets
     event.respondWith(caches.match(req).then((cached) => cached || fetch(req)));
     return;
   }
