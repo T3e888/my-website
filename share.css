@@ -1,5 +1,5 @@
 /* -------------------------------------------------------
-   share.css — light sidebar + shared UI blocks
+   share.css — red sidebar + shared UI blocks
    Works with global.css tokens: --panel, --text, --line, --brand, --radius, --shadow
 --------------------------------------------------------*/
 
@@ -16,20 +16,23 @@
   display:block; width:20px; height:2px; background: currentColor; border-radius:2px;
 }
 
-/* ============ Drawer / Sidebar ============ */
+/* ============ Drawer / Sidebar (RED) ============ */
 .sidebar{
   position: fixed; inset: 0 auto 0 0; width: 80vw; max-width: 320px;
   transform: translateX(-100%);
-  background: var(--panel); color: var(--text);
+  background: #e11d48;                 /* RED drawer */
+  color: #fff;
   padding: 18px; box-shadow: var(--shadow); z-index: 1300;
   transition: transform .2s ease;
+  border-top-right-radius: 18px;
+  border-bottom-right-radius: 18px;
 }
 .sidebar.open{ transform: translateX(0); }
 
 .close-btn{
   position: absolute; top: 8px; right: 10px; width: 36px; height: 36px;
-  border: 1px solid var(--line); background: var(--panel); color: var(--text);
-  border-radius: 10px;
+  border: 1px solid #ffd3d9; background: #fff; color: #b91c1c;
+  border-radius: 10px; font-weight: 800;
 }
 
 /* Backdrop behind sidebar */
@@ -42,21 +45,36 @@
 /* Brand (optional) */
 .brand{ display:flex; align-items:center; gap:.75rem; margin: 8px 0 12px; }
 .brand img{ width:32px; height:32px; border-radius:50%; }
-.brand-name{ font-weight:800 }
+.brand-name{ font-weight:800; color:#fff; }
 
-/* Menu (compatible with old .menu-item a and new .menu a) */
+/* ============ Menu (white pill buttons) ============ */
 .menu{ display:grid; gap:12px; margin: 12px 0; }
-.menu-item a,
-.menu a{
+
+/* Support BOTH markups: .menu a and .menu-item a */
+.menu a,
+.menu-item a{
   display:block; padding:12px 14px; border-radius:12px;
-  background: var(--panel); color: var(--text);
-  border: 1px solid var(--line); text-decoration:none;
+  background:#fff;                      /* white pill */
+  color:#111;
+  border: 1px solid #ffd3d9;            /* soft pink border */
+  text-decoration:none;
   box-shadow: var(--shadow);
+  font-weight:700;
 }
-.menu-item a.active,
-.menu a.active{
-  border-color: var(--brand);
-  box-shadow: 0 0 0 2px rgba(225,29,72,.12) inset;
+.menu a:hover,
+.menu-item a:hover{ filter:brightness(0.98); }
+
+.menu a.active,
+.menu-item a.active{
+  border-color:#fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.35) inset;
+}
+
+/* If you use a dedicated logout button inside the drawer */
+.sidebar .logout-btn{
+  display:inline-block; margin-top:8px; padding:10px 14px;
+  border-radius:12px; background:#fff; color:#b91c1c;
+  border:1px solid #ffd3d9; font-weight:800;
 }
 
 /* ============ Page chrome ============ */
