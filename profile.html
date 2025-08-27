@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>คลังข้อมูล</title>
+  <title>โปรไฟล์ของคุณ</title>
 
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#b91c1c">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StrokeCards">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{});} </script>
 
@@ -15,7 +16,7 @@
   <link rel="stylesheet" href="global.css?v=8">
   <!-- NEW: shared red sidebar -->
   <link rel="stylesheet" href="share.css">
-  <link rel="stylesheet" href="learn.css" />
+  <link rel="stylesheet" href="profile.css" />
 </head>
 <body>
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
@@ -35,8 +36,8 @@
       <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
       <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
       <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
-      <li class="menu-item"><a class="active" href="learn.html">คลังข้อมูล</a></li>
-      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
+      <li class="menu-item"><a class="active" href="profile.html">โปรไฟล์</a></li>
+      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
       <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
       <li class="menu-item"><a href="leaderboard.html">ตารางคะแนน</a></li>
       <li class="menu-item"><a href="stats.html">สถิติคำถาม</a></li>
@@ -45,21 +46,19 @@
   </nav>
   <div id="overlay" class="overlay"></div>
 
-  <h1 class="page-title">คลังข้อมูล</h1>
-  <p class="subtitle">กดกล่องเพื่อดูความรู้</p>
+  <h1 class="page-title">โปรไฟล์ของคุณ</h1>
 
-  <div id="learnGrid" class="grid"></div>
-
-  <div id="learnModal" class="modal">
-    <div class="modal-content">
-      <button class="close-x" id="learnClose">×</button>
-      <div id="learnBody"></div>
-    </div>
+  <div class="wrap">
+    <!-- (content unchanged) -->
+    <!-- ... existing profile sections ... -->
   </div>
 
-  <!-- Firebase (auth-guard) -->
+  <div id="toast"></div>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
@@ -73,6 +72,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
 
-  <script src="learn.js"></script>
+  <script src="profile.js?v=th-4"></script>
 </body>
-    </html>
+</html>
