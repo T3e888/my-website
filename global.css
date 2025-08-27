@@ -10,15 +10,25 @@
 :root{
   --bg-overlay: rgba(255,255,255,.75);  /* raise to .85 if text needs more contrast */
   --tile: 320px;                        /* pattern tile size */
+
+  /* Theme tokens (light) */
+  --panel: #ffffff;
+  --panel-2: #ffffff;
+  --line: #e6e6e6;
+  --text: #222;
+  --muted: #6b7280;
+  --brand: #e11d48;          /* app accent (red/pink) */
+  --onBrand: #ffffff;
+  --radius: 16px;
+  --shadow: 0 8px 24px rgba(0,0,0,.08);
 }
 
-/* Base document */
 html, body { height: 100%; }
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans Thai", "Noto Sans", sans-serif;
   background: #fbe9ea;                  /* soft pink base */
-  color: #222;
+  color: var(--text);
   color-scheme: light;                   /* force light controls */
 }
 
@@ -42,19 +52,6 @@ body::after{
   background: var(--bg-overlay);
   z-index: -1;
   pointer-events: none;
-}
-
-/* ---------- Theme tokens (light) ---------- */
-:root{
-  --panel: #ffffff;
-  --panel-2: #ffffff;
-  --line: #e6e6e6;
-  --text: #222;
-  --muted: #6b7280;
-  --brand: #e11d48;          /* app accent (red/pink) */
-  --onBrand: #ffffff;
-  --radius: 16px;
-  --shadow: 0 8px 24px rgba(0,0,0,.08);
 }
 
 a { color: #7c2d12; }
@@ -82,31 +79,71 @@ a:hover { opacity:.9; }
 }
 
 /* --------------- Sidebar ----------------- */
+/* Drawer shell — RED */
 .sidebar{
   position: fixed; inset: 0 auto 0 0; width: 80vw; max-width: 320px;
   transform: translateX(-100%);
-  background: var(--panel);
-  color: var(--text);
+  background: var(--brand);           /* RED drawer */
+  color: #fff;
   padding: 18px;
   box-shadow: var(--shadow);
   transition: transform .2s ease; z-index: 1100;
+  border-top-right-radius: 18px;
+  border-bottom-right-radius: 18px;
 }
 .sidebar.open{ transform: translateX(0); }
 
+/* Brand line inside the drawer */
 .sidebar .brand{ display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem; }
 .sidebar .brand img{ width:32px; height:32px; border-radius:50%; }
+.sidebar .brand div, .sidebar .brand-name{ color:#fff; font-weight:800; }
 
-.menu{ display:grid; gap:12px; margin: 12px 0; }
-.menu a{
+/* Menu list */
+.sidebar .menu{ display:grid; gap:12px; margin: 12px 0; }
+
+/* White pill buttons INSIDE the red drawer (new pages structure) */
+.sidebar .menu a{
   display:block; padding:12px 14px; border-radius:12px;
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--line);
+  background:#fff;                     /* white pills */
+  color:#111;
+  border: 1px solid #ffd3d9;           /* soft pink border */
   text-decoration:none;
+  box-shadow: var(--shadow);
+  font-weight:700;
 }
-.menu a.active{
-  border-color: var(--brand);
-  box-shadow: 0 0 0 2px rgba(225,29,72,.12) inset;
+
+/* "Active" look */
+.sidebar .menu a.active{
+  border-color:#fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.35) inset;
+}
+
+/* Old pages structure (ul > li.menu-item > a) */
+#sidebar .menu-item a{
+  display:block; padding:12px 14px; border-radius:12px;
+  background:#fff;
+  color:#111;
+  border:1px solid #ffd3d9;
+  text-decoration:none;
+  box-shadow: var(--shadow);
+  font-weight:700;
+}
+#sidebar .menu-item a.active{
+  border-color:#fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.35) inset;
+}
+
+/* Close / logout buttons in drawer */
+#close-sidebar,
+.sidebar .logout-btn{
+  display:inline-block;
+  margin-top:8px;
+  padding:10px 14px;
+  border-radius:12px;
+  background:#fff;
+  color:#b91c1c;
+  border:1px solid #ffd3d9;
+  font-weight:800;
 }
 
 /* Backdrop behind the drawer */
@@ -145,8 +182,6 @@ a:hover { opacity:.9; }
 }
 .tile:hover{ transform: translateY(-2px); background: #fff; }
 .tile:active{ transform: translateY(0); }
-
-/* Title-ish tile */
 .title-tile{ font-weight:800; font-size:1.1rem; }
 
 /* Subtle info block */
@@ -168,12 +203,10 @@ a:hover { opacity:.9; }
   box-shadow: var(--shadow);
 }
 .btn[disabled]{ opacity:.55; }
-
 .primary{
   background: var(--brand); color: var(--onBrand);
   border-color: var(--brand);
 }
-
 .big-actions{ display:grid; gap:14px; justify-items:center; }
 .big-actions .btn{ width:min(420px, 92%); }
 
