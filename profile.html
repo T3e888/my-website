@@ -1,52 +1,42 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>โปรไฟล์ของคุณ</title>
-  <!-- PWA: Manifest & Icons (GitHub Pages subpath-safe) -->
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#b91c1c">
+  <title>คลังข้อมูล</title>
 
-<!-- Favicon (optional) -->
-<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#b91c1c">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{});} </script>
 
-<!-- iOS Add to Home Screen -->
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="StrokeCards">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- (Harmless hint for older Android Chrome) -->
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="StrokeCards">
-
-<!-- Service Worker (relative path, so scope is /my-website/) -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(err =>
-      console.warn('SW register failed:', err)
-    );
-  }
-</script>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="global.css?v=8">
-  <link rel="stylesheet" href="profile.css" />
+  <!-- NEW: shared red sidebar -->
+  <link rel="stylesheet" href="share.css">
+  <link rel="stylesheet" href="learn.css" />
 </head>
 <body>
-  <!-- Sidebar -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
   <nav id="sidebar" class="sidebar">
-    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">×</button>
+
+    <!-- NEW brand row -->
+    <div class="brand">
+      <img src="assets/logo.png" alt="Logo">
+      <div class="brand-name">Stroke Card Adventure</div>
+    </div>
+
     <ul class="menu">
       <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
       <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
       <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
       <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
-      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
-      <li class="menu-item"><a href="profile.html" class="active">โปรไฟล์</a></li>
+      <li class="menu-item"><a class="active" href="learn.html">คลังข้อมูล</a></li>
+      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
       <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
       <li class="menu-item"><a href="leaderboard.html">ตารางคะแนน</a></li>
       <li class="menu-item"><a href="stats.html">สถิติคำถาม</a></li>
@@ -54,84 +44,22 @@
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
-  <!-- /Sidebar -->
 
-  <h1 class="page-title">โปรไฟล์ของคุณ</h1>
+  <h1 class="page-title">คลังข้อมูล</h1>
+  <p class="subtitle">กดกล่องเพื่อดูความรู้</p>
 
-  <div class="wrap">
-    <!-- Overview -->
-    <section class="card">
-      <div class="row">
-        <div class="col">
-          <div class="big" id="displayName">—</div>
-          <div class="muted">UID: <span id="uid">—</span></div>
-          <div class="muted">อีเมล: <span id="email">—</span></div>
+  <div id="learnGrid" class="grid"></div>
 
-          <!-- UPDATED stats line -->
-          <div class="stats">
-            <b>คะแนน:</b> <span id="points">0</span>
-            <span class="pill"><span id="cardsCount">0</span> ใบ</span>
-            <span class="pill">แบบทดสอบ: <span id="quizCount">0</span> ครั้ง</span>
-            <span class="pill">🔥สตรีค: <span id="quizStreak">0</span> วัน</span>
-          </div>
-        </div>
-
-        <div class="col">
-          <label>เกี่ยวกับฉัน</label>
-          <textarea id="about" placeholder="พิมพ์แนะนำตัวสั้น ๆ..."></textarea>
-          <div class="actions">
-            <button class="btn btn-red" id="saveAboutBtn">บันทึก</button>
-            <span class="muted" id="saveAboutMsg"></span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Username -->
-    <section class="card">
-      <div class="row">
-        <div class="col">
-          <label>ชื่อผู้ใช้ (แสดงในแอป)</label>
-          <input id="username" type="text" placeholder="yourname" />
-          <div class="actions">
-            <button class="btn btn-red" id="saveUserBtn">อัปเดตชื่อผู้ใช้</button>
-            <span class="muted" id="saveUserMsg"></span>
-          </div>
-        </div>
-        <div class="col">
-          <label>การทำงานด่วน</label>
-          <div class="actions">
-            <button class="btn btn-grey" id="signOutBtn">ออกจากระบบ</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Change password -->
-    <section class="card">
-      <div class="row">
-        <div class="col">
-          <label>รหัสผ่านปัจจุบัน</label>
-          <input id="curPass" type="password" autocomplete="current-password" />
-        </div>
-        <div class="col">
-          <label>รหัสผ่านใหม่</label>
-          <input id="newPass" type="password" autocomplete="new-password" />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-red" id="changePassBtn">เปลี่ยนรหัสผ่าน</button>
-        <span class="muted" id="passMsg"></span>
-      </div>
-    </section>
+  <div id="learnModal" class="modal">
+    <div class="modal-content">
+      <button class="close-x" id="learnClose">×</button>
+      <div id="learnBody"></div>
+    </div>
   </div>
 
-  <div id="toast"></div>
-
-  <!-- Firebase -->
+  <!-- Firebase (auth-guard) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
@@ -145,7 +73,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- JS (bump version to avoid cache) -->
-  <script src="profile.js?v=th-4"></script>
+  <script src="learn.js"></script>
 </body>
-  </html>
+    </html>
