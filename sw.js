@@ -1,6 +1,6 @@
 // sw.js — Service Worker for Stroke Card Adventure
 // Bump this version whenever you change cached files:
-const CACHE = "sca-v10";
+const CACHE = "sca-v11";   // ← bumped from v10 to v11
 
 const CORE_ASSETS = [
   // Root / PWA
@@ -8,7 +8,7 @@ const CORE_ASSETS = [
   "./index.html",
   "./manifest.webmanifest",
 
-  // Pages (existing)
+  // Pages
   "./login.html",
   "./register.html",
   "./card.html",
@@ -22,7 +22,7 @@ const CORE_ASSETS = [
   "./leaderboard.html",
   "./stats.html",
 
-  // NEW pages (play + cards hub)
+  // New pages (play + cards hub)
   "./play-menu.html",
   "./mycards.html",
   "./mycharacter.html",
@@ -30,22 +30,22 @@ const CORE_ASSETS = [
   "./merge.html",
   "./mutation.html",
   "./collection.html",
-  "./play.html",            // keep if you added a placeholder/game page
+  "./play.html",
 
-  // CSS (include the exact URLs your pages load)
+  // CSS  (exact URLs your pages load)
   "./global.css",
   "./global.css?v=1",
   "./login.css",
   "./register.css",
   "./card.css",
-  "./share.css",
+  "./share.css",       // ← updated file
   "./mission.css",
   "./learn.css",
   "./profile.css",
   "./feedback.css",
   "./leaderboard.css",
 
-  // JS (include exact URLs your pages load)
+  // JS
   "./app.js",
   "./login.js",
   "./register.js",
@@ -60,7 +60,7 @@ const CORE_ASSETS = [
   "./sponsor.js",
   "./leaderboard.js",
 
-  // Icons / images used by head or UI
+  // Icons / images
   "./assets/icons/pwa-192.png",
   "./assets/icons/pwa-512.png",
   "./assets/icons/favicon-16.png",
@@ -103,7 +103,6 @@ self.addEventListener("fetch", (event) => {
 
   // Same-origin
   if (url.origin === location.origin) {
-    // Runtime cache for images (no need to enumerate file names)
     const isImage =
       req.destination === "image" ||
       /\/assets\/(cards|icons|partners)\//.test(url.pathname);
@@ -127,6 +126,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cross-origin (Firebase/Auth/etc.): network-first with cache fallback
+  // Cross-origin: network-first with cache fallback
   event.respondWith(fetch(req).catch(() => caches.match(req)));
 });
