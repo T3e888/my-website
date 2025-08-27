@@ -1,30 +1,18 @@
-/* Reuse your sidebar styles (copy from mission.css top block) */
-.sidebar-toggle{position:fixed;top:24px;left:24px;z-index:1201;background:#e53935;border:none;border-radius:10px;width:48px;height:48px;box-shadow:0 2px 12px rgba(0,0,0,.08);cursor:pointer;display:flex;align-items:center;justify-content:center}
-.menu-icon{display:flex;flex-direction:column;gap:7px}
-.menu-icon span{display:block;width:26px;height:4px;background:#fff;border-radius:3px}
-#sidebar{position:fixed;top:0;left:0;height:100vh;width:220px;background:#e53935;box-shadow:3px 0 16px rgba(0,0,0,.18);padding:30px 0 0;z-index:1300;transform:translateX(-105%);transition:transform .3s cubic-bezier(.5,1.8,.6,.9);border-top-right-radius:24px;border-bottom-right-radius:24px}
-#sidebar.open{transform:translateX(0)}
-#sidebar .close-btn{position:absolute;top:14px;right:16px;font-size:2.1rem;color:#fff;background:none;border:none;cursor:pointer}
-#sidebar .menu{margin:48px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:22px;align-items:flex-start}
-#sidebar .menu-item a{color:#fff;font-size:1.16rem;text-decoration:none;font-weight:500;padding:8px 36px;border-radius:10px;display:block;transition:background .13s}
-#sidebar .menu-item a:hover,#sidebar .menu-item.active a{background:#fff2}
-#logout-link a{color:#ffcdd2!important;font-weight:600}
-#logout-link a:hover{background:#b71c1c!important;color:#fff!important}
-.overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(80,10,10,.13);z-index:1200;opacity:0;pointer-events:none;transition:opacity .25s}
-.overlay.active{opacity:1;pointer-events:auto}
-@media (max-width:600px){#sidebar{width:85vw;border-radius:0 18px 18px 0}.sidebar-toggle{top:14px;left:14px;width:42px;height:42px}}
-body{padding-left:0!important}
-/* END sidebar */
+/* learn.css — page styles only (sidebar now from share.css) */
 
-/* Page */
 :root{--red:#e53935;--red-2:#d32f2f}
-body{margin:0;min-height:100vh;background:#fff;color:#333;font-family:'Noto Sans Thai','Noto Sans',sans-serif}
+body{
+  margin:0;min-height:100vh;background:#fff;color:#333;
+  font-family:'Noto Sans Thai','Noto Sans',sans-serif
+}
 .page-title{margin:32px 0 6px;text-align:center;color:var(--red-2);font-size:2.3rem;font-weight:900}
 .subtitle{text-align:center;color:#888;margin:0 0 18px}
 
 /* Cards grid */
-.grid{display:grid;gap:16px;width:92vw;max-width:820px;margin:14px auto 64px;
-  grid-template-columns:repeat(2,1fr)}
+.grid{
+  display:grid;gap:16px;width:92vw;max-width:820px;margin:14px auto 64px;
+  grid-template-columns:repeat(2,1fr)
+}
 @media (max-width:640px){.grid{grid-template-columns:1fr}}
 .card{
   background:#fff;border:2px solid #ffcdd2;border-radius:16px;box-shadow:0 8px 24px #e5393514;
@@ -37,7 +25,7 @@ body{margin:0;min-height:100vh;background:#fff;color:#333;font-family:'Noto Sans
 /* Modal */
 .modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:2000}
 .modal.show{display:flex}
-.modal-content{background:#fff;border-radius:16px;max-width:720px;width:92vw;padding:18px 16px 14px}
+.modal-content{background:#fff;border-radius:16px;max-width:720px;width:92vw;padding:18px 16px 14px;position:relative}
 .close-x{position:absolute;right:12px;top:10px;background:transparent;border:none;font-size:28px;color:#e53935;cursor:pointer}
 .modal-content h2{color:#d32f2f;margin:0 0 8px}
 .modal-content p{line-height:1.5;margin:.4rem 0}
