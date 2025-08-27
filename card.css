@@ -1,5 +1,5 @@
 /* =========================================================
-   card.css — Collection page + shared sidebar + modal
+   card.css — Collection page (sidebar now from share.css)
    ========================================================= */
 
 /* ---------- Theme ---------- */
@@ -10,51 +10,6 @@
   --soft2: #ffebee;     /* soft bg (borrowed) */
   --ink:   #333;
   --muted: #888;
-}
-
-/* ---------- Sidebar (universal) ---------- */
-.sidebar-toggle {
-  position: fixed; top: 24px; left: 24px; z-index: 1201;
-  background: var(--brand); border: none; border-radius: 10px;
-  width: 48px; height: 48px; box-shadow: 0 2px 12px rgba(0,0,0,.08);
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-}
-.menu-icon { display: flex; flex-direction: column; gap: 7px; }
-.menu-icon span { display: block; width: 26px; height: 4px; background: #fff; border-radius: 3px; }
-
-#sidebar {
-  position: fixed; top: 0; left: 0; height: 100vh; width: 220px;
-  background: var(--brand); box-shadow: 3px 0 16px rgba(0,0,0,.18);
-  padding: 30px 0 0; z-index: 1300;
-  transform: translateX(-105%); transition: transform .3s cubic-bezier(.5,1.8,.6,.9);
-  border-top-right-radius: 24px; border-bottom-right-radius: 24px;
-}
-#sidebar.open { transform: translateX(0); }
-#sidebar .close-btn {
-  position: absolute; top: 14px; right: 16px; font-size: 2.1rem; color: #fff;
-  background: none; border: none; cursor: pointer;
-}
-#sidebar .menu {
-  margin: 48px 0 0; padding: 0; list-style: none;
-  display: flex; flex-direction: column; gap: 22px; align-items: flex-start;
-}
-#sidebar .menu-item a {
-  color: #fff; font-size: 1.16rem; text-decoration: none; font-weight: 500;
-  padding: 8px 36px; border-radius: 10px; display: block; transition: background .13s;
-}
-#sidebar .menu-item a:hover, #sidebar .menu-item a.active { background: #ffffff22; }
-#logout-link a { color: #ffcdd2 !important; font-weight: 600; }
-#logout-link a:hover { background: #b71c1c !important; color: #fff !important; }
-
-.overlay {
-  position: fixed; inset: 0; background: rgba(80,10,10,.13); z-index: 1200;
-  opacity: 0; pointer-events: none; transition: opacity .25s;
-}
-.overlay.active { opacity: 1; pointer-events: auto; }
-
-@media (max-width: 600px) {
-  #sidebar { width: 85vw; border-radius: 0 18px 18px 0; }
-  .sidebar-toggle { top: 14px; left: 14px; width: 42px; height: 42px; }
 }
 
 /* ---------- Page base ---------- */
@@ -99,46 +54,36 @@ body{
 .card:active{ transform: scale(.985); }
 
 /* LOCKED state */
-.card.locked .lock-icon{
-  font-size: 2.5em;
-  color: #bdbdbd;
-}
+.card.locked .lock-icon{ font-size: 2.5em; color: #bdbdbd; }
 
-/* OWNED state (unlocked) */
+/* OWNED state */
 .card.unlocked{
-  background: #fff;                      /* image is set inline via JS background-image */
-  background-size: cover;
-  background-position: center;
-  border: 2.5px solid #e57373;           /* dark red border = owner */
+  background: #fff;
+  background-size: cover; background-position: center;
+  border: 2.5px solid #e57373;
   box-shadow: 0 4px 18px rgba(229,115,115,.5);
 }
 
-/* Optional: BORROWED look (if you add .borrowed class later) */
+/* Optional: BORROWED look */
 .card.borrowed{
-  background: #fff;
-  background-size: cover;
-  background-position: center;
-  border: 3px solid var(--soft);         /* light red border = borrowed */
+  background: #fff; background-size: cover; background-position: center;
+  border: 3px solid var(--soft);
   box-shadow: 0 6px 18px rgba(255,205,210,.7);
 }
 
 /* Number badge */
 .card-num{
   position: absolute; top: 9px; right: 13px;
-  background: #fff8; color: #b71c1c;
-  font-weight: 600; font-size: 1.08em;
+  background: #fff8; color: #b71c1c; font-weight: 600; font-size: 1.08em;
   padding: 2px 10px; border-radius: 12px; z-index: 2;
 }
 
 /* ---------- Modal ---------- */
 .modal{
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
-  display: none; align-items: center; justify-content: center;
-  z-index: 2000;
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: none; align-items: center; justify-content: center; z-index: 2000;
 }
 .modal.active{ display: flex; }
-
 .modal .modal-content{
   background: #fff; color: #b71c1c;
   border-radius: 16px; padding: 28px 26px; min-width: 240px; max-width: 92vw; text-align: center;
@@ -146,45 +91,15 @@ body{
 }
 .modal .modal-close{
   display: inline-block; margin-top: 16px; padding: 10px 26px;
-  background: #e57373; color: #fff; border: none;
-  border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
-  }
-/* Corner logo (kept small) */
+  background: #e57373; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
+}
+
+/* Corner logo */
 .corner-logo{
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  width: 44px;         /* small on phones */
-  height: 44px;
-  z-index: 1400;
-  display: block;
+  position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; z-index: 1400; display: block;
 }
-@media (min-width: 480px){
-  .corner-logo{ width: 56px; height: 56px; } /* slightly bigger on larger screens */
-}
+@media (min-width: 480px){ .corner-logo{ width: 56px; height: 56px; } }
 .corner-logo img{
   width: 100%; height: 100%; object-fit: contain;
-  border-radius: 50%;
-  background: #fff; padding: 4px;
-  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+  border-radius: 50%; background: #fff; padding: 4px; box-shadow: 0 4px 14px rgba(0,0,0,.18);
 }
-
-/* Sidebar brand row (compact) */
-#sidebar .brand{
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 20px 14px;
-  border-bottom: 1px solid #ffffff26;
-}
-#sidebar .brand img{
-  width: 40px; height: 40px;       /* << smaller */
-  border-radius: 50%;
-  background: #fff; padding: 3px;
-  box-shadow: 0 3px 10px rgba(0,0,0,.2);
-}
-#sidebar .brand-name{
-  color: #fff; font-weight: 900; letter-spacing: .2px;
-  font-size: 1rem; line-height: 1.1;
-}
-
-/* Safety: if a raw <img> was left inside the sidebar, hide it */
-#sidebar > img { display: none; }
