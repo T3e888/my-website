@@ -1,81 +1,39 @@
 /* -------------------------------------------------------
-   share.css — unified red sidebar (auto brand fallback)
-   - Red drawer
-   - Brand row with logo + name (HTML .brand OR CSS fallback)
-   - Text-only menu links (no boxes)
+   share.css — red sidebar + TEXT-ONLY menu items
+   (no boxes, no borders)
 --------------------------------------------------------*/
 
 /* ============ Hamburger button ============ */
 .sidebar-toggle{
   position: fixed; top: 14px; left: 14px; z-index: 1200;
-  width: 44px; height: 44px; border: 1px solid transparent;
-  background: #e53935; color: #fff;
+  width: 44px; height: 44px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text);
   border-radius: 12px; display: grid; place-items: center;
-  box-shadow: 0 6px 18px rgba(229,57,53,.28);
+  box-shadow: var(--shadow);
 }
-.menu-icon{ display: grid; gap: 5px; }
+.menu-icon{ display: grid; gap: 4px; }
 .menu-icon span{
-  display:block; width:22px; height:3px; background: currentColor; border-radius:2px;
+  display:block; width:20px; height:2px; background: currentColor; border-radius:2px;
 }
 
-/* ============ Drawer / Sidebar ============ */
+/* ============ Drawer / Sidebar (RED) ============ */
 .sidebar{
   position: fixed; inset: 0 auto 0 0; width: 80vw; max-width: 320px;
   transform: translateX(-100%);
-  background: #e53935; color: #fff;
-  padding: 18px 18px 22px; box-shadow: 3px 0 22px rgba(0,0,0,.2); z-index: 1300;
-  transition: transform .26s ease; border-top-right-radius: 20px; border-bottom-right-radius:20px;
+  background: #e11d48;                 /* RED drawer */
+  color: #fff;
+  padding: 18px; box-shadow: var(--shadow); z-index: 1300;
+  transition: transform .2s ease;
+  border-top-right-radius: 18px;
+  border-bottom-right-radius: 18px;
 }
 .sidebar.open{ transform: translateX(0); }
 
 .close-btn{
-  position: absolute; top: 12px; right: 12px; width: 36px; height: 36px;
-  border: 1px solid #ffffff55; background: #fff; color: #e53935; font-size: 18px;
-  border-radius: 12px; cursor: pointer; display:grid;place-items:center;
-  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  position: absolute; top: 8px; right: 10px; width: 36px; height: 36px;
+  border: 1px solid #ffd3d9; background: #fff; color: #b91c1c;
+  border-radius: 10px; font-weight: 800;
 }
-
-/* -------- Brand (preferred: real HTML block) -------- */
-.brand{ display:flex; align-items:center; gap:.75rem; margin: 8px 0 12px; padding-right: 46px; }
-.brand img{
-  width: 44px; height: 44px; border-radius:50%;
-  background:#fff; padding:4px; box-shadow: 0 4px 12px rgba(0,0,0,.25);
-}
-.brand-name{ font-weight:900; font-size:1.05rem; letter-spacing:.2px }
-
-/* -------- Auto-brand fallback (if .brand is missing) --------
-   Shows logo + name purely with CSS so every page gets branding.
-   Supported in modern Chrome/Edge/Safari. */
-.sidebar:not(:has(.brand)){ padding-top: 74px; }
-.sidebar:not(:has(.brand))::before{
-  content: "";
-  position: absolute; top: 16px; left: 18px; width: 44px; height: 44px;
-  background: #fff url("assets/logo.png") center/contain no-repeat;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0,0,0,.25);
-}
-.sidebar:not(:has(.brand))::after{
-  content: "Stroke Card Adventure";
-  position: absolute; top: 24px; left: 72px;
-  color: #fff; font-weight: 900; font-size: 1.05rem; letter-spacing: .2px;
-}
-
-/* -------- Menu: text-only (no white boxes) -------- */
-.menu{ display:grid; gap:14px; margin: 14px 0; padding: 0; list-style:none; }
-.menu-item a,
-.sidebar .menu a{
-  display:block; padding:4px 4px; border-radius:8px;
-  background: transparent !important; color: #fff !important;
-  border: 0 !important; text-decoration:none;
-  font-weight:800; font-size:1.05rem; box-shadow:none !important;
-}
-.menu-item a:hover,
-.sidebar .menu a:hover{ text-decoration:underline; text-underline-offset: 3px; }
-.menu-item a.active,
-.sidebar .menu a.active{
-  text-decoration: underline; text-underline-offset: 3px;
-}
-#logout-link a{ color:#ffe5e8 !important; font-weight:900; }
 
 /* Backdrop behind sidebar */
 .overlay{
@@ -84,11 +42,91 @@
 }
 .overlay.active{ opacity: 1; pointer-events: all; }
 
-/* Small helpers (optional) */
-.page-title{ margin: 76px 16px 6px; font-weight: 900; font-size: clamp(1.5rem, 3.6vw, 2.2rem); color: #b91c1c; }
-.panel{ background:#fff; border:1px solid #eee; border-radius:14px; margin: 12px 16px; padding: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+/* Brand */
+.brand{ display:flex; align-items:center; gap:.75rem; margin: 8px 0 12px; }
+.brand img{ width:32px; height:32px; border-radius:50%; }
+.brand-name{ font-weight:800; color:#fff; }
 
-@media (max-width: 600px){
-  .sidebar{ width: 85vw; border-radius: 0 16px 16px 0; }
-  .sidebar-toggle{ width:42px; height:42px; }
+/* ============ TEXT-ONLY Menu ============ */
+.menu{ display:grid; gap:12px; margin: 12px 0; }
+
+/* Support BOTH markups: .menu a and .menu-item a */
+.menu a,
+.menu-item a{
+  display:block;
+  padding: 6px 2px;                     /* slimmer; feels like text */
+  background: transparent;              /* <-- no box */
+  color: #fff;
+  border: none;                          /* <-- no border */
+  box-shadow: none;                      /* <-- no shadow */
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: .2px;
 }
+
+/* hover: very subtle tint, still feels like text */
+.menu a:hover,
+.menu-item a:hover{
+  background: rgba(255,255,255,.10);
+  border-radius: 8px;
+}
+
+/* active: underline only (no light box) */
+.menu a.active,
+.menu-item a.active{
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* If you have a logout button inside the drawer, make it text-like too */
+.sidebar .logout-btn{
+  padding: 6px 2px;
+  background: transparent;
+  color: #ffe4e6;
+  border: none;
+  box-shadow: none;
+  font-weight: 800;
+  text-align: left;
+}
+
+/* ============ Page chrome ============ */
+.page-title{
+  margin: 76px 16px 6px;           /* leave room for hamburger */
+  font-weight: 900; font-size: clamp(1.5rem, 3.6vw, 2.2rem);
+  color: #b91c1c; display:flex; align-items:center; gap:.6rem;
+}
+.subtitle{ margin: 0 16px 12px; color:#6b7280 }
+
+/* Panel card used by many pages */
+.panel{
+  background:#fff; border:1px solid var(--line); border-radius:14px;
+  margin: 12px 16px; padding: 14px; box-shadow: var(--shadow);
+}
+
+/* Small helpers used around the app */
+.hint{ color:#6b7280; font-size:.95rem }
+.grid{ display:grid; gap:14px }
+
+/* Modal */
+.modal{
+  position: fixed; inset: 0; display:none; place-items:center; z-index:1500;
+  background: rgba(0,0,0,.45);
+}
+.modal.show{ display:grid; }
+.modal .modal-content{
+  width: min(620px, 92vw);
+  background:#fff; border:1px solid var(--line); border-radius:16px;
+  padding:16px; box-shadow: var(--shadow);
+}
+.close-x{
+  position:absolute; right:12px; top:10px; width:36px; height:36px;
+  border:1px solid var(--line); background:#fff; border-radius:10px;
+}
+
+/* Inputs/buttons helpers (unchanged) */
+.textarea{ width:100%; min-height:110px; padding:10px 12px; border:1px solid var(--line);
+           border-radius:12px; background:#fff; color:var(--text); }
+.btn{ width:auto; display:inline-flex; align-items:center; justify-content:center; }
+.btn-red{ background: var(--brand); color: #fff; border:1px solid var(--brand) }
+.btn-grey{ background:#f3f4f6; border:1px solid var(--line); color:#111827 }
