@@ -1,6 +1,6 @@
 // sw.js — Service Worker for Stroke Card Adventure
 // Bump this version whenever you change cached files:
-const CACHE = "sca-v11";   // ← bumped from v10 to v11
+const CACHE = "sca-v14";   // ← bumped from v10 to v11
 
 const CORE_ASSETS = [
   // Root / PWA
