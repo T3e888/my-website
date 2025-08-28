@@ -186,10 +186,11 @@
 .modal{
   position: fixed; inset: 0; display:none; place-items:center; z-index:1500;
   background: rgba(0,0,0,.45);
-   /* Allow either .show or .active to display the modal */
-.modal.active{ display:grid; }
 }
 .modal.show{ display:grid; }
+/* Allow either .show or .active to display the modal */
+.modal.active{ display:grid; }
+
 .modal .modal-content{
   width: min(620px, 92vw);
   background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:16px;
@@ -206,4 +207,4 @@
 @media (max-width: 600px){
   .sidebar{ width: 85vw; border-radius: 0 18px 18px 0; }
   .sidebar-toggle{ top: 14px; left: 14px; width: 42px; height: 42px; }
-     }
+   }
