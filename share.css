@@ -99,7 +99,7 @@
   text-align: left;
 }
 
-/* ============ Page chrome (kept from your design) ============ */
+/* ============ Page chrome ============ */
 .page-title{
   margin: 76px 16px 6px;           /* leave room for hamburger */
   font-weight: 900; font-size: clamp(1.5rem, 3.6vw, 2.2rem);
@@ -147,3 +147,55 @@
   .sidebar{ width: 85vw; border-radius: 0 18px 18px 0; }
   .sidebar-toggle{ top: 14px; left: 14px; width: 42px; height: 42px; }
 }
+
+/* ======================================================
+   Share page fixes (owned grid, borrowed list, log, pink input)
+====================================================== */
+
+/* Center the main title */
+.page-title { text-align: center; }
+
+/* Pink input */
+.pink-input{
+  width:100%; padding:12px 14px; border-radius:12px;
+  background:#ffebee; border:2px solid #ffcdd2; color:#b71c1c;
+  font-weight:800;
+}
+
+/* Owned cards grid + tiles */
+.grid.cards{ grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:12px; margin-top:12px; }
+.cardTile, .card-tile{
+  position:relative; border:2px solid #ffd3d9; border-radius:14px;
+  overflow:hidden; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,.06);
+}
+.cardTile .cover, .card-tile .cover{
+  width:100%; aspect-ratio:5/7; display:block; object-fit:cover; background:#fafafa;
+}
+.cardTile .cap, .card-tile .cap{
+  position:absolute; left:8px; bottom:8px; background:#fff; color:#b71c1c;
+  border-radius:999px; padding:2px 8px; font-weight:800; font-size:.9rem;
+}
+
+/* Borrowed list */
+.borrowed-list{ display:grid; gap:10px; }
+.borrowed{
+  display:flex; gap:12px; align-items:center;
+  border:1px solid #f4a9b4; border-left:5px solid #e11d48;
+  border-radius:12px; padding:10px 12px; background:#fff;
+}
+.borrowed .thumb{
+  width:60px; aspect-ratio:5/7; object-fit:cover; border-radius:10px;
+  border:1px solid #ffd3d9; background:#fafafa;
+}
+.borrowed .meta{ flex:1; color:#b91c1c; font-weight:700; }
+.borrowed .timer{ color:#6b7280; font-weight:600; }
+
+/* Activity log */
+.log-list{ display:grid; gap:10px; }
+.log-item{
+  background:#fff; border:1px solid #f4a9b4; border-left:5px solid #e11d48;
+  border-radius:10px; padding:10px 12px; color:#b71c1c; font-weight:700;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.log-item .badge{ padding:3px 8px; border-radius:999px; background:#fdecea; color:#b71c1c; font-size:12px; font-weight:800; }
+.log-item .badge.converted{ background:#e3f2e8; color:#1b5e20; }
