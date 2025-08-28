@@ -4,28 +4,30 @@
   <meta charset="UTF-8" />
   <title>โปรไฟล์ของคุณ</title>
 
+  <!-- PWA basics -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#b91c1c">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StrokeCards">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <script> if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{});} </script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
 
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Styles -->
   <link rel="stylesheet" href="global.css?v=8">
-  <!-- NEW: shared red sidebar -->
-  <link rel="stylesheet" href="share.css">
-  <link rel="stylesheet" href="profile.css" />
+  <!-- Reuse the red sidebar + page chrome -->
+  <link rel="stylesheet" href="share.css?v=prelogo">
+  <!-- Page-only styles -->
+  <link rel="stylesheet" href="profile.css?v=2">
 </head>
 <body>
+  <!-- Sidebar -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">×</button>
 
-    <!-- NEW brand row -->
     <div class="brand">
       <img src="assets/logo.png" alt="Logo">
       <div class="brand-name">Stroke Card Adventure</div>
@@ -45,14 +47,105 @@
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
+  <!-- /Sidebar -->
 
   <h1 class="page-title">โปรไฟล์ของคุณ</h1>
 
   <div class="wrap">
-    <!-- (content unchanged) -->
-    <!-- ... existing profile sections ... -->
+    <!-- บัญชีพื้นฐาน -->
+    <div class="card">
+      <h2>ข้อมูลบัญชี</h2>
+      <div class="row">
+        <div class="col">
+          <div class="muted">UID</div>
+          <div id="uid" class="big">—</div>
+        </div>
+        <div class="col">
+          <div class="muted">อีเมล</div>
+          <div id="email" class="big">—</div>
+        </div>
+        <div class="col">
+          <div class="muted">ชื่อสำหรับแสดง</div>
+          <div id="displayName" class="big">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ชื่อผู้ใช้ (ใช้รับการ์ด) -->
+    <div class="card">
+      <h2>ชื่อผู้ใช้ (ใช้รับการ์ด)</h2>
+      <label for="username">ชื่อผู้ใช้ (ตัวพิมพ์เล็ก)</label>
+      <input id="username" type="text" placeholder="เช่น portokorkai" />
+      <div class="actions">
+        <button id="saveUserBtn" class="btn btn-red">บันทึกชื่อผู้ใช้</button>
+        <span id="saveUserMsg" class="muted"></span>
+      </div>
+    </div>
+
+    <!-- เกี่ยวกับฉัน -->
+    <div class="card">
+      <h2>เกี่ยวกับฉัน</h2>
+      <label for="about">ข้อความแนะนำตัว</label>
+      <textarea id="about" placeholder="สั้น ๆ เกี่ยวกับตัวคุณ"></textarea>
+      <div class="actions">
+        <button id="saveAboutBtn" class="btn btn-grey">บันทึก</button>
+        <span id="saveAboutMsg" class="muted"></span>
+      </div>
+    </div>
+
+    <!-- เปลี่ยนรหัสผ่าน -->
+    <div class="card">
+      <h2>เปลี่ยนรหัสผ่าน</h2>
+      <div class="row">
+        <div class="col">
+          <label for="curPass">รหัสผ่านปัจจุบัน</label>
+          <input id="curPass" type="password" autocomplete="current-password">
+        </div>
+        <div class="col">
+          <label for="newPass">รหัสผ่านใหม่</label>
+          <input id="newPass" type="password" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="actions">
+        <button id="changePassBtn" class="btn btn-red">เปลี่ยนรหัสผ่าน</button>
+        <span id="passMsg" class="muted"></span>
+      </div>
+    </div>
+
+    <!-- สถิติ -->
+    <div class="card">
+      <h2>สถิติ</h2>
+      <div class="row">
+        <div class="col">
+          <div class="muted">แต้มสะสม</div>
+          <div id="points" class="big">0</div>
+        </div>
+        <div class="col">
+          <div class="muted">ทำแบบทดสอบทั้งหมด</div>
+          <div id="quizCount" class="big">0</div>
+        </div>
+        <div class="col">
+          <div class="muted">สตรีควันนี้</div>
+          <div id="quizStreak" class="big">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- การ์ดของฉัน -->
+    <div class="card">
+      <h2>การ์ดของฉัน <span class="pill"><span id="cardsCount">0</span> ใบ</span></h2>
+      <div id="cardsGrid" class="grid"></div>
+    </div>
+
+    <!-- ปุ่มออกจากระบบ -->
+    <div class="card">
+      <div class="actions">
+        <button id="signOutBtn" class="btn btn-grey">ออกจากระบบ</button>
+      </div>
+    </div>
   </div>
 
+  <!-- Toast -->
   <div id="toast"></div>
 
   <!-- Firebase -->
@@ -72,6 +165,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
 
-  <script src="profile.js?v=th-4"></script>
+  <script src="profile.js?v=th-5"></script>
 </body>
 </html>
