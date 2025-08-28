@@ -26,15 +26,12 @@ function setupSidebar(){
   });
 }
 
-/* ---------- modal (uses .show to match CSS) ---------- */
+/* ---------- modal ---------- */
 function showModal(msg, cb){
   const modal = $("modal");
   modal.innerHTML = `<div class="modal-content">${msg}<br><button class="ok">ตกลง</button></div>`;
-  modal.classList.add("show");
-  modal.querySelector(".ok").onclick = ()=>{
-    modal.classList.remove("show");
-    cb?.();
-  };
+  modal.classList.add("active");
+  modal.querySelector(".ok").onclick = ()=>{ modal.classList.remove("active"); cb?.(); };
 }
 
 /* ---------- helpers ---------- */
@@ -51,7 +48,7 @@ async function getUsernameByUid(uid){
   }catch{ return uid.slice(0,6); }
 }
 
-/* ---------- render owned grid ---------- */
+/* ---------- render owned grid (UPDATED: visible size + jpg fallback) ---------- */
 function renderOwnedCards(cards){
   const grid = $("ownedGrid");
   grid.innerHTML = "";
@@ -64,9 +61,11 @@ function renderOwnedCards(cards){
     const n = Number(cid.replace('card',''));
     const tile = document.createElement("div");
     tile.className = "cardTile";
-    tile.style.backgroundImage = `url(assets/cards/${cid}.png)`;
     tile.title = `แบ่งปัน ${cid}`;
-    tile.innerHTML = `<div class="cap">การ์ด ${n}</div>`;
+    tile.innerHTML = `
+      <img class="cover" src="assets/cards/${cid}.png"
+           onerror="this.onerror=null;this.src='assets/cards/${cid}.jpg'">
+      <div class="cap">การ์ด ${n}</div>`;
     tile.onclick = ()=> onShareClick(currentUid, cid);
     grid.appendChild(tile);
   }
@@ -105,7 +104,6 @@ async function onShareClick(fromUid, cardId){
     const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
     if (toCards.includes(cardId)){ showModal("ผู้รับเป็นเจ้าของการ์ดนี้อยู่แล้ว"); return; }
 
-    // Create; rules will block duplicates.
     try{
       await createBorrowDoc(toUid, fromUid, cardId);
     }catch(e){
@@ -120,7 +118,7 @@ async function onShareClick(fromUid, cardId){
       return;
     }
 
-    // best-effort log
+    // บันทึกล็อก (best-effort)
     try{
       await db.collection("shareInbox").add({
         fromUid,
@@ -163,8 +161,10 @@ function watchBorrowed(uid){
       const fromName = await getUsernameByUid(v.fromUid);
       const el = document.createElement("div");
       el.className = "borrowed";
+      /* UPDATED: <img> with jpg fallback */
       el.innerHTML = `
-        <div class="thumb" style="background-image:url(assets/cards/${cardId}.png)"></div>
+        <img class="thumb" src="assets/cards/${cardId}.png"
+             onerror="this.onerror=null;this.src='assets/cards/${cardId}.jpg'">
         <div class="meta">
           <div><b>${cardId}</b> — ยืมมาจาก <b>@${fromName}</b></div>
           <div class="timer" data-card="${cardId}">—</div>
@@ -189,6 +189,7 @@ function watchBorrowed(uid){
         }else{
           tEl.textContent = "กำลังเปลี่ยนสถานะเป็นเจ้าของ…";
           items.delete(cid);
+          // convert: เพิ่มการ์ดให้ผู้ยืม + ลบสถานะยืม
           await db.runTransaction(async (tx)=>{
             const uref = db.collection("users").doc(uid);
             tx.set(uref, { cards: firebase.firestore.FieldValue.arrayUnion(cid) }, { merge: true });
