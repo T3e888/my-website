@@ -251,3 +251,33 @@ auth.onAuthStateChanged(async (user)=>{
   watchBorrowed(user.uid);
   renderLogLive(user.uid);
 });
+// KEEP CODE AS-IS
+async function createBorrowDoc(toUid, fromUid, cardId){
+  const untilTs = firebase.firestore.Timestamp.fromDate(
+    new Date(Date.now() + 3*24*60*60*1000)
+  );
+  await db.collection("users").doc(toUid).collection("shared").doc(cardId).set({
+    cardId,
+    fromUid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    until: untilTs
+  });
+}
+// KEEP CODE AS-IS
+try {
+  await createBorrowDoc(toUid, fromUid, cardId);
+} catch (e) {
+  const code = e.code || "";
+  if (code === "permission-denied") {
+    // สาเหตุที่พบบ่อย และตรงกับเงื่อนไขใน rules
+    showModal(
+      "❌ แบ่งปันไม่สำเร็จ:<br>" +
+      "• ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว (ซ้ำ) หรือ<br>" +
+      "• คุณไม่ได้เป็นผู้ส่ง (fromUid ไม่ตรง) หรือ<br>" +
+      "• โครงสร้างข้อมูลไม่ตรงกับที่ระบบกำหนด"
+    );
+  } else {
+    showModal("❌ แบ่งปันไม่สำเร็จ:<br><small>" + (e.message || e) + "</small>");
+  }
+  return;
+      }
