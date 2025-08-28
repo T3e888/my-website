@@ -26,12 +26,15 @@ function setupSidebar(){
   });
 }
 
-/* ---------- modal ---------- */
+/* ---------- modal (uses .show to match CSS) ---------- */
 function showModal(msg, cb){
   const modal = $("modal");
   modal.innerHTML = `<div class="modal-content">${msg}<br><button class="ok">ตกลง</button></div>`;
-  modal.classList.add("active");
-  modal.querySelector(".ok").onclick = ()=>{ modal.classList.remove("active"); cb?.(); };
+  modal.classList.add("show");
+  modal.querySelector(".ok").onclick = ()=>{
+    modal.classList.remove("show");
+    cb?.();
+  };
 }
 
 /* ---------- helpers ---------- */
@@ -102,9 +105,7 @@ async function onShareClick(fromUid, cardId){
     const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
     if (toCards.includes(cardId)){ showModal("ผู้รับเป็นเจ้าของการ์ดนี้อยู่แล้ว"); return; }
 
-    // ✅ No more pre-read of /users/{toUid}/shared/{cardId}
-    // We just try to create. Rules will block duplicates.
-
+    // Create; rules will block duplicates.
     try{
       await createBorrowDoc(toUid, fromUid, cardId);
     }catch(e){
@@ -119,7 +120,7 @@ async function onShareClick(fromUid, cardId){
       return;
     }
 
-    // บันทึกล็อก (best-effort)
+    // best-effort log
     try{
       await db.collection("shareInbox").add({
         fromUid,
@@ -188,7 +189,6 @@ function watchBorrowed(uid){
         }else{
           tEl.textContent = "กำลังเปลี่ยนสถานะเป็นเจ้าของ…";
           items.delete(cid);
-          // convert: เพิ่มการ์ดให้ผู้ยืม + ลบสถานะยืม
           await db.runTransaction(async (tx)=>{
             const uref = db.collection("users").doc(uid);
             tx.set(uref, { cards: firebase.firestore.FieldValue.arrayUnion(cid) }, { merge: true });
