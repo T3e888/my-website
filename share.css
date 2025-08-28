@@ -1,15 +1,18 @@
 /* -------------------------------------------------------
-   share.css — red sidebar + TEXT-ONLY menu items
-   (no boxes, no borders)
+   share.css — RED drawer + TEXT-ONLY menu items + brand row
+   Keeps page panels/modals the same across pages.
+   Works even if global tokens are missing (has fallbacks).
 --------------------------------------------------------*/
 
 /* ============ Hamburger button ============ */
 .sidebar-toggle{
   position: fixed; top: 14px; left: 14px; z-index: 1200;
-  width: 44px; height: 44px; border: 1px solid var(--line);
-  background: var(--panel); color: var(--text);
+  width: 44px; height: 44px;
+  border: 1px solid var(--line, #e5e7eb);
+  background: var(--panel, #ffffff);
+  color: var(--text, #111827);
   border-radius: 12px; display: grid; place-items: center;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow, 0 6px 16px rgba(0,0,0,.08));
 }
 .menu-icon{ display: grid; gap: 4px; }
 .menu-icon span{
@@ -20,19 +23,18 @@
 .sidebar{
   position: fixed; inset: 0 auto 0 0; width: 80vw; max-width: 320px;
   transform: translateX(-100%);
-  background: #e11d48;                 /* RED drawer */
+  background: #e11d48;               /* cherry red drawer */
   color: #fff;
-  padding: 18px; box-shadow: var(--shadow); z-index: 1300;
+  padding: 18px; box-shadow: var(--shadow, 0 10px 24px rgba(0,0,0,.18)); z-index: 1300;
   transition: transform .2s ease;
-  border-top-right-radius: 18px;
-  border-bottom-right-radius: 18px;
+  border-top-right-radius: 18px; border-bottom-right-radius: 18px;
 }
 .sidebar.open{ transform: translateX(0); }
 
 .close-btn{
   position: absolute; top: 8px; right: 10px; width: 36px; height: 36px;
   border: 1px solid #ffd3d9; background: #fff; color: #b91c1c;
-  border-radius: 10px; font-weight: 800;
+  border-radius: 10px; font-weight: 800; cursor: pointer;
 }
 
 /* Backdrop behind sidebar */
@@ -42,10 +44,16 @@
 }
 .overlay.active{ opacity: 1; pointer-events: all; }
 
-/* Brand */
-.brand{ display:flex; align-items:center; gap:.75rem; margin: 8px 0 12px; }
-.brand img{ width:32px; height:32px; border-radius:50%; }
-.brand-name{ font-weight:800; color:#fff; }
+/* ============ Brand row ============ */
+.brand{
+  display:flex; align-items:center; gap:.75rem; margin: 6px 0 10px; padding-bottom: 10px;
+  border-bottom: 1px solid #ffffff26;
+}
+.brand img{
+  width:36px; height:36px; border-radius:50%; background:#fff; padding:3px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.18);
+}
+.brand-name{ font-weight:900; color:#fff; letter-spacing:.2px; }
 
 /* ============ TEXT-ONLY Menu ============ */
 .menu{ display:grid; gap:12px; margin: 12px 0; }
@@ -55,16 +63,16 @@
 .menu-item a{
   display:block;
   padding: 6px 2px;                     /* slimmer; feels like text */
-  background: transparent;              /* <-- no box */
+  background: transparent;              /* no box */
   color: #fff;
-  border: none;                          /* <-- no border */
-  box-shadow: none;                      /* <-- no shadow */
+  border: none;                         /* no border */
+  box-shadow: none;                     /* no shadow */
   text-decoration: none;
   font-weight: 800;
   letter-spacing: .2px;
 }
 
-/* hover: very subtle tint, still feels like text */
+/* hover: very subtle tint, still text-like */
 .menu a:hover,
 .menu-item a:hover{
   background: rgba(255,255,255,.10);
@@ -79,18 +87,19 @@
   text-underline-offset: 4px;
 }
 
-/* If you have a logout button inside the drawer, make it text-like too */
+/* Logout text-look (works for either markup) */
+#logout-link a,
 .sidebar .logout-btn{
   padding: 6px 2px;
-  background: transparent;
-  color: #ffe4e6;
-  border: none;
-  box-shadow: none;
+  background: transparent !important;
+  color: #ffe4e6 !important;
+  border: none !important;
+  box-shadow: none !important;
   font-weight: 800;
   text-align: left;
 }
 
-/* ============ Page chrome ============ */
+/* ============ Page chrome (kept from your design) ============ */
 .page-title{
   margin: 76px 16px 6px;           /* leave room for hamburger */
   font-weight: 900; font-size: clamp(1.5rem, 3.6vw, 2.2rem);
@@ -100,11 +109,11 @@
 
 /* Panel card used by many pages */
 .panel{
-  background:#fff; border:1px solid var(--line); border-radius:14px;
-  margin: 12px 16px; padding: 14px; box-shadow: var(--shadow);
+  background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:14px;
+  margin: 12px 16px; padding: 14px; box-shadow: var(--shadow, 0 6px 16px rgba(0,0,0,.06));
 }
 
-/* Small helpers used around the app */
+/* Small helpers */
 .hint{ color:#6b7280; font-size:.95rem }
 .grid{ display:grid; gap:14px }
 
@@ -116,17 +125,25 @@
 .modal.show{ display:grid; }
 .modal .modal-content{
   width: min(620px, 92vw);
-  background:#fff; border:1px solid var(--line); border-radius:16px;
-  padding:16px; box-shadow: var(--shadow);
+  background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:16px;
+  padding:16px; box-shadow: var(--shadow, 0 10px 24px rgba(0,0,0,.16));
 }
 .close-x{
   position:absolute; right:12px; top:10px; width:36px; height:36px;
-  border:1px solid var(--line); background:#fff; border-radius:10px;
+  border:1px solid var(--line, #e5e7eb); background:#fff; border-radius:10px;
 }
 
-/* Inputs/buttons helpers (unchanged) */
-.textarea{ width:100%; min-height:110px; padding:10px 12px; border:1px solid var(--line);
-           border-radius:12px; background:#fff; color:var(--text); }
+/* Inputs/buttons helpers */
+.textarea{
+  width:100%; min-height:110px; padding:10px 12px; border:1px solid var(--line, #e5e7eb);
+  border-radius:12px; background:#fff; color:var(--text, #111827);
+}
 .btn{ width:auto; display:inline-flex; align-items:center; justify-content:center; }
-.btn-red{ background: var(--brand); color: #fff; border:1px solid var(--brand) }
-.btn-grey{ background:#f3f4f6; border:1px solid var(--line); color:#111827 }
+.btn-red{ background: var(--brand, #e11d48); color: #fff; border:1px solid var(--brand, #e11d48); }
+.btn-grey{ background:#f3f4f6; border:1px solid var(--line, #e5e7eb); color:#111827; }
+
+/* ============ Responsive ============ */
+@media (max-width: 600px){
+  .sidebar{ width: 85vw; border-radius: 0 18px 18px 0; }
+  .sidebar-toggle{ top: 14px; left: 14px; width: 42px; height: 42px; }
+}
