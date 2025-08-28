@@ -1,4 +1,4 @@
-// share.js — สร้าง /users/{toUid}/shared/{cardId} (ยืม 3 วัน)
+// share.js — pre-logo, fully clickable tiles + Thai modal messages
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
@@ -10,8 +10,8 @@ const BORROW_MS = 3 * DAY;
 let currentUid = null;
 let ownedCardsCache = [];
 
-/* ---------- sidebar ---------- */
-function setupSidebar(){
+/* ---------- Sidebar ---------- */
+(function setupSidebar(){
   $("menu-toggle")?.addEventListener("click", ()=>{
     $("sidebar").classList.add("open"); $("overlay").classList.add("active");
   });
@@ -24,9 +24,9 @@ function setupSidebar(){
   $("logout-link")?.addEventListener("click", (e)=>{
     e.preventDefault(); auth.signOut().then(()=>location.href="login.html");
   });
-}
+})();
 
-/* ---------- modal ---------- */
+/* ---------- Modal ---------- */
 function showModal(msg, cb){
   const modal = $("modal");
   modal.innerHTML = `<div class="modal-content">${msg}<br><button class="ok">ตกลง</button></div>`;
@@ -34,7 +34,7 @@ function showModal(msg, cb){
   modal.querySelector(".ok").onclick = ()=>{ modal.classList.remove("active"); cb?.(); };
 }
 
-/* ---------- helpers ---------- */
+/* ---------- Helpers ---------- */
 async function getUidByUsername(username){
   const uname = (username||"").trim().toLowerCase();
   if (!uname) return null;
@@ -48,7 +48,7 @@ async function getUsernameByUid(uid){
   }catch{ return uid.slice(0,6); }
 }
 
-/* ---------- render owned grid (UPDATED: visible size + jpg fallback) ---------- */
+/* ---------- Owned grid (click-to-share) ---------- */
 function renderOwnedCards(cards){
   const grid = $("ownedGrid");
   grid.innerHTML = "";
@@ -57,25 +57,28 @@ function renderOwnedCards(cards){
     return;
   }
   const sorted = cards.slice().sort((a,b)=> Number(a.replace('card','')) - Number(b.replace('card','')));
-  for (const cid of sorted){
+  grid.innerHTML = sorted.map(cid=>{
     const n = Number(cid.replace('card',''));
-    const tile = document.createElement("div");
-    tile.className = "cardTile";
-    tile.title = `แบ่งปัน ${cid}`;
-    tile.innerHTML = `
-      <img class="cover" src="assets/cards/${cid}.png"
-           onerror="this.onerror=null;this.src='assets/cards/${cid}.jpg'">
-      <div class="cap">การ์ด ${n}</div>`;
-    tile.onclick = ()=> onShareClick(currentUid, cid);
-    grid.appendChild(tile);
-  }
+    return `
+      <div class="cardTile" data-id="${cid}" title="แตะเพื่อส่ง">
+        <img class="cover" src="assets/cards/${cid}.png"
+             onerror="this.onerror=null;this.src='assets/cards/${cid}.jpg'">
+        <div class="cap">การ์ด ${n}</div>
+      </div>`;
+  }).join("");
+
+  // single, persistent handler
+  grid.onclick = (e)=>{
+    const tile = e.target.closest(".cardTile");
+    if (!tile) return;
+    onShareClick(currentUid, tile.dataset.id);
+  };
 }
 
-/* ---------- CREATE the borrow doc ---------- */
+/* ---------- Create borrow doc ---------- */
 async function createBorrowDoc(toUid, fromUid, cardId){
   const untilTs = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + BORROW_MS));
   const ref = db.collection("users").doc(toUid).collection("shared").doc(cardId);
-  // Must match security rules: only these 4 fields
   await ref.set({
     cardId,
     fromUid,
@@ -84,7 +87,7 @@ async function createBorrowDoc(toUid, fromUid, cardId){
   });
 }
 
-/* ---------- Share flow ---------- */
+/* ---------- Share flow + user messages ---------- */
 async function onShareClick(fromUid, cardId){
   const username = ($("toUser").value || "").trim().toLowerCase();
   if (!username){ showModal("กรุณากรอกชื่อผู้รับ"); return; }
@@ -94,66 +97,60 @@ async function onShareClick(fromUid, cardId){
     if (!toUid){ showModal("ไม่พบบัญชีผู้รับ กรุณาให้ผู้รับบันทึกชื่อผู้ใช้ในหน้าโปรไฟล์"); return; }
     if (toUid === fromUid){ showModal("ไม่สามารถแบ่งปันการ์ดให้ตัวเองได้"); return; }
 
-    // ต้องเป็นเจ้าของจึงจะแชร์ได้
-    if (!ownedCardsCache.includes(cardId)){
-      showModal("สามารถแบ่งปันได้เฉพาะการ์ดที่คุณเป็นเจ้าของเท่านั้น"); return;
-    }
+    // ต้องเป็นเจ้าของเท่านั้น
+    if (!ownedCardsCache.includes(cardId)){ showModal("สามารถแบ่งปันได้เฉพาะการ์ดที่คุณเป็นเจ้าของเท่านั้น"); return; }
 
     // ผู้รับเป็นเจ้าของอยู่แล้ว?
     const toDoc = await db.collection("users").doc(toUid).get();
     const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
     if (toCards.includes(cardId)){ showModal("ผู้รับเป็นเจ้าของการ์ดนี้อยู่แล้ว"); return; }
 
+    // ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว?
+    const sharedSnap = await db.collection("users").doc(toUid).collection("shared").doc(cardId).get();
+    if (sharedSnap.exists){ showModal("ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว"); return; }
+
+    // สร้างรายการยืม 3 วัน
     try{
       await createBorrowDoc(toUid, fromUid, cardId);
     }catch(e){
       const code = e?.code || "";
-      const msg  = e?.message || e;
-      console.error("borrowed-doc create failed:", e);
-      if (code === "permission-denied") {
-        showModal("ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว หรือคุณไม่มีสิทธิ์สร้างรายการนี้");
-      } else {
-        showModal(`❌ แบ่งปันไม่สำเร็จ (สร้างรายการยืม):<br><small>${code} – ${msg}</small>`);
+      if (code === "permission-denied"){
+        showModal("สิทธิ์ไม่พอในการแบ่งปัน หรือผู้รับกำลังยืมอยู่แล้ว");
+      }else{
+        showModal(`❌ แบ่งปันไม่สำเร็จ:<br><small>${code} ${e?.message||e}</small>`);
       }
       return;
     }
 
-    // บันทึกล็อก (best-effort)
+    // บันทึก log (best effort)
     try{
       await db.collection("shareInbox").add({
-        fromUid,
-        toUid,
-        cardId,
+        fromUid, toUid, cardId,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         status: "borrowed"
       });
-    }catch(e){ console.warn("shareInbox add blocked:", e?.code || e); }
+    }catch{}
 
     showModal(`✅ แบ่งปัน <b>${cardId}</b> ให้ <b>@${username}</b> เรียบร้อยแล้ว`);
   }catch(e){
-    console.error("Share flow error:", e);
-    showModal(`❌ แบ่งปันไม่สำเร็จ:<br><small>${e?.code || ""} ${e?.message || e}</small>`);
+    showModal(`❌ แบ่งปันไม่สำเร็จ:<br><small>${e?.code||""} ${e?.message||e}</small>`);
   }
 }
 
-/* ---------- countdown + log ---------- */
+/* ---------- Borrowed countdown + log ---------- */
 function watchBorrowed(uid){
   const list = $("borrowedList");
   list.innerHTML = `<div class="hint">กำลังโหลด…</div>`;
-
   let timer = null;
   const items = new Map();
 
   db.collection("users").doc(uid).collection("shared").onSnapshot(async (snap)=>{
-    items.clear();
-    list.innerHTML = "";
-
+    items.clear(); list.innerHTML = "";
     if (snap.empty){
       list.innerHTML = `<div class="hint">ตอนนี้คุณยังไม่ได้ยืมการ์ดใด ๆ</div>`;
       if (timer){ clearInterval(timer); timer = null; }
       return;
     }
-
     for (const d of snap.docs){
       const v = d.data();
       const cardId = v.cardId;
@@ -161,7 +158,6 @@ function watchBorrowed(uid){
       const fromName = await getUsernameByUid(v.fromUid);
       const el = document.createElement("div");
       el.className = "borrowed";
-      /* UPDATED: <img> with jpg fallback */
       el.innerHTML = `
         <img class="thumb" src="assets/cards/${cardId}.png"
              onerror="this.onerror=null;this.src='assets/cards/${cardId}.jpg'">
@@ -170,7 +166,7 @@ function watchBorrowed(uid){
           <div class="timer" data-card="${cardId}">—</div>
         </div>`;
       list.appendChild(el);
-      items.set(cardId, { el, until, fromUid: v.fromUid });
+      items.set(cardId, { el, until });
     }
 
     if (timer) clearInterval(timer);
@@ -189,7 +185,6 @@ function watchBorrowed(uid){
         }else{
           tEl.textContent = "กำลังเปลี่ยนสถานะเป็นเจ้าของ…";
           items.delete(cid);
-          // convert: เพิ่มการ์ดให้ผู้ยืม + ลบสถานะยืม
           await db.runTransaction(async (tx)=>{
             const uref = db.collection("users").doc(uid);
             tx.set(uref, { cards: firebase.firestore.FieldValue.arrayUnion(cid) }, { merge: true });
@@ -199,9 +194,6 @@ function watchBorrowed(uid){
       }
       if (items.size === 0){ clearInterval(timer); timer = null; }
     }, 1000);
-  }, (err)=>{
-    console.error("shared listener error:", err);
-    list.innerHTML = `<div class="hint">ไม่สามารถโหลดการ์ดที่ยืมได้ (สิทธิ์การเข้าถึง)</div>`;
   });
 }
 
@@ -220,7 +212,8 @@ function renderLogLive(uid){
       const when = v.createdAt?.toDate ? v.createdAt.toDate().toLocaleString() : "";
       return `<div class="log-item"><div><b>${v.cardId}</b> ${who}<br><small>${when}</small></div><div class="badge ${badge}">${v.status||"borrowed"}</div></div>`;
     }
-    box.innerHTML = [...inDocs.map(d=>row(d,"in")), ...outDocs.map(d=>row(d,"out"))].slice(0,30).join("") || `<div class="hint">ยังไม่มีประวัติการแบ่งปัน</div>`;
+    const merged = [...inDocs.map(d=>row(d,"in")), ...outDocs.map(d=>row(d,"out"))];
+    box.innerHTML = merged.length ? merged.join("") : `<div class="hint">ยังไม่มีประวัติการแบ่งปัน</div>`;
   }
 
   outQ.onSnapshot(async (snap)=>{
@@ -231,12 +224,12 @@ function renderLogLive(uid){
   });
 }
 
-/* ---------- start ---------- */
+/* ---------- Start ---------- */
 auth.onAuthStateChanged(async (user)=>{
   if (!user){ location.href = "login.html"; return; }
   currentUid = user.uid;
-  setupSidebar();
 
+  // Ensure user doc exists (helps when "data lost")
   const uref = db.collection("users").doc(user.uid);
   const snap = await uref.get();
   if (!snap.exists){
