@@ -1,25 +1,27 @@
-<!-- share.html — Share cards page -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
   <title>แบ่งปันการ์ด</title>
-
-  <!-- PWA / subpath-safe for GitHub Pages -->
+  <!-- PWA: Manifest & Icons (GitHub Pages subpath-safe) -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#b91c1c">
 
-  <!-- Favicons / iOS -->
+  <!-- Favicon (optional) -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+
+  <!-- iOS Add to Home Screen -->
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StrokeCards">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- (Harmless hint for older Android Chrome) -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="StrokeCards">
 
-  <!-- Service Worker -->
+  <!-- Service Worker (relative path, so scope is /my-website/) -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(err =>
@@ -30,18 +32,16 @@
 
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="global.css?v=8">
-  <link rel="stylesheet" href="share.css?v=modal-fix" />
+  <link rel="stylesheet" href="share.css?v=fix2" />
 </head>
 <body>
   <!-- Sidebar -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
-
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
 
-    <!-- Brand (logo + name) -->
     <div class="brand">
       <img src="assets/logo.png" alt="Logo">
       <div class="brand-name">Stroke Card Adventure</div>
@@ -71,12 +71,14 @@
     <div class="share-form">
       <div class="field">
         <label for="toUser">ชื่อผู้รับ (ตัวพิมพ์เล็ก)</label>
-        <input id="toUser" type="text" placeholder="เช่น portokorkai" />
+        <!-- pink input -->
+        <input id="toUser" class="pink-input" type="text" placeholder="เช่น portokorkai" />
         <div class="hint">ให้ผู้รับบันทึกชื่อผู้ใช้ในหน้า <b>โปรไฟล์</b> ก่อน</div>
       </div>
       <div class="field">
         <label>การ์ดที่เป็นเจ้าของ</label>
-        <div id="ownedGrid" class="grid"></div>
+        <!-- grid uses cards layout -->
+        <div id="ownedGrid" class="grid cards"></div>
         <div class="hint">แตะที่การ์ดด้านล่างเพื่อส่ง</div>
       </div>
     </div>
@@ -92,7 +94,7 @@
     <div id="logList" class="log-list"></div>
   </section>
 
-  <!-- Modal -->
+  <!-- โมดัลแจ้งเตือน -->
   <div id="modal" class="modal"></div>
 
   <!-- Firebase -->
@@ -112,7 +114,7 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- Cache-bust the JS param if needed -->
-  <script src="share.js?v=modal-fix"></script>
+  <!-- bump the querystring to bust SW cache when you update -->
+  <script src="share.js?v=fix2"></script>
 </body>
 </html>
