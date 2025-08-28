@@ -186,6 +186,8 @@
 .modal{
   position: fixed; inset: 0; display:none; place-items:center; z-index:1500;
   background: rgba(0,0,0,.45);
+   /* Allow either .show or .active to display the modal */
+.modal.active{ display:grid; }
 }
 .modal.show{ display:grid; }
 .modal .modal-content{
