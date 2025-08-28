@@ -1,7 +1,7 @@
 /* -------------------------------------------------------
-   share.css — RED drawer + TEXT-ONLY menu items + brand row
-   Keeps page panels/modals the same across pages.
-   Works even if global tokens are missing (has fallbacks).
+   share.css — RED drawer + TEXT-ONLY menu items (+brand)
+   Self-contained: includes page chrome, tiles, logs, etc.
+   Uses fallbacks so it works without global tokens.
 --------------------------------------------------------*/
 
 /* ============ Hamburger button ============ */
@@ -13,6 +13,7 @@
   color: var(--text, #111827);
   border-radius: 12px; display: grid; place-items: center;
   box-shadow: var(--shadow, 0 6px 16px rgba(0,0,0,.08));
+  cursor: pointer;
 }
 .menu-icon{ display: grid; gap: 4px; }
 .menu-icon span{
@@ -44,7 +45,7 @@
 }
 .overlay.active{ opacity: 1; pointer-events: all; }
 
-/* ============ Brand row ============ */
+/* ============ Brand row (optional) ============ */
 .brand{
   display:flex; align-items:center; gap:.75rem; margin: 6px 0 10px; padding-bottom: 10px;
   border-bottom: 1px solid #ffffff26;
@@ -62,7 +63,7 @@
 .menu a,
 .menu-item a{
   display:block;
-  padding: 6px 2px;                     /* slimmer; feels like text */
+  padding: 6px 2px;                     /* slimmer; text feel */
   background: transparent;              /* no box */
   color: #fff;
   border: none;                         /* no border */
@@ -72,14 +73,14 @@
   letter-spacing: .2px;
 }
 
-/* hover: very subtle tint, still text-like */
+/* hover: subtle tint */
 .menu a:hover,
 .menu-item a:hover{
   background: rgba(255,255,255,.10);
   border-radius: 8px;
 }
 
-/* active: underline only (no light box) */
+/* active: underline only */
 .menu a.active,
 .menu-item a.active{
   background: transparent;
@@ -104,6 +105,7 @@
   margin: 76px 16px 6px;           /* leave room for hamburger */
   font-weight: 900; font-size: clamp(1.5rem, 3.6vw, 2.2rem);
   color: #b91c1c; display:flex; align-items:center; gap:.6rem;
+  text-align: center;               /* center title on Share */
 }
 .subtitle{ margin: 0 16px 12px; color:#6b7280 }
 
@@ -117,23 +119,12 @@
 .hint{ color:#6b7280; font-size:.95rem }
 .grid{ display:grid; gap:14px }
 
-/* Modal */
-.modal{
-  position: fixed; inset: 0; display:none; place-items:center; z-index:1500;
-  background: rgba(0,0,0,.45);
+/* Inputs/buttons */
+.pink-input{
+  width:100%; padding:12px 14px; border-radius:12px;
+  background:#ffebee; border:2px solid #ffcdd2; color:#b71c1c;
+  font-weight:800;
 }
-.modal.show{ display:grid; }
-.modal .modal-content{
-  width: min(620px, 92vw);
-  background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:16px;
-  padding:16px; box-shadow: var(--shadow, 0 10px 24px rgba(0,0,0,.16));
-}
-.close-x{
-  position:absolute; right:12px; top:10px; width:36px; height:36px;
-  border:1px solid var(--line, #e5e7eb); background:#fff; border-radius:10px;
-}
-
-/* Inputs/buttons helpers */
 .textarea{
   width:100%; min-height:110px; padding:10px 12px; border:1px solid var(--line, #e5e7eb);
   border-radius:12px; background:#fff; color:var(--text, #111827);
@@ -141,33 +132,23 @@
 .btn{ width:auto; display:inline-flex; align-items:center; justify-content:center; }
 .btn-red{ background: var(--brand, #e11d48); color: #fff; border:1px solid var(--brand, #e11d48); }
 .btn-grey{ background:#f3f4f6; border:1px solid var(--line, #e5e7eb); color:#111827; }
-
-/* ============ Responsive ============ */
-@media (max-width: 600px){
-  .sidebar{ width: 85vw; border-radius: 0 18px 18px 0; }
-  .sidebar-toggle{ top: 14px; left: 14px; width: 42px; height: 42px; }
+.btn-primary{
+  background:#e53935; color:#fff; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer;
 }
+.btn-primary:disabled{ opacity:.5; cursor:not-allowed }
 
-/* ======================================================
-   Share page fixes (owned grid, borrowed list, log, pink input)
-====================================================== */
-
-/* Center the main title */
-.page-title { text-align: center; }
-
-/* Pink input */
-.pink-input{
-  width:100%; padding:12px 14px; border-radius:12px;
-  background:#ffebee; border:2px solid #ffcdd2; color:#b71c1c;
-  font-weight:800;
+/* ============ Owned cards grid + tiles ============ */
+.grid.cards{
+  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  gap:12px; margin-top:12px;
 }
-
-/* Owned cards grid + tiles */
-.grid.cards{ grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:12px; margin-top:12px; }
 .cardTile, .card-tile{
   position:relative; border:2px solid #ffd3d9; border-radius:14px;
   overflow:hidden; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,.06);
+  transition: transform .08s ease, box-shadow .14s ease, border-color .14s ease;
+  cursor: pointer;
 }
+.cardTile:active, .card-tile:active{ transform: scale(.985); }
 .cardTile .cover, .card-tile .cover{
   width:100%; aspect-ratio:5/7; display:block; object-fit:cover; background:#fafafa;
 }
@@ -176,7 +157,7 @@
   border-radius:999px; padding:2px 8px; font-weight:800; font-size:.9rem;
 }
 
-/* Borrowed list */
+/* ============ Borrowed list (3-day countdown) ============ */
 .borrowed-list{ display:grid; gap:10px; }
 .borrowed{
   display:flex; gap:12px; align-items:center;
@@ -190,12 +171,37 @@
 .borrowed .meta{ flex:1; color:#b91c1c; font-weight:700; }
 .borrowed .timer{ color:#6b7280; font-weight:600; }
 
-/* Activity log */
+/* ============ Activity log ============ */
 .log-list{ display:grid; gap:10px; }
 .log-item{
   background:#fff; border:1px solid #f4a9b4; border-left:5px solid #e11d48;
   border-radius:10px; padding:10px 12px; color:#b71c1c; font-weight:700;
   display:flex; justify-content:space-between; align-items:center;
 }
+.log-item .muted{ color:#6b7280; font-weight:600; }
 .log-item .badge{ padding:3px 8px; border-radius:999px; background:#fdecea; color:#b71c1c; font-size:12px; font-weight:800; }
 .log-item .badge.converted{ background:#e3f2e8; color:#1b5e20; }
+
+/* ============ Modal ============ */
+.modal{
+  position: fixed; inset: 0; display:none; place-items:center; z-index:1500;
+  background: rgba(0,0,0,.45);
+}
+.modal.show{ display:grid; }
+.modal .modal-content{
+  width: min(620px, 92vw);
+  background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:16px;
+  padding:16px; box-shadow: var(--shadow, 0 10px 24px rgba(0,0,0,.16));
+  color:#b71c1c; text-align:center;
+}
+.close-x, .modal .ok{
+  position:relative; display:inline-block; margin-top:12px;
+  padding:10px 18px; border-radius:10px; border:1px solid #ffcdd2;
+  background:#e57373; color:#fff; font-weight:800; cursor:pointer;
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 600px){
+  .sidebar{ width: 85vw; border-radius: 0 18px 18px 0; }
+  .sidebar-toggle{ top: 14px; left: 14px; width: 42px; height: 42px; }
+     }
