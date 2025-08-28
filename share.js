@@ -87,42 +87,45 @@ async function createBorrowDoc(toUid, fromUid, cardId){
   });
 }
 
-/* ---------- Share flow + user messages ---------- */
+/* ---------- Share flow + user messages (NO pre-read of shared doc) ---------- */
 async function onShareClick(fromUid, cardId){
   const username = ($("toUser").value || "").trim().toLowerCase();
   if (!username){ showModal("กรุณากรอกชื่อผู้รับ"); return; }
 
   try{
+    // 1) resolve @username -> uid
     const toUid = await getUidByUsername(username);
     if (!toUid){ showModal("ไม่พบบัญชีผู้รับ กรุณาให้ผู้รับบันทึกชื่อผู้ใช้ในหน้าโปรไฟล์"); return; }
     if (toUid === fromUid){ showModal("ไม่สามารถแบ่งปันการ์ดให้ตัวเองได้"); return; }
 
-    // ต้องเป็นเจ้าของเท่านั้น
-    if (!ownedCardsCache.includes(cardId)){ showModal("สามารถแบ่งปันได้เฉพาะการ์ดที่คุณเป็นเจ้าของเท่านั้น"); return; }
+    // 2) sender must own the card
+    if (!ownedCardsCache.includes(cardId)){
+      showModal("สามารถแบ่งปันได้เฉพาะการ์ดที่คุณเป็นเจ้าของเท่านั้น"); return;
+    }
 
-    // ผู้รับเป็นเจ้าของอยู่แล้ว?
+    // 3) receiver already owns?
     const toDoc = await db.collection("users").doc(toUid).get();
     const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
     if (toCards.includes(cardId)){ showModal("ผู้รับเป็นเจ้าของการ์ดนี้อยู่แล้ว"); return; }
 
-    // ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว?
-    const sharedSnap = await db.collection("users").doc(toUid).collection("shared").doc(cardId).get();
-    if (sharedSnap.exists){ showModal("ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว"); return; }
-
-    // สร้างรายการยืม 3 วัน
+    // 4) just try to create the borrow doc (rules will block duplicates)
     try{
       await createBorrowDoc(toUid, fromUid, cardId);
     }catch(e){
       const code = e?.code || "";
       if (code === "permission-denied"){
-        showModal("สิทธิ์ไม่พอในการแบ่งปัน หรือผู้รับกำลังยืมอยู่แล้ว");
+        showModal(
+          "❌ แบ่งปันไม่สำเร็จ:<br>" +
+          "• ผู้รับกำลังยืมการ์ดนี้อยู่แล้ว (ซ้ำ) หรือ<br>" +
+          "• โครงสร้างข้อมูลไม่ตรงกับเงื่อนไขความปลอดภัย"
+        );
       }else{
         showModal(`❌ แบ่งปันไม่สำเร็จ:<br><small>${code} ${e?.message||e}</small>`);
       }
       return;
     }
 
-    // บันทึก log (best effort)
+    // 5) best-effort log
     try{
       await db.collection("shareInbox").add({
         fromUid, toUid, cardId,
