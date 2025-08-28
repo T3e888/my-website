@@ -10,8 +10,8 @@ function setupSidebar() {
   const closeBtn  = document.getElementById("close-sidebar");
   const logout    = document.getElementById("logout-link");
 
-  const open  = () => { sidebar.classList.add("open");  overlay.classList.add("active"); };
-  const close = () => { sidebar.classList.remove("open"); overlay.classList.remove("active"); };
+  const open  = () => { sidebar?.classList.add("open");  overlay?.classList.add("active"); };
+  const close = () => { sidebar?.classList.remove("open"); overlay?.classList.remove("active"); };
 
   toggleBtn?.addEventListener("click", open);
   closeBtn?.addEventListener("click", close);
@@ -25,7 +25,15 @@ function setupSidebar() {
 // ---------- Helpers ----------
 const $ = (id) => document.getElementById(id);
 const toastEl = $("toast");
-function toast(t){ toastEl.textContent = t; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"), 1600); }
+function toast(t){
+  if (toastEl){
+    toastEl.textContent = t;
+    toastEl.classList.add("show");
+    setTimeout(()=>toastEl.classList.remove("show"), 1600);
+  } else {
+    alert(t);
+  }
+}
 
 async function ensureUsernameMapping(uid, uname) {
   if (!uname) return;
@@ -57,13 +65,13 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) { location.href = "login.html"; return; }
   setupSidebar();
 
-  $("uid").textContent        = user.uid;
-  $("email").textContent      = user.email || "(ไม่มีอีเมล)";
-  $("displayName").textContent= (user.email||"").split("@")[0];
+  $("uid")?.textContent         = user.uid;
+  $("email")?.textContent       = user.email || "(ไม่มีอีเมล)";
+  $("displayName")?.textContent = (user.email||"").split("@")[0];
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure user doc exists + seed (add quizCount/quizStreak)
+  // Ensure user doc exists + seed
   await docRef.set({
     username: (user.email||"").split("@")[0],
     cards: [],
@@ -79,76 +87,80 @@ auth.onAuthStateChanged(async (user) => {
   const data = snap.data() || {};
   const currentUname = (data.username || (user.email||"").split("@")[0] || "").toLowerCase();
 
-  $("username").value      = currentUname;
-  $("about").value         = data.about || "";
-  $("points").textContent  = String(data.points || 0);
-  $("quizCount").textContent  = String(data.quizCount || 0);
-  $("quizStreak").textContent = String(data.quizStreak || 0);
+  if ($("username")) $("username").value = currentUname;
+  if ($("about"))    $("about").value    = data.about || "";
+  $("points")?.textContent     = String(data.points || 0);
+  $("quizCount")?.textContent  = String(data.quizCount || 0);
+  $("quizStreak")?.textContent = String(data.quizStreak || 0);
 
   await ensureUsernameMapping(user.uid, currentUname);
 
-  // Render cards (null-safe if #cardsGrid does not exist)
+  // Render cards
   const cards = Array.isArray(data.cards) ? data.cards : [];
-  const cardsCountEl = $("cardsCount");
-  if (cardsCountEl) cardsCountEl.textContent = String(cards.length);
-
+  $("cardsCount")?.textContent = String(cards.length);
   const grid = $("cardsGrid");
   if (grid) {
     grid.innerHTML = cards.length
       ? cards.map(cId => {
-          const img = `assets/cards/${cId}.png`;
-          const label = cId.replace(/card/i,"Card ");
-          return `<div class="cardItem"><img src="${img}" alt="${label}" /><div class="muted">${label}</div></div>`;
+          const label = cId.replace(/card/i,"การ์ด ");
+          return `<div class="cardItem">
+                   <img src="assets/cards/${cId}.png" onerror="this.onerror=null;this.src='assets/cards/${cId}.jpg'">
+                   <div class="muted">${label}</div>
+                 </div>`;
         }).join("")
       : `<div class="muted">ยังไม่มีการ์ด</div>`;
   }
 
   // Save username
-  $("saveUserBtn").onclick = async () => {
-    const newName = $("username").value.trim().toLowerCase();
-    $("saveUserMsg").textContent = "";
-    if (!newName) { $("saveUserMsg").textContent = "กรุณากรอกชื่อผู้ใช้"; return; }
+  const saveUserBtn = $("saveUserBtn");
+  if (saveUserBtn) saveUserBtn.onclick = async () => {
+    const newName = ($("username")?.value || "").trim().toLowerCase();
+    if ($("saveUserMsg")) $("saveUserMsg").textContent = "";
+    if (!newName) { $("saveUserMsg")?.textContent = "กรุณากรอกชื่อผู้ใช้"; return; }
 
     try {
       await renameUsernameMapping(user.uid, currentUname, newName);
       await docRef.set({ username: newName }, { merge: true });
-      $("displayName").textContent = newName;
+      $("displayName")?.textContent = newName;
       toast("อัปเดตชื่อผู้ใช้แล้ว");
     } catch (e) {
-      $("saveUserMsg").textContent = e.message || String(e);
+      $("saveUserMsg")?.textContent = e.message || String(e);
     }
   };
 
   // Save about
-  $("saveAboutBtn").onclick = async () => {
-    const about = $("about").value.trim();
-    $("saveAboutMsg").textContent = "";
+  const saveAboutBtn = $("saveAboutBtn");
+  if (saveAboutBtn) saveAboutBtn.onclick = async () => {
+    const about = ($("about")?.value || "").trim();
+    if ($("saveAboutMsg")) $("saveAboutMsg").textContent = "";
     try {
       await docRef.set({ about }, { merge: true });
       toast("บันทึกแล้ว");
     } catch (e) {
-      $("saveAboutMsg").textContent = e.message || String(e);
+      $("saveAboutMsg")?.textContent = e.message || String(e);
     }
   };
 
   // Change password
-  $("changePassBtn").onclick = async () => {
-    const cur = $("curPass").value;
-    const nw  = $("newPass").value;
-    $("passMsg").textContent = "";
-    if (!cur || !nw) { $("passMsg").textContent = "กรุณากรอกให้ครบทั้งสองช่อง"; return; }
+  const changePassBtn = $("changePassBtn");
+  if (changePassBtn) changePassBtn.onclick = async () => {
+    const cur = $("curPass")?.value;
+    const nw  = $("newPass")?.value;
+    if ($("passMsg")) $("passMsg").textContent = "";
+    if (!cur || !nw) { $("passMsg")?.textContent = "กรุณากรอกให้ครบทั้งสองช่อง"; return; }
 
     try {
       const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
       await user.reauthenticateWithCredential(cred);
       await user.updatePassword(nw);
-      $("curPass").value = ""; $("newPass").value = "";
+      if ($("curPass")) $("curPass").value = "";
+      if ($("newPass")) $("newPass").value = "";
       toast("เปลี่ยนรหัสผ่านแล้ว");
     } catch (e) {
-      $("passMsg").textContent = e.message || String(e);
+      $("passMsg")?.textContent = e.message || String(e);
     }
   };
 
   // Sign out
-  $("signOutBtn").onclick = () => auth.signOut().then(()=>location.href="login.html");
+  $("signOutBtn")?.addEventListener("click", ()=> auth.signOut().then(()=>location.href="login.html"));
 });
