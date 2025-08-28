@@ -1,6 +1,6 @@
 // sw.js — Service Worker for Stroke Card Adventure
 // Bump this version whenever you change cached files:
-const CACHE = "sca-v17";  // bumped so share.css auto-brand ships
+const CACHE = "sca-v12";  // bumped so share.css auto-brand ships
 
 const CORE_ASSETS = [
   "./","./index.html","./manifest.webmanifest",
