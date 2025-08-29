@@ -1,14 +1,18 @@
 /* profile.css — page styles only (sidebar comes from share.css) */
 :root{
-  --red:#e53935;          /* title & buttons */
-  --red-2:#b71c1c;        /* deep red text */
+  --red:#e53935;      /* title & buttons */
+  --red-2:#b71c1c;    /* deep red text */
   --grey:#888;
   --line:#e5e7eb;
-  --soft:#fdecea;         /* pill bg */
+  --soft:#fdecea;     /* pill bg */
 }
 
-*{box-sizing:border-box}
-body{margin:0;background:#fff;font-family:'Noto Sans Thai','Noto Sans',sans-serif}
+*{ box-sizing:border-box }
+body{
+  margin:0;
+  background:#fff;
+  font-family:'Noto Sans Thai','Noto Sans',sans-serif;
+}
 
 /* Title like the screenshot */
 .page-title{
@@ -21,7 +25,7 @@ body{margin:0;background:#fff;font-family:'Noto Sans Thai','Noto Sans',sans-seri
 }
 
 /* Cards */
-.wrap{max-width:900px;margin:0 auto 28px;padding:0 16px}
+.wrap{ max-width:900px; margin:0 auto 28px; padding:0 16px }
 .card{
   background:#fff;
   border:1px solid #eee;
@@ -30,60 +34,103 @@ body{margin:0;background:#fff;font-family:'Noto Sans Thai','Noto Sans',sans-seri
   margin:14px 0 18px;
   box-shadow:0 8px 24px rgba(0,0,0,.06);
 }
-.row{display:flex;gap:16px;flex-wrap:wrap}
-.col{flex:1 1 320px}
+.row{ display:flex; gap:16px; flex-wrap:wrap }
+.col{ flex:1 1 320px }
 
 /* Labels & inputs */
-label{font-size:13px;color:#555;margin-bottom:6px;display:block}
+label{ font-size:13px; color:#555; margin-bottom:6px; display:block }
 input,textarea{
-  width:100%;padding:12px 14px;border:1.5px solid var(--line);
-  border-radius:12px;font-size:15px;background:#fff
+  width:100%;
+  padding:12px 14px;
+  border:1.5px solid var(--line);
+  border-radius:12px;
+  font-size:15px;
+  background:#fff;
 }
-textarea{min-height:96px;resize:vertical}
+textarea{ min-height:96px; resize:vertical }
 input:focus,textarea:focus{
-  outline:none;border-color:var(--red);
+  outline:none;
+  border-color:var(--red);
   box-shadow:0 0 0 3px rgba(229,57,53,.12);
 }
 
 /* Buttons like your screenshot (pill) */
-.btn{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
-.btn-red{background:var(--red);color:#fff}
-.btn-grey{background:#f1f1f1;color:#333}
-.btn:active{transform:translateY(1px)}
-.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.btn{ border:0; border-radius:999px; padding:12px 18px; font-weight:800; cursor:pointer }
+.btn-red{ background:var(--red); color:#fff }
+.btn-grey{ background:#f1f1f1; color:#333 }
+.btn:active{ transform:translateY(1px) }
+.actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:12px }
 
 /* Small muted text */
-.muted{color:var(--grey);font-size:13px}
-.big{font-size:18px;font-weight:700}
+.muted{ color:var(--grey); font-size:13px }
+.big{ font-size:18px; font-weight:700 }
 
-/* Grid for owned cards preview (if you show them here) */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px;margin-top:10px}
-.cardItem{border:1px dashed #bbb;border-radius:12px;padding:6px;text-align:center;background:#fafafa}
-.cardItem img{width:100%;height:auto;border-radius:10px;display:block}
+/* Grid for owned cards preview */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+  gap:12px;
+  margin-top:10px;
+}
+.cardItem{
+  border:1px dashed #bbb;
+  border-radius:12px;
+  padding:6px;
+  text-align:center;
+  background:#fafafa;
+}
+.cardItem img{
+  width:100%;
+  height:auto;
+  border-radius:10px;
+  display:block;
+}
 
 /* Red soft pill (0 ใบ) */
 .pill{
-  display:inline-block;background:var(--soft);color:var(--red-2);
-  padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800
+  display:inline-block;
+  background:var(--soft);
+  color:var(--red-2);
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
 }
 
-/* Inline success toast (optional; keep your fixed #toast too) */
+/* Toast */
 #toast{
-  position:fixed;left:50%;transform:translateX(-50%);
-  bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;
-  opacity:0;pointer-events:none;transition:.25s
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:18px;
+  background:#111;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:10px;
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
 }
-#toast.show{opacity:1}
+#toast.show{ opacity:1 }
 
-/* ---------- Optional helpers to match the top card layout in screenshot ---------- */
-/* Wrap the first card content in <div class="identity"> … </div> for nicer spacing */
+/* Optional helpers to mirror your top card layout */
 .identity .name{
-  font-size:1.35rem;font-weight:900;color:var(--red-2);margin-bottom:4px
+  font-size:1.35rem;
+  font-weight:900;
+  color:var(--red-2);
+  margin-bottom:4px;
 }
 .identity .meta{
-  color:#6b7280;line-height:1.45;word-break:break-all;margin-bottom:8px
+  color:#6b7280;
+  line-height:1.45;
+  word-break:break-all;
+  margin-bottom:8px;
 }
 .identity .stats{
-  display:flex;align-items:center;gap:12px;margin-top:4px;font-weight:800
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:4px;
+  font-weight:800;
 }
-.identity .stats b{color:#111}
+.identity .stats b{ color:#111 }
