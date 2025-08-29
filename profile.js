@@ -16,10 +16,15 @@ function setupSidebar() {
   toggleBtn?.addEventListener("click", open);
   closeBtn?.addEventListener("click", close);
   overlay?.addEventListener("click", close);
-  document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
+
+  document.querySelectorAll("#sidebar .menu-item a").forEach(a => {
     if (!a.closest("#logout-link")) a.addEventListener("click", close);
   });
-  logout?.addEventListener("click", (e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
+
+  logout?.addEventListener("click", (e) => {
+    e.preventDefault();
+    auth.signOut().then(() => location.href = "login.html");
+  });
 }
 
 // ---------- Helpers ----------
@@ -41,11 +46,12 @@ async function ensureUsernameMapping(uid, uname) {
   if (!uname) return;
   try {
     await db.collection("usernames").doc(uname).set({ uid, username: uname }, { merge: true });
-  } catch (e) {}
+  } catch (_) {}
 }
+
 async function renameUsernameMapping(uid, oldU, newU) {
-  oldU = (oldU||"").trim().toLowerCase();
-  newU = (newU||"").trim().toLowerCase();
+  oldU = (oldU || "").trim().toLowerCase();
+  newU = (newU || "").trim().toLowerCase();
   if (!newU) throw new Error("ต้องระบุชื่อผู้ใช้");
   if (oldU === newU) return;
 
@@ -55,7 +61,7 @@ async function renameUsernameMapping(uid, oldU, newU) {
       if (oldSnap.exists && oldSnap.data().uid === uid) {
         await db.collection("usernames").doc(oldU).delete();
       }
-    } catch {}
+    } catch (_) {}
   }
   await db.collection("usernames").doc(newU).set({ uid, username: newU });
 }
@@ -67,13 +73,13 @@ auth.onAuthStateChanged(async (user) => {
 
   $("uid")?.textContent         = user.uid;
   $("email")?.textContent       = user.email || "(ไม่มีอีเมล)";
-  $("displayName")?.textContent = (user.email||"").split("@")[0];
+  $("displayName")?.textContent = (user.email || "").split("@")[0];
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure user doc exists + seed
+  // Ensure user doc exists + seed (merge so we never wipe)
   await docRef.set({
-    username: (user.email||"").split("@")[0],
+    username: (user.email || "").split("@")[0],
     cards: [],
     mission: Array(15).fill(false),
     points: 0,
@@ -85,7 +91,7 @@ auth.onAuthStateChanged(async (user) => {
   // Load
   const snap = await docRef.get();
   const data = snap.data() || {};
-  const currentUname = (data.username || (user.email||"").split("@")[0] || "").toLowerCase();
+  const currentUname = (data.username || (user.email || "").split("@")[0] || "").toLowerCase();
 
   if ($("username")) $("username").value = currentUname;
   if ($("about"))    $("about").value    = data.about || "";
@@ -98,15 +104,18 @@ auth.onAuthStateChanged(async (user) => {
   // Render cards
   const cards = Array.isArray(data.cards) ? data.cards : [];
   $("cardsCount")?.textContent = String(cards.length);
+
   const grid = $("cardsGrid");
   if (grid) {
     grid.innerHTML = cards.length
       ? cards.map(cId => {
-          const label = cId.replace(/card/i,"การ์ด ");
-          return `<div class="cardItem">
-                   <img src="assets/cards/${cId}.png" onerror="this.onerror=null;this.src='assets/cards/${cId}.jpg'">
-                   <div class="muted">${label}</div>
-                 </div>`;
+          const label = cId.replace(/card/i, "การ์ด ");
+          return `
+            <div class="cardItem">
+              <img src="assets/cards/${cId}.png"
+                   onerror="this.onerror=null;this.src='assets/cards/${cId}.jpg'">
+              <div class="muted">${label}</div>
+            </div>`;
         }).join("")
       : `<div class="muted">ยังไม่มีการ์ด</div>`;
   }
@@ -162,5 +171,7 @@ auth.onAuthStateChanged(async (user) => {
   };
 
   // Sign out
-  $("signOutBtn")?.addEventListener("click", ()=> auth.signOut().then(()=>location.href="login.html"));
+  $("signOutBtn")?.addEventListener("click", () =>
+    auth.signOut().then(() => location.href = "login.html")
+  );
 });
