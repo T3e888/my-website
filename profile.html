@@ -11,20 +11,26 @@
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+  </script>
 
   <!-- Styles -->
   <link rel="stylesheet" href="global.css?v=8">
   <!-- Reuse the red sidebar + page chrome -->
   <link rel="stylesheet" href="share.css?v=prelogo">
   <!-- Page-only styles -->
-  <link rel="stylesheet" href="profile.css?v=3">
+  <link rel="stylesheet" href="profile.css?v=4">
 </head>
 <body>
-  <!-- Sidebar -->
+  <!-- Sidebar trigger -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
+
+  <!-- Sidebar -->
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">×</button>
 
@@ -52,26 +58,16 @@
   <h1 class="page-title">โปรไฟล์ของคุณ</h1>
 
   <div class="wrap">
-    <!-- บัญชีพื้นฐาน -->
-    <div class="card">
-      <h2>ข้อมูลบัญชี</h2>
-      <div class="row">
-        <div class="col">
-          <div class="muted">UID</div>
-          <div id="uid" class="big">—</div>
-        </div>
-        <div class="col">
-          <div class="muted">อีเมล</div>
-          <div id="email" class="big">—</div>
-        </div>
-        <div class="col">
-          <div class="muted">ชื่อสำหรับแสดง</div>
-          <div id="displayName" class="big">—</div>
-        </div>
+    <!-- identity card -->
+    <div class="card identity">
+      <div class="name" id="displayName">—</div>
+      <div class="meta"><b>UID</b> · <span id="uid">—</span></div>
+      <div class="actions">
+        <button id="signOutBtn" class="btn btn-grey">ออกจากระบบ</button>
       </div>
     </div>
 
-    <!-- ชื่อผู้ใช้ (ใช้รับการ์ด) -->
+    <!-- username -->
     <div class="card">
       <h2>ชื่อผู้ใช้ (ใช้รับการ์ด)</h2>
       <label for="username">ชื่อผู้ใช้ (ตัวพิมพ์เล็ก)</label>
@@ -82,7 +78,7 @@
       </div>
     </div>
 
-    <!-- เกี่ยวกับฉัน -->
+    <!-- about -->
     <div class="card">
       <h2>เกี่ยวกับฉัน</h2>
       <label for="about">ข้อความแนะนำตัว</label>
@@ -93,7 +89,7 @@
       </div>
     </div>
 
-    <!-- เปลี่ยนรหัสผ่าน -->
+    <!-- change password -->
     <div class="card">
       <h2>เปลี่ยนรหัสผ่าน</h2>
       <div class="row">
@@ -112,7 +108,7 @@
       </div>
     </div>
 
-    <!-- สถิติ -->
+    <!-- stats -->
     <div class="card">
       <h2>สถิติ</h2>
       <div class="row">
@@ -131,17 +127,10 @@
       </div>
     </div>
 
-    <!-- การ์ดของฉัน -->
+    <!-- my cards -->
     <div class="card">
       <h2>การ์ดของฉัน <span class="pill"><span id="cardsCount">0</span> ใบ</span></h2>
       <div id="cardsGrid" class="grid"></div>
-    </div>
-
-    <!-- ปุ่มออกจากระบบ -->
-    <div class="card">
-      <div class="actions">
-        <button id="signOutBtn" class="btn btn-grey">ออกจากระบบ</button>
-      </div>
     </div>
   </div>
 
@@ -165,6 +154,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
 
-  <script src="profile.js?v=th-6"></script>
+  <script src="profile.js?v=th-7"></script>
 </body>
-</html>
+                                               </html>
