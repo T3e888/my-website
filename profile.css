@@ -1,25 +1,89 @@
-/* profile.css — page styles only (sidebar now from share.css) */
+/* profile.css — page styles only (sidebar comes from share.css) */
+:root{
+  --red:#e53935;          /* title & buttons */
+  --red-2:#b71c1c;        /* deep red text */
+  --grey:#888;
+  --line:#e5e7eb;
+  --soft:#fdecea;         /* pill bg */
+}
 
-:root{--red:#d32f2f;--grey:#888}
 *{box-sizing:border-box}
 body{margin:0;background:#fff;font-family:'Noto Sans Thai','Noto Sans',sans-serif}
-.wrap{max-width:900px;margin:28px auto;padding:0 16px}
-.page-title{margin:32px 0 6px;text-align:center;color:var(--red);font-size:2.1rem;font-weight:900}
-.card{background:#fff;border:1px solid #eee;border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+
+/* Title like the screenshot */
+.page-title{
+  margin:28px 0 10px;
+  text-align:center;
+  color:var(--red);
+  font-size:2.4rem;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+/* Cards */
+.wrap{max-width:900px;margin:0 auto 28px;padding:0 16px}
+.card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:20px;
+  padding:18px;
+  margin:14px 0 18px;
+  box-shadow:0 8px 24px rgba(0,0,0,.06);
+}
 .row{display:flex;gap:16px;flex-wrap:wrap}
 .col{flex:1 1 320px}
+
+/* Labels & inputs */
 label{font-size:13px;color:#555;margin-bottom:6px;display:block}
-input,textarea{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;font-size:15px}
-textarea{min-height:84px;resize:vertical}
-.btn{border:0;border-radius:999px;padding:10px 16px;font-weight:700;cursor:pointer}
-.btn-red{background:#e53935;color:#fff}
+input,textarea{
+  width:100%;padding:12px 14px;border:1.5px solid var(--line);
+  border-radius:12px;font-size:15px;background:#fff
+}
+textarea{min-height:96px;resize:vertical}
+input:focus,textarea:focus{
+  outline:none;border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(229,57,53,.12);
+}
+
+/* Buttons like your screenshot (pill) */
+.btn{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
+.btn-red{background:var(--red);color:#fff}
 .btn-grey{background:#f1f1f1;color:#333}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.btn:active{transform:translateY(1px)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+
+/* Small muted text */
 .muted{color:var(--grey);font-size:13px}
+.big{font-size:18px;font-weight:700}
+
+/* Grid for owned cards preview (if you show them here) */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px;margin-top:10px}
 .cardItem{border:1px dashed #bbb;border-radius:12px;padding:6px;text-align:center;background:#fafafa}
 .cardItem img{width:100%;height:auto;border-radius:10px;display:block}
-.pill{display:inline-block;background:#fdecea;color:#b71c1c;padding:3px 8px;border-radius:999px;font-size:12px;margin-left:8px}
-.big{font-size:18px;font-weight:700}
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#333;color:#fff;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s}
+
+/* Red soft pill (0 ใบ) */
+.pill{
+  display:inline-block;background:var(--soft);color:var(--red-2);
+  padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800
+}
+
+/* Inline success toast (optional; keep your fixed #toast too) */
+#toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;
+  opacity:0;pointer-events:none;transition:.25s
+}
 #toast.show{opacity:1}
+
+/* ---------- Optional helpers to match the top card layout in screenshot ---------- */
+/* Wrap the first card content in <div class="identity"> … </div> for nicer spacing */
+.identity .name{
+  font-size:1.35rem;font-weight:900;color:var(--red-2);margin-bottom:4px
+}
+.identity .meta{
+  color:#6b7280;line-height:1.45;word-break:break-all;margin-bottom:8px
+}
+.identity .stats{
+  display:flex;align-items:center;gap:12px;margin-top:4px;font-weight:800
+}
+.identity .stats b{color:#111}
