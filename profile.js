@@ -1,82 +1,95 @@
-// profile.js (Thai UI)
+// profile.js — Sidebar + Profile + Username mapping (no email field)
+
+// ===== Firebase handles =====
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* ---------- Sidebar (init ASAP) ---------- */
-function setupSidebar() {
-  const toggleBtn = document.getElementById("menu-toggle");
-  const sidebar   = document.getElementById("sidebar");
-  const overlay   = document.getElementById("overlay");
-  const closeBtn  = document.getElementById("close-sidebar");
-  const logout    = document.getElementById("logout-link");
+// ===== Small helpers =====
+const $ = (id) => document.getElementById(id);
+const toastEl = $("toast");
+function toast(t){
+  if (!toastEl) return alert(t);
+  toastEl.textContent = t;
+  toastEl.classList.add("show");
+  setTimeout(()=>toastEl.classList.remove("show"), 1600);
+}
 
-  const open  = () => { sidebar?.classList.add("open");  overlay?.classList.add("active"); };
-  const close = () => { sidebar?.classList.remove("open"); overlay?.classList.remove("active"); };
+// ===== Sidebar (safe bindings) =====
+function setupSidebar(){
+  const toggleBtn = $("menu-toggle");
+  const sidebar   = $("sidebar");
+  const overlay   = $("overlay");
+  const closeBtn  = $("close-sidebar");
+  const logout    = $("logout-link");
+
+  const open  = ()=>{ sidebar?.classList.add("open");  overlay?.classList.add("active"); };
+  const close = ()=>{ sidebar?.classList.remove("open"); overlay?.classList.remove("active"); };
 
   toggleBtn?.addEventListener("click", open);
   closeBtn?.addEventListener("click", close);
   overlay?.addEventListener("click", close);
 
+  // Close when navigating (except logout)
   document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
     if (!a.closest("#logout-link")) a.addEventListener("click", close);
   });
 
+  // Logout
   logout?.addEventListener("click", (e)=>{
     e.preventDefault();
     auth.signOut().then(()=>location.href="login.html");
   });
 }
-document.addEventListener("DOMContentLoaded", setupSidebar);
 
-/* ---------- Helpers ---------- */
-const $ = (id) => document.getElementById(id);
-const toastEl = $("toast");
-function toast(t){
-  if (toastEl){
-    toastEl.textContent = t;
-    toastEl.classList.add("show");
-    setTimeout(()=>toastEl.classList.remove("show"), 1600);
-  } else {
-    alert(t);
-  }
-}
-
+// ===== Username mapping helpers =====
+// Ensure usernames/{username} → { uid, username } exists (or is already mine).
 async function ensureUsernameMapping(uid, uname){
-  const u = (uname||"").trim().toLowerCase();
-  if (!u) return;
-  try { await db.collection("usernames").doc(u).set({ uid, username: u }, { merge: true }); } catch {}
+  if (!uname) return;
+  uname = String(uname).trim().toLowerCase();
+  if (!uname) return;
+  try {
+    await db.collection("usernames").doc(uname)
+      .set({ uid, username: uname }, { merge: true });
+  } catch(_) {/* ignore — rules will protect collisions */}
 }
 
+// Change username mapping safely:
+// - delete old mapping ONLY if it belongs to me
+// - write new mapping (rules must allow if free or mine)
 async function renameUsernameMapping(uid, oldU, newU){
-  const oldu = (oldU||"").trim().toLowerCase();
-  const newu = (newU||"").trim().toLowerCase();
-  if (!newu) throw new Error("ต้องระบุชื่อผู้ใช้");
-  if (oldu === newu) return;
+  oldU = String(oldU||"").trim().toLowerCase();
+  newU = String(newU||"").trim().toLowerCase();
+  if (!newU) throw new Error("Please enter a username.");
+  if (oldU === newU) return;
 
-  if (oldu){
-    try {
-      const snap = await db.collection("usernames").doc(oldu).get();
-      if (snap.exists && snap.data().uid === uid){
-        await db.collection("usernames").doc(oldu).delete();
+  if (oldU){
+    try{
+      const s = await db.collection("usernames").doc(oldU).get();
+      if (s.exists && s.data()?.uid === uid){
+        await db.collection("usernames").doc(oldU).delete();
       }
-    } catch {}
+    }catch(_) {/* best effort */}
   }
-  await db.collection("usernames").doc(newu).set({ uid, username: newu });
+  await db.collection("usernames").doc(newU).set({ uid, username: newU });
 }
 
-/* ---------- App ---------- */
+// ===== App =====
 auth.onAuthStateChanged(async (user)=>{
-  if (!user){ location.href="login.html"; return; }
+  if (!user){ location.href = "login.html"; return; }
 
-  // Identity header
+  // sidebar first
+  setupSidebar();
+
+  // Basic header (⚠️ no email element used anywhere)
   $("uid")?.textContent         = user.uid;
-  $("displayName")?.textContent = (user.email||"").split("@")[0] || "user";
+  $("displayName")?.textContent = (user.email||"").split("@")[0];
 
-  const docRef = db.collection("users").doc(user.uid);
+  const uref = db.collection("users").doc(user.uid);
 
-  // Seed / ensure fields exist (merge so nothing is lost)
-  await docRef.set({
-    username: (user.email||"").split("@")[0],
+  // Seed doc (merge so we never wipe existing)
+  await uref.set({
+    username: (user.email||"").split("@")[0] || "user",
+    about: "",
     cards: [],
     mission: Array(15).fill(false),
     points: 0,
@@ -85,72 +98,86 @@ auth.onAuthStateChanged(async (user)=>{
     quizLastYmd: null
   }, { merge: true });
 
-  // Load snapshot
-  const snap = await docRef.get();
+  // Load current data
+  const snap = await uref.get();
   const data = snap.data() || {};
-  let currentUname = (data.username || (user.email||"").split("@")[0] || "").toLowerCase();
+  let currentUname = String(
+    data.username || (user.email||"").split("@")[0] || ""
+  ).toLowerCase();
 
+  // Fill UI (all optional-safe)
+  $("username")?.setAttribute("inputmode","lowercase");
   if ($("username")) $("username").value = currentUname;
   if ($("about"))    $("about").value    = data.about || "";
+
   $("points")?.textContent     = String(data.points || 0);
   $("quizCount")?.textContent  = String(data.quizCount || 0);
   $("quizStreak")?.textContent = String(data.quizStreak || 0);
 
+  // Keep username ↔ uid mapping in /usernames
   await ensureUsernameMapping(user.uid, currentUname);
 
-  // Cards preview
+  // Render cards
   const cards = Array.isArray(data.cards) ? data.cards : [];
   $("cardsCount")?.textContent = String(cards.length);
   const grid = $("cardsGrid");
   if (grid){
-    grid.innerHTML = cards.length
-      ? cards.map(cId=>{
-          const label = cId.replace(/card/i, "การ์ด ");
+    if (!cards.length){
+      grid.innerHTML = `<div class="muted">No cards yet.</div>`;
+    } else {
+      const html = cards
+        .slice()
+        .sort((a,b)=>Number(a.replace('card',''))-Number(b.replace('card','')))
+        .map(cId=>{
+          const n = cId.replace(/card/i,"Card ");
           return `
             <div class="cardItem">
               <img src="assets/cards/${cId}.png"
+                   alt="${n}"
                    onerror="this.onerror=null;this.src='assets/cards/${cId}.jpg'">
-              <div class="muted">${label}</div>
+              <div class="muted">${n}</div>
             </div>`;
-        }).join("")
-      : `<div class="muted">ยังไม่มีการ์ด</div>`;
+        }).join("");
+      grid.innerHTML = html;
+    }
   }
 
+  // ===== Actions =====
   // Save username
   $("saveUserBtn")?.addEventListener("click", async ()=>{
     const newName = ($("username")?.value || "").trim().toLowerCase();
     if ($("saveUserMsg")) $("saveUserMsg").textContent = "";
-    if (!newName){ $("saveUserMsg")?.textContent = "กรุณากรอกชื่อผู้ใช้"; return; }
+    if (!newName){ $("saveUserMsg")?.textContent = "Please enter a username."; return; }
 
     try{
       await renameUsernameMapping(user.uid, currentUname, newName);
-      await docRef.set({ username: newName }, { merge: true });
+      await uref.set({ username: newName }, { merge: true });
       $("displayName")?.textContent = newName;
-      currentUname = newName; // keep in sync
-      toast("อัปเดตชื่อผู้ใช้แล้ว");
+      currentUname = newName;                 // keep in sync for future renames
+      toast("Username updated");
     }catch(e){
-      $("saveUserMsg")?.textContent = e.message || String(e);
+      $("saveUserMsg")?.textContent = e?.message || String(e);
     }
   });
 
-  // Save about
+  // Save "about me"
   $("saveAboutBtn")?.addEventListener("click", async ()=>{
     const about = ($("about")?.value || "").trim();
     if ($("saveAboutMsg")) $("saveAboutMsg").textContent = "";
     try{
-      await docRef.set({ about }, { merge: true });
-      toast("บันทึกแล้ว");
+      await uref.set({ about }, { merge: true });
+      toast("Saved");
     }catch(e){
-      $("saveAboutMsg")?.textContent = e.message || String(e);
+      $("saveAboutMsg")?.textContent = e?.message || String(e);
     }
   });
 
-  // Change password
+  // Change password (email/password users)
   $("changePassBtn")?.addEventListener("click", async ()=>{
-    const cur = $("curPass")?.value;
-    const nw  = $("newPass")?.value;
+    const cur = $("curPass")?.value || "";
+    const nw  = $("newPass")?.value || "";
     if ($("passMsg")) $("passMsg").textContent = "";
-    if (!cur || !nw){ $("passMsg")?.textContent = "กรุณากรอกให้ครบทั้งสองช่อง"; return; }
+    if (!cur || !nw){ $("passMsg")?.textContent = "Fill both fields."; return; }
 
     try{
       const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
@@ -158,12 +185,21 @@ auth.onAuthStateChanged(async (user)=>{
       await user.updatePassword(nw);
       if ($("curPass")) $("curPass").value = "";
       if ($("newPass")) $("newPass").value = "";
-      toast("เปลี่ยนรหัสผ่านแล้ว");
+      toast("Password changed");
     }catch(e){
-      $("passMsg")?.textContent = e.message || String(e);
+      $("passMsg")?.textContent = e?.message || String(e);
     }
   });
 
-  // Sign out
-  $("signOutBtn")?.addEventListener("click", ()=> auth.signOut().then(()=>location.href="login.html"));
+  // Sign out (secondary button)
+  $("signOutBtn")?.addEventListener("click", ()=>{
+    auth.signOut().then(()=>location.href="login.html");
+  });
 });
+
+// (Optional) bind sidebar even if this script is loaded before DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupSidebar, { once:true });
+} else {
+  setupSidebar();
+  }
