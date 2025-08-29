@@ -91,7 +91,7 @@ auth.onAuthStateChanged(async (user) => {
   // Load
   const snap = await docRef.get();
   const data = snap.data() || {};
-  const currentUname = (data.username || (user.email || "").split("@")[0] || "").toLowerCase();
+  let currentUname = (data.username || (user.email || "").split("@")[0] || "").toLowerCase(); // <-- let
 
   if ($("username")) $("username").value = currentUname;
   if ($("about"))    $("about").value    = data.about || "";
@@ -132,6 +132,7 @@ auth.onAuthStateChanged(async (user) => {
       await docRef.set({ username: newName }, { merge: true });
       $("displayName")?.textContent = newName;
       toast("อัปเดตชื่อผู้ใช้แล้ว");
+      currentUname = newName; // keep in sync
     } catch (e) {
       $("saveUserMsg")?.textContent = e.message || String(e);
     }
@@ -175,12 +176,3 @@ auth.onAuthStateChanged(async (user) => {
     auth.signOut().then(() => location.href = "login.html")
   );
 });
-// after loading user data
-let currentUname = (data.username || (user.email||"").split("@")[0] || "").toLowerCase();
-
-// inside saveUserBtn success block
-await renameUsernameMapping(user.uid, currentUname, newName);
-await docRef.set({ username: newName }, { merge: true });
-$("displayName")?.textContent = newName;
-toast("อัปเดตชื่อผู้ใช้แล้ว");
-currentUname = newName; // keep in sync
