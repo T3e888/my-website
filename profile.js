@@ -2,7 +2,7 @@
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// ---------- Sidebar ----------
+/* ---------- Sidebar (init ASAP) ---------- */
 function setupSidebar() {
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar   = document.getElementById("sidebar");
@@ -17,17 +17,18 @@ function setupSidebar() {
   closeBtn?.addEventListener("click", close);
   overlay?.addEventListener("click", close);
 
-  document.querySelectorAll("#sidebar .menu-item a").forEach(a => {
+  document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
     if (!a.closest("#logout-link")) a.addEventListener("click", close);
   });
 
-  logout?.addEventListener("click", (e) => {
+  logout?.addEventListener("click", (e)=>{
     e.preventDefault();
-    auth.signOut().then(() => location.href = "login.html");
+    auth.signOut().then(()=>location.href="login.html");
   });
 }
+document.addEventListener("DOMContentLoaded", setupSidebar);
 
-// ---------- Helpers ----------
+/* ---------- Helpers ---------- */
 const $ = (id) => document.getElementById(id);
 const toastEl = $("toast");
 function toast(t){
@@ -40,46 +41,42 @@ function toast(t){
   }
 }
 
-async function ensureUsernameMapping(uid, uname) {
-  if (!uname) return;
-  uname = uname.trim().toLowerCase();
-  if (!uname) return;
-  try {
-    await db.collection("usernames").doc(uname).set({ uid, username: uname }, { merge: true });
-  } catch (_) {}
+async function ensureUsernameMapping(uid, uname){
+  const u = (uname||"").trim().toLowerCase();
+  if (!u) return;
+  try { await db.collection("usernames").doc(u).set({ uid, username: u }, { merge: true }); } catch {}
 }
 
-async function renameUsernameMapping(uid, oldU, newU) {
-  oldU = (oldU || "").trim().toLowerCase();
-  newU = (newU || "").trim().toLowerCase();
-  if (!newU) throw new Error("ต้องระบุชื่อผู้ใช้");
-  if (oldU === newU) return;
+async function renameUsernameMapping(uid, oldU, newU){
+  const oldu = (oldU||"").trim().toLowerCase();
+  const newu = (newU||"").trim().toLowerCase();
+  if (!newu) throw new Error("ต้องระบุชื่อผู้ใช้");
+  if (oldu === newu) return;
 
-  if (oldU) {
+  if (oldu){
     try {
-      const oldSnap = await db.collection("usernames").doc(oldU).get();
-      if (oldSnap.exists && oldSnap.data().uid === uid) {
-        await db.collection("usernames").doc(oldU).delete();
+      const snap = await db.collection("usernames").doc(oldu).get();
+      if (snap.exists && snap.data().uid === uid){
+        await db.collection("usernames").doc(oldu).delete();
       }
-    } catch (_) {}
+    } catch {}
   }
-  await db.collection("usernames").doc(newU).set({ uid, username: newU });
+  await db.collection("usernames").doc(newu).set({ uid, username: newu });
 }
 
-// ---------- App ----------
-auth.onAuthStateChanged(async (user) => {
-  if (!user) { location.href = "login.html"; return; }
-  setupSidebar();
+/* ---------- App ---------- */
+auth.onAuthStateChanged(async (user)=>{
+  if (!user){ location.href="login.html"; return; }
 
+  // Identity header
   $("uid")?.textContent         = user.uid;
-  $("email")?.textContent       = user.email || "(ไม่มีอีเมล)";
-  $("displayName")?.textContent = (user.email || "").split("@")[0];
+  $("displayName")?.textContent = (user.email||"").split("@")[0] || "user";
 
   const docRef = db.collection("users").doc(user.uid);
 
-  // Ensure user doc exists + seed (merge so we never wipe)
+  // Seed / ensure fields exist (merge so nothing is lost)
   await docRef.set({
-    username: (user.email || "").split("@")[0],
+    username: (user.email||"").split("@")[0],
     cards: [],
     mission: Array(15).fill(false),
     points: 0,
@@ -88,10 +85,10 @@ auth.onAuthStateChanged(async (user) => {
     quizLastYmd: null
   }, { merge: true });
 
-  // Load
+  // Load snapshot
   const snap = await docRef.get();
   const data = snap.data() || {};
-  let currentUname = (data.username || (user.email || "").split("@")[0] || "").toLowerCase(); // <-- let
+  let currentUname = (data.username || (user.email||"").split("@")[0] || "").toLowerCase();
 
   if ($("username")) $("username").value = currentUname;
   if ($("about"))    $("about").value    = data.about || "";
@@ -101,14 +98,13 @@ auth.onAuthStateChanged(async (user) => {
 
   await ensureUsernameMapping(user.uid, currentUname);
 
-  // Render cards
+  // Cards preview
   const cards = Array.isArray(data.cards) ? data.cards : [];
   $("cardsCount")?.textContent = String(cards.length);
-
   const grid = $("cardsGrid");
-  if (grid) {
+  if (grid){
     grid.innerHTML = cards.length
-      ? cards.map(cId => {
+      ? cards.map(cId=>{
           const label = cId.replace(/card/i, "การ์ด ");
           return `
             <div class="cardItem">
@@ -121,58 +117,53 @@ auth.onAuthStateChanged(async (user) => {
   }
 
   // Save username
-  const saveUserBtn = $("saveUserBtn");
-  if (saveUserBtn) saveUserBtn.onclick = async () => {
+  $("saveUserBtn")?.addEventListener("click", async ()=>{
     const newName = ($("username")?.value || "").trim().toLowerCase();
     if ($("saveUserMsg")) $("saveUserMsg").textContent = "";
-    if (!newName) { $("saveUserMsg")?.textContent = "กรุณากรอกชื่อผู้ใช้"; return; }
+    if (!newName){ $("saveUserMsg")?.textContent = "กรุณากรอกชื่อผู้ใช้"; return; }
 
-    try {
+    try{
       await renameUsernameMapping(user.uid, currentUname, newName);
       await docRef.set({ username: newName }, { merge: true });
       $("displayName")?.textContent = newName;
-      toast("อัปเดตชื่อผู้ใช้แล้ว");
       currentUname = newName; // keep in sync
-    } catch (e) {
+      toast("อัปเดตชื่อผู้ใช้แล้ว");
+    }catch(e){
       $("saveUserMsg")?.textContent = e.message || String(e);
     }
-  };
+  });
 
   // Save about
-  const saveAboutBtn = $("saveAboutBtn");
-  if (saveAboutBtn) saveAboutBtn.onclick = async () => {
+  $("saveAboutBtn")?.addEventListener("click", async ()=>{
     const about = ($("about")?.value || "").trim();
     if ($("saveAboutMsg")) $("saveAboutMsg").textContent = "";
-    try {
+    try{
       await docRef.set({ about }, { merge: true });
       toast("บันทึกแล้ว");
-    } catch (e) {
+    }catch(e){
       $("saveAboutMsg")?.textContent = e.message || String(e);
     }
-  };
+  });
 
   // Change password
-  const changePassBtn = $("changePassBtn");
-  if (changePassBtn) changePassBtn.onclick = async () => {
+  $("changePassBtn")?.addEventListener("click", async ()=>{
     const cur = $("curPass")?.value;
     const nw  = $("newPass")?.value;
     if ($("passMsg")) $("passMsg").textContent = "";
-    if (!cur || !nw) { $("passMsg")?.textContent = "กรุณากรอกให้ครบทั้งสองช่อง"; return; }
+    if (!cur || !nw){ $("passMsg")?.textContent = "กรุณากรอกให้ครบทั้งสองช่อง"; return; }
 
-    try {
+    try{
       const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
       await user.reauthenticateWithCredential(cred);
       await user.updatePassword(nw);
       if ($("curPass")) $("curPass").value = "";
       if ($("newPass")) $("newPass").value = "";
       toast("เปลี่ยนรหัสผ่านแล้ว");
-    } catch (e) {
+    }catch(e){
       $("passMsg")?.textContent = e.message || String(e);
     }
-  };
+  });
 
   // Sign out
-  $("signOutBtn")?.addEventListener("click", () =>
-    auth.signOut().then(() => location.href = "login.html")
-  );
+  $("signOutBtn")?.addEventListener("click", ()=> auth.signOut().then(()=>location.href="login.html"));
 });
