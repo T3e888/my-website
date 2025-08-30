@@ -1,140 +1,106 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Your Profile</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+  <meta charset="UTF-8" />  
+  <title>Your Profile</title>  
+  <meta name="viewport" content="width=device-width,initial-scale=1" />  
+  <link rel="stylesheet" href="profile.css" />  
+</head>  
+<body>  
+  <!-- Sidebar -->  
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">  
+    <span class="menu-icon"><span></span><span></span><span></span></span>  
+  </button>  
+  <nav id="sidebar" class="sidebar">  
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>  
+    <ul class="menu">  
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>  
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>  
+      <li class="menu-item"><a href="share.html">Share</a></li>  
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>  
+      <li class="menu-item"><a href="unlock.html">Unlock</a></li>  
+      <li class="menu-item"><a href="learn.html">Learn</a></li>  
+      <li class="menu-item"><a href="profile.html" class="active">Profile</a></li>  
+      <li class="menu-item"><a href="feedback.html">Comment</a></li>  
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>  
+    </ul>  
+  </nav>  
+  <div id="overlay" class="overlay"></div>  
+  <!-- /Sidebar -->    <h1 class="page-title">Your Profile</h1>    <div class="wrap">  
+    <!-- Overview -->  
+    <section class="card">  
+      <div class="row">  
+        <div class="col">  
+          <div class="big" id="displayName">—</div>  
+          <div class="muted">UID: <span id="uid">—</span></div>  
+          <div class="muted">Email: <span id="email">—</span></div>  
+          <div class="stats">  
+            <b>Points:</b> <span id="points">0</span>  
+            <span class="pill"><span id="cardsCount">0</span> cards</span>  
+          </div>  
+        </div>  
+        <div class="col">  
+          <label>About me</label>  
+          <textarea id="about" placeholder="Write something about you…"></textarea>  
+          <div class="actions">  
+            <button class="btn btn-red" id="saveAboutBtn">Save</button>  
+            <span class="muted" id="saveAboutMsg"></span>  
+          </div>  
+        </div>  
+      </div>  
+    </section>  <!-- Username -->  
+<section class="card">  
+  <div class="row">  
+    <div class="col">  
+      <label>Username (shown in app)</label>  
+      <input id="username" type="text" placeholder="yourname" />  
+      <div class="actions">  
+        <button class="btn btn-red" id="saveUserBtn">Update Username</button>  
+        <span class="muted" id="saveUserMsg"></span>  
+      </div>  
+    </div>  
+    <div class="col">  
+      <label>Quick actions</label>  
+      <div class="actions">  
+        <button class="btn btn-grey" id="signOutBtn">Sign out</button>  
+      </div>  
+    </div>  
+  </div>  
+</section>  
 
-  <!-- PWA (same as other pages) -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#b91c1c">
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
-    }
-  </script>
+<!-- Change password -->  
+<section class="card">  
+  <div class="row">  
+    <div class="col">  
+      <label>Current password</label>  
+      <input id="curPass" type="password" autocomplete="current-password" />  
+    </div>  
+    <div class="col">  
+      <label>New password</label>  
+      <input id="newPass" type="password" autocomplete="new-password" />  
+    </div>  
+  </div>  
+  <div class="actions">  
+    <button class="btn btn-red" id="changePassBtn">Change Password</button>  
+    <span class="muted" id="passMsg"></span>  
+  </div>  
+</section>  
 
-  <!-- Shared chrome (logo sidebar) + page-only CSS -->
-  <link rel="stylesheet" href="global.css?v=8">
-  <link rel="stylesheet" href="share.css?v=prelogo">
-  <link rel="stylesheet" href="profile.css?v=7">
-</head>
-<body>
-  <!-- Sidebar trigger -->
-  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
-    <span class="menu-icon"><span></span><span></span><span></span></span>
-  </button>
+<!-- Your owned cards -->  
+<section class="card">  
+  <div class="topBar"><b>Your Cards</b></div>  
+  <div id="cardsGrid" class="grid"></div>  
+</section>
 
-  <!-- Sidebar (same markup as other pages) -->
-  <nav id="sidebar" class="sidebar">
-    <button id="close-sidebar" class="close-btn" aria-label="Close menu">×</button>
-
-    <div class="brand">
-      <img src="assets/logo.png" alt="Logo">
-      <div class="brand-name">Stroke Card Adventure</div>
-    </div>
-
-    <ul class="menu">
-      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
-      <li class="menu-item"><a href="share.html">Share</a></li>
-      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
-      <li class="menu-item"><a href="unlock.html">Unlock</a></li>
-      <li class="menu-item"><a href="learn.html">Learn</a></li>
-      <li class="menu-item"><a class="active" href="profile.html">Profile</a></li>
-      <li class="menu-item"><a href="feedback.html">Comment</a></li>
-      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
-    </ul>
-  </nav>
-  <div id="overlay" class="overlay"></div>
-  <!-- /Sidebar -->
-
-  <h1 class="page-title">Your Profile</h1>
-
-  <div class="wrap">
-    <!-- Identity / Stats -->
-    <section class="card identity">
-      <div class="name" id="displayName">—</div>
-      <div class="meta"><b>UID</b> · <span id="uid">—</span></div>
-      <div class="stats">
-        <b>Points:</b> <span id="points">0</span>
-        <span class="pill"><span id="cardsCount">0</span> cards</span>
-      </div>
-    </section>
-
-    <!-- About me -->
-    <section class="card">
-      <label for="about">About me</label>
-      <textarea id="about" placeholder="Write something about you…"></textarea>
-      <div class="actions">
-        <button class="btn btn-red" id="saveAboutBtn">Save</button>
-        <span class="muted" id="saveAboutMsg"></span>
-      </div>
-    </section>
-
-    <!-- Username -->
-    <section class="card">
-      <div class="row">
-        <div class="col">
-          <label for="username">Username (shown in app)</label>
-          <input id="username" type="text" placeholder="yourname" inputmode="lowercase" />
-          <div class="actions">
-            <button class="btn btn-red" id="saveUserBtn">Update Username</button>
-            <span class="muted" id="saveUserMsg"></span>
-          </div>
-        </div>
-        <div class="col">
-          <label>Quick actions</label>
-          <div class="actions">
-            <button class="btn btn-grey" id="signOutBtn">Sign out</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Change password -->
-    <section class="card">
-      <div class="row">
-        <div class="col">
-          <label for="curPass">Current password</label>
-          <input id="curPass" type="password" autocomplete="current-password" />
-        </div>
-        <div class="col">
-          <label for="newPass">New password</label>
-          <input id="newPass" type="password" autocomplete="new-password" />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-red" id="changePassBtn">Change Password</button>
-        <span class="muted" id="passMsg"></span>
-      </div>
-    </section>
-
-    <!-- Your owned cards -->
-    <section class="card">
-      <h2>Your Cards <span class="pill"><span id="cardsCount">0</span></span></h2>
-      <div id="cardsGrid" class="grid"></div>
-    </section>
-  </div>
-
-  <!-- Toast -->
-  <div id="toast"></div>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",
-      authDomain: "login-ba993.firebaseapp.com",
-      projectId: "login-ba993",
-      storageBucket: "login-ba993.appspot.com",
-      messagingSenderId: "86689747767",
-      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
-      measurementId: "G-33LJCV1MD8"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  </script>
-  <script src="profile.js?v=th-9"></script>
-</body>
-                                            </html>
+  </div>    <div id="toast"></div>    <!-- Firebase -->    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>    <script>  
+    const firebaseConfig = {  
+      apiKey: "AIzaSyAY684l419wAeZwfMLS5dJVfZaNuW3drTY",  
+      authDomain: "login-ba993.firebaseapp.com",  
+      projectId: "login-ba993",  
+      storageBucket: "login-ba993.appspot.com",  
+      messagingSenderId: "86689747767",  
+      appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",  
+      measurementId: "G-33LJCV1MD8"  
+    };  
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);  
+  </script>    <script src="profile.js"></script>  </body>  
+</html>
