@@ -5,7 +5,7 @@
   <title>Your Profile</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <!-- PWA (optional, same as other pages) -->
+  <!-- PWA (same as other pages) -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#b91c1c">
   <script>
@@ -14,19 +14,18 @@
     }
   </script>
 
-  <!-- Use the SAME shared chrome as other pages -->
+  <!-- Shared chrome (logo sidebar) + page-only CSS -->
   <link rel="stylesheet" href="global.css?v=8">
   <link rel="stylesheet" href="share.css?v=prelogo">
-  <!-- Page-only styles -->
-  <link rel="stylesheet" href="profile.css?v=6">
+  <link rel="stylesheet" href="profile.css?v=7">
 </head>
 <body>
-  <!-- Sidebar trigger (same markup used everywhere) -->
+  <!-- Sidebar trigger -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
 
-  <!-- Sidebar (shared style/structure) -->
+  <!-- Sidebar (same markup as other pages) -->
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">×</button>
 
@@ -52,7 +51,7 @@
   <h1 class="page-title">Your Profile</h1>
 
   <div class="wrap">
-    <!-- Overview -->
+    <!-- Identity / Stats -->
     <section class="card identity">
       <div class="name" id="displayName">—</div>
       <div class="meta"><b>UID</b> · <span id="uid">—</span></div>
@@ -136,6 +135,6 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
-  <script src="profile.js?v=th-8"></script>
+  <script src="profile.js?v=th-9"></script>
 </body>
-</html>
+                                            </html>
