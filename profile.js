@@ -102,9 +102,9 @@ auth.onAuthStateChanged(async (user)=>{
 
   // Fill header & fields
   $("uid")?.textContent         = user.uid;
-  $("displayName")?.textContent = currentUname;       // ← big name at top
-  $("username") && ($("username").value = currentUname);
-  $("about")    && ($("about").value    = data.about || "");
+  $("displayName")?.textContent = currentUname;       // big name at top
+  if ($("username")) $("username").value = currentUname;
+  if ($("about"))    $("about").value    = data.about || "";
   $("points")?.textContent     = String(data.points || 0);
   $("quizCount")?.textContent  = String(data.quizCount || 0);
   $("quizStreak")?.textContent = String(data.quizStreak || 0);
@@ -196,4 +196,4 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", setupSidebar, { once:true });
 } else {
   setupSidebar();
-    }
+            }
