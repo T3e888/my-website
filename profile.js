@@ -1,14 +1,21 @@
-<script>
-// profile.js — robust username mapping with transaction + live UI
+// profile.js — Sidebar + Profile + Username mapping
+console.log('profile.js vth-9 loaded');
 
+// ===== Firebase handles =====
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
+// ===== Small helpers =====
 const $ = (id) => document.getElementById(id);
 const toastEl = $("toast");
-const toast = (t)=>{ if(!toastEl) return alert(t); toastEl.textContent=t; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"),1500); };
+function toast(t){
+  if (!toastEl) return alert(t);
+  toastEl.textContent = t;
+  toastEl.classList.add("show");
+  setTimeout(()=>toastEl.classList.remove("show"), 1600);
+}
 
-// ---- Sidebar (unchanged) ----
+// ===== Sidebar (safe bindings) =====
 function setupSidebar(){
   const toggleBtn = $("menu-toggle");
   const sidebar   = $("sidebar");
@@ -16,61 +23,69 @@ function setupSidebar(){
   const closeBtn  = $("close-sidebar");
   const logout    = $("logout-link");
 
-  const open  = ()=>{ sidebar?.classList.add("open"); overlay?.classList.add("active"); };
+  const open  = ()=>{ sidebar?.classList.add("open");  overlay?.classList.add("active"); };
   const close = ()=>{ sidebar?.classList.remove("open"); overlay?.classList.remove("active"); };
 
   toggleBtn?.addEventListener("click", open);
   closeBtn?.addEventListener("click", close);
   overlay?.addEventListener("click", close);
-  document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{ if(!a.closest("#logout-link")) a.addEventListener("click", close); });
-  logout?.addEventListener("click",(e)=>{ e.preventDefault(); auth.signOut().then(()=>location.href="login.html"); });
-}
 
-// ---- Username utils ----
-const USERNAME_RE = /^[a-z0-9._-]{3,20}$/;  // adjust if you want
-function sanitizeName(v){ return String(v||"").trim().toLowerCase(); }
+  // Close when navigating (except logout)
+  document.querySelectorAll("#sidebar .menu-item a").forEach(a=>{
+    if (!a.closest("#logout-link")) a.addEventListener("click", close);
+  });
 
-// Keep a best-effort mapping on first load (won’t overwrite others due to rules)
-async function ensureUsernameMapping(uid, uname){
-  const u = sanitizeName(uname);
-  if(!u) return;
-  try { await db.collection("usernames").doc(u).set({ uid, username:u }, { merge:true }); } catch(_) {}
-}
-
-// Atomic change: old → new (delete old if mine, claim new if free or mine)
-async function changeUsernameTx(uid, oldU, newU){
-  const oldRef = oldU ? db.collection("usernames").doc(oldU) : null;
-  const newRef = db.collection("usernames").doc(newU);
-  const userRef= db.collection("users").doc(uid);
-
-  return db.runTransaction(async (tx)=>{
-    const newSnap = await tx.get(newRef);
-    if (newSnap.exists && newSnap.data().uid !== uid) {
-      throw new Error("USERNAME_TAKEN");
-    }
-    if (oldRef){
-      const oldSnap = await tx.get(oldRef);
-      if (oldSnap.exists && oldSnap.data().uid === uid) {
-        tx.delete(oldRef);
-      }
-    }
-    tx.set(newRef, { uid, username: newU });
-    tx.set(userRef, { username: newU }, { merge:true });
+  // Logout
+  logout?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    auth.signOut().then(()=>location.href="login.html");
   });
 }
 
-// ---- App ----
+// ===== Username mapping helpers =====
+// Ensure usernames/{username} → { uid, username } exists (or is already mine).
+async function ensureUsernameMapping(uid, uname){
+  if (!uname) return;
+  uname = String(uname).trim().toLowerCase();
+  if (!uname) return;
+  try {
+    await db.collection("usernames").doc(uname)
+      .set({ uid, username: uname }, { merge: true });
+  } catch(_) {/* ignore — rules will protect collisions */}
+}
+
+// Change username mapping safely
+async function renameUsernameMapping(uid, oldU, newU){
+  oldU = String(oldU||"").trim().toLowerCase();
+  newU = String(newU||"").trim().toLowerCase();
+  if (!newU) throw new Error("Please enter a username.");
+  if (oldU === newU) return;
+
+  if (oldU){
+    try{
+      const s = await db.collection("usernames").doc(oldU).get();
+      if (s.exists && s.data()?.uid === uid){
+        await db.collection("usernames").doc(oldU).delete();
+      }
+    }catch(_) {/* best effort */}
+  }
+  await db.collection("usernames").doc(newU).set({ uid, username: newU });
+}
+
+// ===== App =====
 auth.onAuthStateChanged(async (user)=>{
-  if(!user) { location.href="login.html"; return; }
+  if (!user){ location.href = "login.html"; return; }
+
+  // sidebar first
   setupSidebar();
 
-  // Identity header
-  $("uid")?.textContent = user.uid;
-  $("displayName")?.textContent = (user.email||"").split("@")[0] || "user";
+  // Basic header placeholders
+  $("uid")?.textContent         = user.uid;
+  $("displayName")?.textContent = (user.email||"").split("@")[0];
 
   const uref = db.collection("users").doc(user.uid);
 
-  // Seed (merge so nothing gets wiped)
+  // Seed doc (merge so we never wipe existing)
   await uref.set({
     username: (user.email||"").split("@")[0] || "user",
     about: "",
@@ -80,112 +95,111 @@ auth.onAuthStateChanged(async (user)=>{
     quizCount: 0,
     quizStreak: 0,
     quizLastYmd: null
-  }, { merge:true });
+  }, { merge: true });
 
-  // Live listener keeps UI in sync (username/points/cards update instantly)
-  let currentUname = "";
-  uref.onSnapshot((snap)=>{
-    const d = snap.exists ? (snap.data()||{}) : {};
-    currentUname = sanitizeName(d.username || (user.email||"").split("@")[0] || "user");
+  // Load current data
+  const snap = await uref.get();
+  const data = snap.data() || {};
+  let currentUname = String(
+    data.username || (user.email||"").split("@")[0] || ""
+  ).toLowerCase();
 
-    // Header + fields
-    $("displayName") && ($("displayName").textContent = currentUname);
-    $("username") && ( $("username").value = currentUname );
-    $("about") && ( $("about").value = d.about || "" );
-    $("points") && ( $("points").textContent = String(d.points||0) );
-    $("quizCount") && ( $("quizCount").textContent = String(d.quizCount||0) );
-    $("quizStreak") && ( $("quizStreak").textContent = String(d.quizStreak||0) );
+  // Show the Firestore username immediately (fixes old email fallback)
+  $("displayName")?.textContent = currentUname || (user.email||"").split("@")[0];
 
-    // Cards grid
-    const cards = Array.isArray(d.cards) ? d.cards : [];
-    $("cardsCount") && ( $("cardsCount").textContent = String(cards.length) );
-    const grid = $("cardsGrid");
-    if (grid){
-      if (!cards.length){
-        grid.innerHTML = `<div class="muted">No cards yet.</div>`;
-      } else {
-        grid.innerHTML = cards
-          .slice().sort((a,b)=>Number(a.replace('card',''))-Number(b.replace('card','')))
-          .map(cId=>{
-            const n = cId.replace(/card/i,"Card ");
-            return `<div class="cardItem">
-                      <img src="assets/cards/${cId}.png" alt="${n}"
-                           onerror="this.onerror=null;this.src='assets/cards/${cId}.jpg'">
-                      <div class="muted">${n}</div>
-                    </div>`;
-          }).join("");
-      }
+  // Fill UI
+  if ($("username")) $("username").value = currentUname;
+  if ($("about"))    $("about").value    = data.about || "";
+  $("points")?.textContent     = String(data.points || 0);
+  $("quizCount")?.textContent  = String(data.quizCount || 0);
+  $("quizStreak")?.textContent = String(data.quizStreak || 0);
+
+  // Keep username ↔ uid mapping in /usernames
+  await ensureUsernameMapping(user.uid, currentUname);
+
+  // Render cards
+  const cards = Array.isArray(data.cards) ? data.cards : [];
+  $("cardsCount")?.textContent = String(cards.length);
+  const grid = $("cardsGrid");
+  if (grid){
+    if (!cards.length){
+      grid.innerHTML = `<div class="muted">No cards yet.</div>`;
+    } else {
+      const html = cards
+        .slice()
+        .sort((a,b)=>Number(a.replace('card',''))-Number(b.replace('card','')))
+        .map(cId=>{
+          const n = cId.replace(/card/i,"Card ");
+          return `
+            <div class="cardItem">
+              <img src="assets/cards/${cId}.png"
+                   alt="${n}"
+                   onerror="this.onerror=null;this.src='assets/cards/${cId}.jpg'">
+              <div class="muted">${n}</div>
+            </div>`;
+        }).join("");
+      grid.innerHTML = html;
     }
-  });
+  }
 
-  // Best-effort mapping for whatever username we start with
-  const firstSnap = await uref.get();
-  await ensureUsernameMapping(user.uid, (firstSnap.data()||{}).username);
-
-  // Force lowercase as you type (so it “shows” exactly what will be saved)
-  $("username")?.addEventListener("input", (e)=>{
-    const v = sanitizeName(e.target.value);
-    if (e.target.value !== v) e.target.value = v;
-  });
-
+  // ===== Actions =====
   // Save username
   $("saveUserBtn")?.addEventListener("click", async ()=>{
-    const msgEl = $("saveUserMsg");
-    msgEl && (msgEl.textContent = "");
-    let newName = sanitizeName($("username")?.value);
-    if (!newName){ msgEl && (msgEl.textContent="Please enter a username."); return; }
-    if (!USERNAME_RE.test(newName)){ msgEl && (msgEl.textContent="Use 3–20 chars: a–z, 0–9, . _ -"); return; }
+    const newName = ($("username")?.value || "").trim().toLowerCase();
+    if ($("saveUserMsg")) $("saveUserMsg").textContent = "";
+    if (!newName){ $("saveUserMsg")?.textContent = "Please enter a username."; return; }
 
     try{
-      await changeUsernameTx(user.uid, currentUname, newName);
+      await renameUsernameMapping(user.uid, currentUname, newName);
+      await uref.set({ username: newName }, { merge: true });
+      $("displayName")?.textContent = newName;
+      currentUname = newName;                 // keep in sync for future renames
       toast("Username updated");
-      // UI will refresh via onSnapshot; displayName mirrors that
     }catch(e){
-      if (e?.message === "USERNAME_TAKEN") {
-        msgEl && (msgEl.textContent = "That username is already taken.");
-      } else {
-        msgEl && (msgEl.textContent = e?.message || String(e));
-      }
+      $("saveUserMsg")?.textContent = e?.message || String(e);
     }
   });
 
-  // Save about
+  // Save "about me"
   $("saveAboutBtn")?.addEventListener("click", async ()=>{
-    const msgEl = $("saveAboutMsg");
-    msgEl && (msgEl.textContent = "");
+    const about = ($("about")?.value || "").trim();
+    if ($("saveAboutMsg")) $("saveAboutMsg").textContent = "";
     try{
-      await uref.set({ about: ($("about")?.value||"").trim() }, { merge:true });
+      await uref.set({ about }, { merge: true });
       toast("Saved");
     }catch(e){
-      msgEl && (msgEl.textContent = e?.message || String(e));
+      $("saveAboutMsg")?.textContent = e?.message || String(e);
     }
   });
 
-  // Change password (email/password only)
+  // Change password (email/password users)
   $("changePassBtn")?.addEventListener("click", async ()=>{
-    const msgEl = $("passMsg");
-    msgEl && (msgEl.textContent = "");
     const cur = $("curPass")?.value || "";
     const nw  = $("newPass")?.value || "";
-    if (!cur || !nw){ msgEl && (msgEl.textContent="Fill both fields."); return; }
+    if ($("passMsg")) $("passMsg").textContent = "";
+    if (!cur || !nw){ $("passMsg")?.textContent = "Fill both fields."; return; }
+
     try{
       const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
       await user.reauthenticateWithCredential(cred);
       await user.updatePassword(nw);
-      $("curPass") && ( $("curPass").value = "" );
-      $("newPass") && ( $("newPass").value = "" );
+      if ($("curPass")) $("curPass").value = "";
+      if ($("newPass")) $("newPass").value = "";
       toast("Password changed");
     }catch(e){
-      msgEl && (msgEl.textContent = e?.message || String(e));
+      $("passMsg")?.textContent = e?.message || String(e);
     }
   });
 
-  // Sign out
-  $("signOutBtn")?.addEventListener("click", ()=> auth.signOut().then(()=>location.href="login.html"));
+  // Sign out (secondary button)
+  $("signOutBtn")?.addEventListener("click", ()=>{
+    auth.signOut().then(()=>location.href="login.html");
+  });
 });
 
-// If script loads before DOM
-document.readyState === "loading"
-  ? document.addEventListener("DOMContentLoaded", setupSidebar, { once:true })
-  : setupSidebar();
-</script>
+// Ensure sidebar hook even if JS loads before DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupSidebar, { once:true });
+} else {
+  setupSidebar();
+}
