@@ -43,7 +43,6 @@ function setupSidebar(){
 async function ensureUsernameMapping(uid, uname){
   uname = String(uname||"").trim().toLowerCase();
   if (!uname) return;
-  // Rules allow {uid} or {uid, username}
   await db.collection("usernames").doc(uname)
     .set({ uid, username: uname }, { merge: true });
 }
@@ -56,10 +55,8 @@ async function renameUsernameMapping(uid, oldU, newU){
   }
   if (oldU === newU) return;
 
-  // Try claiming/writing new mapping; rules allow if free or already mine
   await db.collection("usernames").doc(newU).set({ uid, username: newU }, { merge: true });
 
-  // Best-effort delete old mapping if it belonged to me
   if (oldU){
     try{
       const s = await db.collection("usernames").doc(oldU).get();
@@ -70,23 +67,20 @@ async function renameUsernameMapping(uid, oldU, newU){
   }
 }
 
-/* === NEW: one-time identity hook ===
-   Makes sure /users/{uid} has a username and /usernames/{name} -> {uid}
-   If the desired name is taken, it auto-suffixes -xxxx (first 4 of uid). */
+/* === Identity hook ===
+   Ensures /users/{uid}.username exists and /usernames/{name}->{uid}.
+   If name is taken by someone else, suffix -xxxx and write both places. */
 async function ensureIdentity(user){
   const uref = db.collection("users").doc(user.uid);
-
-  // Load current data (if any)
   const snap = await uref.get();
   const data = snap.exists ? (snap.data() || {}) : {};
 
-  // Compute a base username
   const emailName = (user.email||"").split("@")[0] || "user";
   let uname = String(data.username || emailName).trim().toLowerCase()
                .replace(/[^a-z0-9._-]/g,"");
   if (uname.length < 3) uname = `user-${user.uid.slice(0,4).toLowerCase()}`;
 
-  // Ensure /users/{uid} exists (merge, never wipe)
+  // user doc (merge so nothing else is lost)
   await uref.set({
     username: uname,
     about: data.about || "",
@@ -98,11 +92,10 @@ async function ensureIdentity(user){
     quizLastYmd: data.quizLastYmd || null
   }, { merge: true });
 
-  // Ensure /usernames/{uname} -> { uid }
+  // username mapping (fallback if taken)
   try{
     await ensureUsernameMapping(user.uid, uname);
   }catch{
-    // If taken by someone else, suffix and write both places
     const fallback = `${uname}-${user.uid.slice(0,4).toLowerCase()}`;
     await db.collection("usernames").doc(fallback)
       .set({ uid: user.uid, username: fallback }, { merge: true });
@@ -110,7 +103,6 @@ async function ensureIdentity(user){
     uname = fallback;
   }
 
-  // Return fresh data + final uname
   const finalSnap = await uref.get();
   return { data: finalSnap.data() || {}, uname };
 }
@@ -121,12 +113,12 @@ auth.onAuthStateChanged(async (user)=>{
 
   setupSidebar();
 
+  // Show UID immediately so UI never stays blank
+  $("uid")?.textContent = user.uid;
+
   try{
-    // Ensure identity and mapping first
     const { data, uname } = await ensureIdentity(user);
 
-    // Fill header & fields
-    $("uid")?.textContent         = user.uid;
     $("displayName")?.textContent = uname;
     if ($("username")) $("username").value = uname;
     if ($("about"))    $("about").value    = data.about || "";
@@ -134,7 +126,7 @@ auth.onAuthStateChanged(async (user)=>{
     $("quizCount")?.textContent  = String(data.quizCount || 0);
     $("quizStreak")?.textContent = String(data.quizStreak || 0);
 
-    // Render cards
+    // Cards grid (with .png → .jpg fallback)
     const cards = Array.isArray(data.cards) ? data.cards : [];
     $("cardsCount")?.textContent = String(cards.length);
     const grid = $("cardsGrid");
@@ -142,8 +134,7 @@ auth.onAuthStateChanged(async (user)=>{
       if (!cards.length){
         grid.innerHTML = `<div class="muted">No cards yet.</div>`;
       } else {
-        const html = cards
-          .slice()
+        const html = cards.slice()
           .sort((a,b)=>Number(a.replace('card',''))-Number(b.replace('card','')))
           .map(cId=>{
             const n = cId.replace(/card/i,"Card ");
@@ -207,13 +198,12 @@ auth.onAuthStateChanged(async (user)=>{
       }
     });
 
-    // Sign out (secondary button)
+    // Sign out
     $("signOutBtn")?.addEventListener("click", ()=>{
       auth.signOut().then(()=>location.href="login.html");
     });
 
   }catch(err){
-    // Minimal debug surface (doesn't change layout)
     const dbg = $("debug");
     if (dbg){
       dbg.classList.remove("hidden");
@@ -229,4 +219,4 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", setupSidebar, { once:true });
 } else {
   setupSidebar();
-    }
+  }
