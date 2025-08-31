@@ -48,6 +48,26 @@ async function getUsernameByUid(uid){
   }catch{ return uid.slice(0,6); }
 }
 
+/* ---------- ensure *my* username mapping exists on login ---------- */
+/* (keeps your rules happy and makes recipient lookup reliable) */
+async function ensureSelfUsernameMapping(user){
+  const uref = db.collection("users").doc(user.uid);
+  const snap = await uref.get();
+  const fromEmail = (user.email || "").split("@")[0] || "user";
+  const base = (snap.exists && snap.data().username) ? String(snap.data().username) : String(fromEmail);
+  let uname = base.trim().toLowerCase().replace(/[^a-z0-9._-]/g,"");
+  if (uname.length < 3) uname = `user-${user.uid.slice(0,4).toLowerCase()}`;
+
+  try {
+    await db.collection("usernames").doc(uname).set({ uid: user.uid, username: uname }, { merge: true });
+  } catch (e) {
+    // Likely taken by someone else per rules → suffix with -xxxx, then persist back to /users
+    const fallback = `${uname}-${user.uid.slice(0,4).toLowerCase()}`;
+    await db.collection("usernames").doc(fallback).set({ uid: user.uid, username: fallback }, { merge: true });
+    await uref.set({ username: fallback }, { merge: true });
+  }
+}
+
 /* ---------- Owned grid (click-to-share) ---------- */
 function renderOwnedCards(cards){
   const grid = $("ownedGrid");
@@ -244,6 +264,9 @@ auth.onAuthStateChanged(async (user)=>{
       points: 0
     });
   }
+
+  // NEW: make sure my /usernames/{name} mapping exists (or auto-suffix if taken)
+  await ensureSelfUsernameMapping(user);
 
   // live owned cards
   uref.onSnapshot(s=>{
