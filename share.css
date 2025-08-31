@@ -1,4 +1,3 @@
-.center { text-align: center; }
 /* -------------------------------------------------------
    share.css — RED drawer + TEXT-ONLY menu items (+brand)
    Self-contained: includes page chrome, tiles, logs, etc.
@@ -208,4 +207,4 @@
 @media (max-width: 600px){
   .sidebar{ width: 85vw; border-radius: 0 18px 18px 0; }
   .sidebar-toggle{ top: 14px; left: 14px; width: 42px; height: 42px; }
-     }
+   }
