@@ -1,7 +1,7 @@
 /* -------------------------------------------------------
    share.css — RED drawer + TEXT-ONLY menu items (+brand)
-   Self-contained: includes page chrome, tiles, logs, etc.
-   Uses fallbacks so it works without global tokens.
+   Self-contained: page chrome, tiles, logs, etc.
+   Works even without global tokens.
 --------------------------------------------------------*/
 
 /* ============ Hamburger button ============ */
@@ -16,16 +16,13 @@
   cursor: pointer;
 }
 .menu-icon{ display: grid; gap: 4px; }
-.menu-icon span{
-  display:block; width:20px; height:2px; background: currentColor; border-radius:2px;
-}
+.menu-icon span{ display:block; width:20px; height:2px; background: currentColor; border-radius:2px; }
 
 /* ============ Drawer / Sidebar (RED) ============ */
 .sidebar{
   position: fixed; inset: 0 auto 0 0; width: 80vw; max-width: 320px;
   transform: translateX(-100%);
-  background: #e11d48;               /* cherry red drawer */
-  color: #fff;
+  background: #e11d48; color: #fff;
   padding: 18px; box-shadow: var(--shadow, 0 10px 24px rgba(0,0,0,.18)); z-index: 1300;
   transition: transform .2s ease;
   border-top-right-radius: 18px; border-bottom-right-radius: 18px;
@@ -38,7 +35,7 @@
   border-radius: 10px; font-weight: 800; cursor: pointer;
 }
 
-/* Backdrop behind sidebar */
+/* Backdrop */
 .overlay{
   position: fixed; inset: 0; background: rgba(0,0,0,.45);
   opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 1250;
@@ -46,112 +43,68 @@
 .overlay.active{ opacity: 1; pointer-events: all; }
 
 /* ============ Brand row (optional) ============ */
-.brand{
-  display:flex; align-items:center; gap:.75rem; margin: 6px 0 10px; padding-bottom: 10px;
-  border-bottom: 1px solid #ffffff26;
-}
-.brand img{
-  width:36px; height:36px; border-radius:50%; background:#fff; padding:3px;
-  box-shadow: 0 3px 10px rgba(0,0,0,.18);
-}
+.brand{ display:flex; align-items:center; gap:.75rem; margin: 6px 0 10px; padding-bottom: 10px; border-bottom: 1px solid #ffffff26; }
+.brand img{ width:36px; height:36px; border-radius:50%; background:#fff; padding:3px; box-shadow: 0 3px 10px rgba(0,0,0,.18); }
 .brand-name{ font-weight:900; color:#fff; letter-spacing:.2px; }
 
 /* ============ TEXT-ONLY Menu ============ */
 .menu{ display:grid; gap:12px; margin: 12px 0; }
-
-/* Support BOTH markups: .menu a and .menu-item a */
-.menu a,
-.menu-item a{
-  display:block;
-  padding: 6px 2px;                     /* slimmer; text feel */
-  background: transparent;              /* no box */
-  color: #fff;
-  border: none;                         /* no border */
-  box-shadow: none;                     /* no shadow */
-  text-decoration: none;
-  font-weight: 800;
-  letter-spacing: .2px;
+.menu a, .menu-item a{
+  display:block; padding: 6px 2px; background: transparent; color:#fff;
+  border:none; box-shadow:none; text-decoration:none; font-weight:800; letter-spacing:.2px;
 }
-
-/* hover: subtle tint */
-.menu a:hover,
-.menu-item a:hover{
-  background: rgba(255,255,255,.10);
-  border-radius: 8px;
-}
-
-/* active: underline only */
-.menu a.active,
-.menu-item a.active{
-  background: transparent;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-/* Logout text-look (works for either markup) */
-#logout-link a,
-.sidebar .logout-btn{
-  padding: 6px 2px;
-  background: transparent !important;
-  color: #ffe4e6 !important;
-  border: none !important;
-  box-shadow: none !important;
-  font-weight: 800;
-  text-align: left;
-}
+.menu a:hover, .menu-item a:hover{ background: rgba(255,255,255,.10); border-radius: 8px; }
+.menu a.active, .menu-item a.active{ background: transparent; text-decoration: underline; text-underline-offset: 4px; }
+#logout-link a, .sidebar .logout-btn{ padding:6px 2px; background:transparent!important; color:#ffe4e6!important; border:none!important; box-shadow:none!important; font-weight:800; text-align:left; }
 
 /* ============ Page chrome ============ */
 .page-title{
-  margin: 76px 16px 6px;           /* leave room for hamburger */
-  font-weight: 900; font-size: clamp(1.5rem, 3.6vw, 2.2rem);
-  color: #b91c1c; display:flex; align-items:center; gap:.6rem;
-  text-align: center;               /* center title on Share */
+  margin:76px 16px 6px; font-weight:900; font-size:clamp(1.5rem,3.6vw,2.2rem);
+  color:#b91c1c; display:flex; align-items:center; gap:.6rem; text-align:center;
 }
-.subtitle{ margin: 0 16px 12px; color:#6b7280 }
-
-/* Panel card used by many pages */
+.subtitle{ margin:0 16px 12px; color:#6b7280; }
 .panel{
   background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:14px;
-  margin: 12px 16px; padding: 14px; box-shadow: var(--shadow, 0 6px 16px rgba(0,0,0,.06));
+  margin:12px 16px; padding:14px; box-shadow: var(--shadow, 0 6px 16px rgba(0,0,0,.06));
 }
-
-/* Small helpers */
 .hint{ color:#6b7280; font-size:.95rem }
 .grid{ display:grid; gap:14px }
 
-/* Inputs/buttons */
+/* ============ Inputs / Buttons ============ */
+/* compact pink input */
 .pink-input{
-  width:100%; padding:12px 14px; border-radius:12px;
-  background:#ffebee; border:2px solid #ffcdd2; color:#b71c1c;
-  font-weight:800;
+  width:100%; height:44px; padding:8px 12px; border-radius:10px;
+  background:#ffebee; border:1.5px solid #ffcdd2; color:#b71c1c;
+  font-size:16px; font-weight:700;   /* 16px = no iOS zoom */
 }
+.pink-input::placeholder{ color:#cf6a79; opacity:.95; }
+.pink-input:focus{ outline:none; border-color:#f39cb5; box-shadow:0 0 0 3px rgba(225,29,72,.12); }
+
 .textarea{
   width:100%; min-height:110px; padding:10px 12px; border:1px solid var(--line, #e5e7eb);
   border-radius:12px; background:#fff; color:var(--text, #111827);
 }
 .btn{ width:auto; display:inline-flex; align-items:center; justify-content:center; }
-.btn-red{ background: var(--brand, #e11d48); color: #fff; border:1px solid var(--brand, #e11d48); }
+.btn-red{ background: var(--brand, #e11d48); color:#fff; border:1px solid var(--brand, #e11d48); }
 .btn-grey{ background:#f3f4f6; border:1px solid var(--line, #e5e7eb); color:#111827; }
-.btn-primary{
-  background:#e53935; color:#fff; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer;
-}
+.btn-primary{ background:#e53935; color:#fff; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; }
 .btn-primary:disabled{ opacity:.5; cursor:not-allowed }
 
 /* ============ Owned cards grid + tiles ============ */
-.grid.cards{
-  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
-  gap:12px; margin-top:12px;
-}
+.grid.cards{ grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:12px; margin-top:12px; }
 .cardTile, .card-tile{
-  position:relative; border:2px solid #ffd3d9; border-radius:14px;
-  overflow:hidden; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,.06);
+  position:relative; border:2px solid #ffd3d9; border-radius:14px; overflow:hidden;
+  background:#fff; box-shadow:0 4px 10px rgba(0,0,0,.06);
   transition: transform .08s ease, box-shadow .14s ease, border-color .14s ease;
-  cursor: pointer;
+  cursor:pointer;
+  /* Support background-image variant from JS */
+  aspect-ratio: 5 / 7;
+  background-size: cover;
+  background-position: center;
 }
 .cardTile:active, .card-tile:active{ transform: scale(.985); }
-.cardTile .cover, .card-tile .cover{
-  width:100%; aspect-ratio:5/7; display:block; object-fit:cover; background:#fafafa;
-}
+/* Support <img class="cover"> variant from JS */
+.cardTile .cover, .card-tile .cover{ width:100%; aspect-ratio:5/7; display:block; object-fit:cover; background:#fafafa; }
 .cardTile .cap, .card-tile .cap{
   position:absolute; left:8px; bottom:8px; background:#fff; color:#b71c1c;
   border-radius:999px; padding:2px 8px; font-weight:800; font-size:.9rem;
@@ -164,9 +117,11 @@
   border:1px solid #f4a9b4; border-left:5px solid #e11d48;
   border-radius:12px; padding:10px 12px; background:#fff;
 }
+/* Works for both <img class="thumb"> and <div class="thumb" style="background-image:…"> */
 .borrowed .thumb{
-  width:60px; aspect-ratio:5/7; object-fit:cover; border-radius:10px;
-  border:1px solid #ffd3d9; background:#fafafa;
+  width:60px; aspect-ratio:5/7; border-radius:10px; border:1px solid #ffd3d9; background:#fafafa;
+  object-fit:cover;                     /* if it's an <img> */
+  background-size:cover; background-position:center; /* if it's a <div> */
 }
 .borrowed .meta{ flex:1; color:#b91c1c; font-weight:700; }
 .borrowed .timer{ color:#6b7280; font-weight:600; }
@@ -183,14 +138,9 @@
 .log-item .badge.converted{ background:#e3f2e8; color:#1b5e20; }
 
 /* ============ Modal ============ */
-.modal{
-  position: fixed; inset: 0; display:none; place-items:center; z-index:1500;
-  background: rgba(0,0,0,.45);
-}
-.modal.show{ display:grid; }
-/* Allow either .show or .active to display the modal */
-.modal.active{ display:grid; }
-
+.modal{ position: fixed; inset: 0; display:none; place-items:center; z-index:1500; background: rgba(0,0,0,.45); }
+.modal.show{ display:grid; }      /* older JS */
+.modal.active{ display:grid; }    /* newer JS */
 .modal .modal-content{
   width: min(620px, 92vw);
   background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:16px;
@@ -198,13 +148,12 @@
   color:#b71c1c; text-align:center;
 }
 .close-x, .modal .ok{
-  position:relative; display:inline-block; margin-top:12px;
-  padding:10px 18px; border-radius:10px; border:1px solid #ffcdd2;
-  background:#e57373; color:#fff; font-weight:800; cursor:pointer;
+  position:relative; display:inline-block; margin-top:12px; padding:10px 18px;
+  border-radius:10px; border:1px solid #ffcdd2; background:#e57373; color:#fff; font-weight:800; cursor:pointer;
 }
 
 /* ============ Responsive ============ */
 @media (max-width: 600px){
-  .sidebar{ width: 85vw; border-radius: 0 18px 18px 0; }
-  .sidebar-toggle{ top: 14px; left: 14px; width: 42px; height: 42px; }
-   }
+  .sidebar{ width:85vw; border-radius:0 18px 18px 0; }
+  .sidebar-toggle{ top:14px; left:14px; width:42px; height:42px; }
+      }
