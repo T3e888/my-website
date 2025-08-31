@@ -1,19 +1,7 @@
 /* Center the big page title and keep it clear of the left hamburger */
 .page-title{
   text-align: center;
-  margin: 32px 0 6px;
-  font-weight: 900;
-  /* optional: match your theme */
-  color: #e53935;          /* or var(--red-2) if you use CSS vars */
-  font-size: 2.3rem;
 
-  /* This keeps the title visually centered even with the fixed menu button */
-  padding: 0 64px;
-}
-
-@media (max-width:600px){
-  .page-title{ padding: 0 56px; }
-}
 /* ---------------------------------------------------
    global.css — Stroke Card Adventure (light theme)
    - Pink pattern background
