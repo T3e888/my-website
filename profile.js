@@ -46,7 +46,6 @@ async function ensureUsernameMapping(uid, uname){
   uname = String(uname||"").trim().toLowerCase();
   if (!uname) return;
   try {
-    // Write either {uid} or {uid, username} (both allowed by your rules)
     await db.collection("usernames").doc(uname)
       .set({ uid, username: uname }, { merge: true });
   } catch(_) { /* ignore — rules protect collisions */ }
@@ -60,10 +59,8 @@ async function renameUsernameMapping(uid, oldU, newU){
   }
   if (oldU === newU) return;
 
-  // 1) Claim/write the new mapping (rules allow if free or already mine)
   await db.collection("usernames").doc(newU).set({ uid, username: newU }, { merge: true });
 
-  // 2) Best-effort delete old mapping if it belonged to me
   if (oldU){
     try{
       const s = await db.collection("usernames").doc(oldU).get();
@@ -102,9 +99,9 @@ auth.onAuthStateChanged(async (user)=>{
 
   // Fill header & fields
   $("uid")?.textContent         = user.uid;
-  $("displayName")?.textContent = currentUname;       // ← big name at top
-  $("username") && ($("username").value = currentUname);
-  $("about")    && ($("about").value    = data.about || "");
+  $("displayName")?.textContent = currentUname;
+  if ($("username")) $("username").value = currentUname;
+  if ($("about")) $("about").value = data.about || "";
   $("points")?.textContent     = String(data.points || 0);
   $("quizCount")?.textContent  = String(data.quizCount || 0);
   $("quizStreak")?.textContent = String(data.quizStreak || 0);
@@ -196,4 +193,4 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", setupSidebar, { once:true });
 } else {
   setupSidebar();
-    }
+}
