@@ -10,7 +10,19 @@
   <meta name="theme-color" content="#b91c1c">
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        // ensure newest files are used
+        if (reg.waiting) reg.waiting.postMessage('SW_SKIP_WAITING');
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          nw?.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && reg.waiting) {
+              reg.waiting.postMessage('SW_SKIP_WAITING');
+              location.reload();
+            }
+          });
+        });
+      }).catch(()=>{});
     }
   </script>
 
@@ -137,6 +149,6 @@
   </script>
 
   <!-- bump the query to beat the SW cache -->
-  <script src="profile.js?v=12"></script>
+  <script src="profile.js?v=13"></script>
 </body>
-                                                         </html>
+  </html>
