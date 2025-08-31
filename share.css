@@ -121,7 +121,7 @@
 
 /* Inputs/buttons */
 .pink-input{
-  width:100%; padding:12px 14px; border-radius:12px;
+  width:80%; padding:12px 14px; border-radius:12px;
   background:#ffebee; border:2px solid #ffcdd2; color:#b71c1c;
   font-weight:800;
 }
