@@ -1,4 +1,4 @@
-/* ==== SIDEBAR (reuse) ==== */
+/* ==== SIDEBAR (self-contained) ==== */
 .sidebar-toggle{position:fixed;top:24px;left:24px;z-index:1201;background:#e53935;border:none;border-radius:10px;width:48px;height:48px;box-shadow:0 2px 12px rgba(0,0,0,.08);cursor:pointer;display:flex;align-items:center;justify-content:center}
 .menu-icon{display:flex;flex-direction:column;gap:7px}
 .menu-icon span{display:block;width:26px;height:4px;background:#fff;border-radius:3px}
@@ -6,8 +6,8 @@
 #sidebar.open{transform:translateX(0)}
 #sidebar .close-btn{position:absolute;top:14px;right:16px;font-size:2.1rem;color:#fff;background:none;border:none;cursor:pointer}
 #sidebar .menu{margin:48px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:22px;align-items:flex-start}
-#sidebar .menu-item a{color:#fff;font-size:1.16rem;text-decoration:none;font-weight:500;padding:8px 36px;border-radius:10px;display:block;transition:background .13s}
-#sidebar .menu-item a:hover,#sidebar .menu-item.active a{background:#ffffff22}
+#sidebar .menu-item a{color:#fff;font-size:1.16rem;text-decoration:none;font-weight:600;padding:8px 36px;border-radius:10px;display:block;transition:background .13s}
+#sidebar .menu-item a:hover,#sidebar .menu-item a.active{background:#ffffff22}
 #logout-link a{color:#ffcdd2!important;font-weight:600}
 #logout-link a:hover{background:#b71c1c!important;color:#fff!important}
 .overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(80,10,10,.13);z-index:1200;opacity:0;pointer-events:none;transition:opacity .25s}
@@ -16,10 +16,9 @@
 body{padding-left:0!important}
 /* ==== END SIDEBAR ==== */
 
-/* Page theme like screenshot */
 body{
   margin:0;min-height:100vh;background:#fff;color:#111;
-  font-family:'Noto Sans Thai','Noto Sans',sans-serif;
+  font-family:'Noto Sans Thai','Noto Sans',system-ui,Arial,sans-serif;
 }
 .page-title{
   text-align:center;color:#2e2e2e;font-size:2.2rem;letter-spacing:.01em;margin:36px 0 26px;font-weight:800;
@@ -39,6 +38,7 @@ body{
 .drop-wrap{
   border:3px dashed #e7e7e7; border-radius:10px; padding:18px 14px;
   display:flex; flex-direction:column; align-items:center; gap:10px;
+  cursor:pointer; user-select:none;
 }
 .red-btn{
   background:#e53935; color:#fff; border:none; border-radius:12px;
@@ -48,7 +48,7 @@ body{
 .red-btn:hover{filter:brightness(1.02)}
 .drop-hint{color:#6b6b6b}
 .camera-link{
-  display:block; margin:18px auto 6px; text-align:center; color:#2e2e2e; text-decoration:underline; font-weight:700;
+  display:block; margin:18px auto 6px; text-align:center; color:#2e2e2e; text-decoration:underline; font-weight:800;
 }
 
 /* Drag states */
@@ -67,4 +67,4 @@ body{
 .modal.active{display:flex}
 .modal-content{background:#fff;border-radius:16px;padding:28px 24px;text-align:center;min-width:240px;max-width:90vw;box-shadow:0 6px 28px rgba(0,0,0,.18);color:#b71c1c;font-size:1.18em}
 .modal-content img{max-width:240px;height:auto;border-radius:12px;display:block;margin:10px auto 0}
-.modal-close{display:inline-block;margin-top:18px;padding:10px 22px;background:#e57373;color:#fff;border:none;border-radius:10px;font-size:1em;cursor:pointer;font-weight:600}
+.modal-close{display:inline-block;margin-top:18px;padding:10px 22px;background:#e57373;color:#fff;border:none;border-radius:10px;font-size:1em;cursor:pointer;font-weight:700}
