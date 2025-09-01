@@ -1,0 +1,48 @@
+/* -------- Hub layout (สำหรับ all*.html) -------- */
+:root{
+  --brand:#e53935; --brand-2:#d32f2f; --ink:#111; --muted:#6b6b6b;
+  --card-bg:#fff; --card-br:#eee;
+}
+body{ background:#fff; color:var(--ink); font-family:'Noto Sans Thai','Noto Sans',system-ui,sans-serif; }
+
+/* header */
+.hub-header{
+  display:flex; align-items:center; justify-content:space-between;
+  width:min(980px,92vw); margin:22px auto 10px;
+}
+.hub-title{
+  font-weight:900; letter-spacing:.01em; color:var(--brand);
+  font-size:2rem; margin:0;
+}
+.hub-actions{ display:flex; align-items:center; gap:12px; }
+.hub-logo{ width:44px; height:44px; border-radius:50%; object-fit:cover; }
+
+/* grid tiles */
+.hub-grid{
+  width:min(980px,92vw); margin:10px auto 40px;
+  display:grid; grid-template-columns:1fr; gap:14px;
+}
+@media (min-width:680px){ .hub-grid{ grid-template-columns:1fr 1fr; } }
+.tile{
+  display:block; text-decoration:none; color:inherit; background:var(--card-bg);
+  border:1px solid var(--card-br); border-radius:16px; padding:18px 16px;
+  box-shadow:0 6px 16px rgba(0,0,0,.06);
+  transition: transform .06s ease, box-shadow .12s ease;
+}
+.tile:hover{ transform: translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.1); }
+.tile h3{ margin:.2rem 0 .35rem; font-size:1.3rem; font-weight:900; color:#222; }
+.tile p{ margin:0; color:var(--muted); font-weight:600; }
+.tile .bullet{ font-size:1.4rem; margin-right:.35rem; }
+
+/* ใช้ sidebar เดิม ( share.css ) */
+.sidebar-toggle{position:fixed;top:18px;left:18px;z-index:1201;background:var(--brand);border:none;border-radius:10px;width:48px;height:48px;box-shadow:0 2px 12px rgba(0,0,0,.08);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.menu-icon{display:flex;flex-direction:column;gap:7px}
+.menu-icon span{display:block;width:26px;height:4px;background:#fff;border-radius:3px}
+
+/* daily (ปุ่มกลมด้านขวาล่าง – สร้างโดย daily.js) */
+#daily-fab{ right:22px; bottom:22px; }
+
+/* note ใต้กริด */
+.hub-note{
+  width:min(980px,92vw); margin:4px auto 0; color:var(--muted); font-weight:600;
+}
