@@ -1,225 +1,237 @@
-// scan.js — สแกน QR การ์ด (สไตล์เดิม)
-
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
-const $ = (id) => document.getElementById(id);
-
-let currentUid = null;
-let stream = null;
-let usingDeviceId = null;
-let torchOn = false;
-let rafId = null;
-let lastCode = "";
-let lastAt = 0;
-
-// ---------- sidebar ----------
-function setupSidebar(){
-  $("menu-toggle")?.addEventListener("click", ()=>{
-    $("sidebar").classList.add("open"); $("overlay").classList.add("active");
-  });
-  $("close-sidebar")?.addEventListener("click", ()=>{
-    $("sidebar").classList.remove("open"); $("overlay").classList.remove("active");
-  });
-  $("overlay")?.addEventListener("click", ()=>{
-    $("sidebar").classList.remove("open"); $("overlay").classList.remove("active");
-  });
-  $("logout-link")?.addEventListener("click", (e)=>{
-    e.preventDefault(); auth.signOut().then(()=>location.href="login.html");
-  });
-}
-
-// ---------- modal ----------
-function showModal(msg, cb){
-  const modal = $("modal");
-  modal.innerHTML = `<div class="modal-content">${msg}<br><button class="ok">ตกลง</button></div>`;
-  modal.classList.add("active");
-  modal.querySelector(".ok").onclick = ()=>{ modal.classList.remove("active"); cb?.(); };
-}
-
-// ---------- camera helpers ----------
-async function listCams(){
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  return devices.filter(d => d.kind === "videoinput");
-}
-
-async function startCam(deviceId){
-  stopCam();
-
-  const constraints = deviceId
-    ? { video: { deviceId: { exact: deviceId } } }
-    : { video: { facingMode: { ideal: "environment" } } };
-
-  stream = await navigator.mediaDevices.getUserMedia(constraints);
-  const video = $("preview");
-  video.srcObject = stream;
-  await video.play();
-
-  usingDeviceId = stream.getVideoTracks()[0].getSettings().deviceId || deviceId || null;
-
-  // torch capability
-  const track = stream.getVideoTracks()[0];
-  const caps = track.getCapabilities?.() || {};
-  const btnTorch = $("btnTorch");
-  if (caps.torch){
-    btnTorch.disabled = false;
-  }else{
-    btnTorch.disabled = true;
-  }
-
-  loopScan();
-}
-
-function stopCam(){
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = null;
-  const video = $("preview");
-  if (video) video.pause();
-  if (stream){
-    stream.getTracks().forEach(t => t.stop());
-    stream = null;
-  }
-}
-
-async function switchCam(){
-  const cams = await listCams();
-  if (!cams.length) return;
-  if (!usingDeviceId){
-    await startCam(cams[0].deviceId);
+scan.js
+// --- guard + bootstrap ---
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    // If the page itself has ?card=cardX, send to login with that same param,
+    // then login flow can unlock after auth.
+    const params = new URLSearchParams(location.search);
+    const cardParam = params.get('card');
+    if (cardParam) {
+      location.href = `login.html?card=${encodeURIComponent(cardParam)}`;
+    } else {
+      location.href = 'login.html';
+    }
     return;
   }
-  const idx = cams.findIndex(c => c.deviceId === usingDeviceId);
-  const next = cams[(idx + 1) % cams.length];
-  await startCam(next.deviceId);
-}
 
-async function toggleTorch(){
-  if (!stream) return;
-  const track = stream.getVideoTracks()[0];
-  const caps = track.getCapabilities?.() || {};
-  if (!caps.torch) return;
-  torchOn = !torchOn;
-  try{
-    await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-  }catch(e){
-    console.warn("Torch toggle failed:", e);
+  initScanPage(user).catch(err => console.error(err));
+});
+
+async function initScanPage(user) {
+  // ====== SIDEBAR (unchanged behavior) ======
+  const toggleBtn = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('close-sidebar');
+  const logout = document.getElementById('logout-link');
+
+  toggleBtn?.addEventListener('click', () => {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+  });
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  }
+  closeBtn?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', closeSidebar);
+  logout?.addEventListener('click', (e) => {
+    e.preventDefault();
+    auth.signOut().then(() => location.href = 'login.html');
+  });
+  document.querySelectorAll('#sidebar .menu-item a').forEach(a => {
+    if (!a.closest('#logout-link')) a.addEventListener('click', closeSidebar);
+  });
+
+  // ====== If this page URL has ?card=cardX, unlock immediately ======
+  const hereParams = new URLSearchParams(location.search);
+  const hereCard = hereParams.get('card');
+  if (isValidCardId(hereCard)) {
+    await saveUnlockedCard(user.uid, hereCard);
+    showModal(`Unlocked card ${numFromCardId(hereCard)}!<br>
+      <img src="assets/cards/${hereCard}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
+      () => { cleanCardQueryFromUrl(); location.href = 'card.html'; }
+    );
+    return; // stop camera if any
+  } else {
+    // Just clean junk/unknown card param from URL
+    if (hereCard) cleanCardQueryFromUrl();
+  }
+
+  // ====== Live camera scan ======
+  const video = document.getElementById('camera');
+  const fileInput = document.getElementById('fileInput');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const dropZone = document.getElementById('dropZone');
+
+  // Start camera with BarcodeDetector if possible
+  let stopStream = () => {};
+  if ('BarcodeDetector' in window) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = stream;
+      await video.play();
+      stopStream = () => stream.getTracks().forEach(t => t.stop());
+
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const scanLoop = async () => {
+        if (!video.videoWidth) {
+          requestAnimationFrame(scanLoop);
+          return;
+        }
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+          const codes = await detector.detect(canvas);
+          if (codes && codes.length) {
+            const raw = codes[0].rawValue || '';
+            const card = extractCardId(raw);
+            if (card) {
+              stopStream();
+              await handleUnlock(user.uid, card);
+              return;
+            } else {
+              // Not a valid card payload; keep scanning
+            }
+          }
+        } catch (_) {}
+        requestAnimationFrame(scanLoop);
+      };
+      requestAnimationFrame(scanLoop);
+    } catch (err) {
+      // Camera not allowed; fall back to upload
+      console.warn('Camera not available:', err);
+    }
+  }
+
+  // ====== Upload button ======
+  uploadBtn?.addEventListener('click', () => fileInput.click());
+  fileInput?.addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (f) await readImageAndDecode(f, async (text) => {
+      const card = extractCardId(text);
+      if (card) await handleUnlock(user.uid, card);
+      else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
+    });
+    e.target.value = '';
+  });
+
+  // ====== Drag & drop ======
+  ;['dragenter','dragover'].forEach(ev =>
+    dropZone?.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('dragging'); })
+  );
+  ;['dragleave','drop'].forEach(ev =>
+    dropZone?.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('dragging'); })
+  );
+  dropZone?.addEventListener('drop', async (e) => {
+    const f = e.dataTransfer?.files?.[0];
+    if (f) await readImageAndDecode(f, async (text) => {
+      const card = extractCardId(text);
+      if (card) await handleUnlock(user.uid, card);
+      else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
+    });
+  });
+
+  // ====== helpers ======
+  async function handleUnlock(uid, cardId) {
+    await saveUnlockedCard(uid, cardId);
+    showModal(`Unlocked card ${numFromCardId(cardId)}!<br>
+      <img src="assets/cards/${cardId}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
+      () => location.href = 'card.html'
+    );
   }
 }
 
-// ---------- parsing & UI ----------
-function parseCardId(text){
+// ---------- QR helpers ----------
+function extractCardId(text) {
   if (!text) return null;
-  // examples it will accept: "card1", "CARD_25", "...?card=7", "card=12"
-  const m = String(text).toLowerCase().match(/card[_:=\s-]?(\d{1,3})/);
-  if (m) return "card" + Number(m[1]);
+
+  // 1) If it's literally "card7" etc.
+  if (isValidCardId(text)) return text;
+
+  // 2) If it's a URL, try to read ?card=cardX
+  try {
+    const u = new URL(text);
+    const q = u.searchParams.get('card');
+    if (isValidCardId(q)) return q;
+    // 3) Or filename includes cardX.png
+    const tail = u.pathname.split('/').pop() || '';
+    const m = tail.match(/^card([1-9]|1[0-9]|2[0-5])(?:\.png)?$/i);
+    if (m) return `card${m[1]}`;
+  } catch (_) {
+    // Not a URL; keep going
+  }
+
+  // 4) Generic regex in the string
+  const m2 = text.match(/card([1-9]|1[0-9]|2[0-5])(?!\w)/i);
+  if (m2) return `card${m2[1]}`;
+
   return null;
 }
 
-function renderResult(raw, cardId){
-  const box = $("resultBox");
-  if (!cardId){
-    box.innerHTML = `<div class="hint">ไม่รู้จักรูปแบบข้อมูล: <small>${raw || ""}</small></div>`;
-    return;
-  }
-  const n = Number(cardId.replace("card",""));
-  box.innerHTML = `
-    <div class="thumb">
-      <img src="assets/cards/${cardId}.png" onerror="this.onerror=null;this.src='assets/cards/${cardId}.jpg'">
-    </div>
-    <div class="meta">
-      พบ <b>การ์ด ${n}</b>
-      <small>${cardId}</small>
-    </div>
-    <div class="actions">
-      <button class="btn btn-red" id="btnAdd">เพิ่มเข้าคลัง</button>
-    </div>
-  `;
-  $("btnAdd").onclick = ()=> addCardToUser(cardId);
+function isValidCardId(v) {
+  return typeof v === 'string' && /^card([1-9]|1[0-9]|2[0-5])$/i.test(v);
+}
+function numFromCardId(cardId) {
+  return cardId.replace(/[^0-9]/g, '');
 }
 
-async function addCardToUser(cardId){
-  if (!currentUid) return showModal("กรุณาเข้าสู่ระบบอีกครั้ง");
-  const uref = db.collection("users").doc(currentUid);
-  try{
-    await uref.set({ cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
-    // log เล็กน้อย
-    try{
-      await db.collection("scanLog").add({
-        uid: currentUid, cardId, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }catch(e){/* ignore */}
-    showModal(`✅ เพิ่ม <b>${cardId}</b> เข้าคลังเรียบร้อย`);
-  }catch(e){
-    showModal(`❌ เพิ่มการ์ดไม่สำเร็จ<br><small>${e?.code || ""} ${e?.message || e}</small>`);
-  }
+function cleanCardQueryFromUrl() {
+  const url = new URL(location.href);
+  url.searchParams.delete('card');
+  history.replaceState({}, '', url.toString());
 }
 
-// ---------- scanning loop ----------
-async function loopScan(){
-  const video = $("preview");
-  const canvas = $("capture");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+// ---------- Firestore save ----------
+async function saveUnlockedCard(uid, cardId) {
+  const docRef = db.collection('users').doc(uid);
+  await docRef.set(
+    { cards: firebase.firestore.FieldValue.arrayUnion(cardId) },
+    { merge: true }
+  );
+}
 
-  const hasBarcode = ("BarcodeDetector" in window);
-  let detector = null;
-  if (hasBarcode){
-    try{
-      detector = new window.BarcodeDetector({ formats: ["qr_code"] });
-    }catch{ detector = null; }
-  }
+// ---------- Image decoding (jsQR fallback) ----------
+let jsQRLoaded = false;
+function loadJsQR() {
+  return new Promise((resolve, reject) => {
+    if (jsQRLoaded) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/jsqr';
+    s.onload = () => { jsQRLoaded = true; resolve(); };
+    s.onerror = reject;
+    document.body.appendChild(s);
+  });
+}
 
-  const step = async ()=>{
-    if (!stream){ rafId = null; return; }
-
-    const now = Date.now();
-    // ป้องกันอ่านซ้ำถี่ ๆ
-    if (now - lastAt > 120){
-      if (detector){
-        try{
-          const codes = await detector.detect(video);
-          if (codes && codes.length){
-            const value = codes[0].rawValue || "";
-            handleDecode(value);
-          }
-        }catch(e){ /* ignore frame */ }
-      }else if (window.jsQR){
-        // fallback jsQR
-        const vw = video.videoWidth || 0, vh = video.videoHeight || 0;
-        if (vw && vh){
-          canvas.width = vw; canvas.height = vh;
-          ctx.drawImage(video, 0, 0, vw, vh);
-          const img = ctx.getImageData(0, 0, vw, vh);
-          const code = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
-          if (code && code.data) handleDecode(code.data);
-        }
-      }
-      lastAt = now;
-    }
-    rafId = requestAnimationFrame(step);
+async function readImageAndDecode(file, onDecoded) {
+  await loadJsQR();
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+    const qr = window.jsQR(imageData.data, imageData.width, imageData.height);
+    onDecoded(qr ? qr.data : '');
   };
-  rafId = requestAnimationFrame(step);
+  img.onerror = () => onDecoded('');
+  const reader = new FileReader();
+  reader.onload = (e) => { img.src = e.target.result; };
+  reader.readAsDataURL(file);
 }
 
-function handleDecode(text){
-  if (!text) return;
-  if (text === lastCode) return;      // กันเด้งซ้ำ
-  lastCode = text;
-  const cardId = parseCardId(text);
-  renderResult(text, cardId);
-}
-
-// ---------- start ----------
-auth.onAuthStateChanged(async (user)=>{
-  if (!user){ location.href = "login.html"; return; }
-  currentUid = user.uid;
-  setupSidebar();
-
-  // ปุ่มควบคุม
-  $("btnStart").onclick = ()=> startCam(usingDeviceId).catch(e=> showModal("ไม่สามารถเปิดกล้องได้<br><small>"+(e.message||e)+"</small>"));
-  $("btnStop").onclick  = ()=> stopCam();
-  $("btnSwitch").onclick= ()=> switchCam().catch(e=> showModal("สลับกล้องไม่ได้<br><small>"+(e.message||e)+"</small>"));
-  $("btnTorch").onclick = ()=> toggleTorch();
-
-  // เริ่มอัตโนมัติถ้าอนุญาต
-  try{ await startCam(); }catch(e){ console.warn("autostart cam failed:", e); }
-});
+// ---------- Modal ----------
+function showModal(msg, cb) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `<div class="modal-content">${msg}<br>
+    <button class="modal-close">OK</button></div>`;
+  modal.classList.add('active');
+  modal.querySelector('.modal-close').onclick = () => {
+    modal.classList.remove('active');
+    if (cb) cb();
+  };
+              }
