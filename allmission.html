@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mission Mode</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">MyApp</div>
+    <button id="openRewardModalBtn">รางวัลล็อกอิน</button>
+  </header>
+  <div class="container">
+    <nav class="sidebar">
+      <ul>
+        <li><a href="mission.html">Mission</a></li>
+        <li><a href="library.html">Library</a></li>
+      </ul>
+    </nav>
+    <main class="content">
+      <h1>Welcome to Mission Mode</h1>
+      <p>Select an option from the sidebar.</p>
+    </main>
+  </div>
+  <!-- Include the same daily reward modal structure as in allcard.html -->
+  <div id="dailyRewardModal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModalBtn">&times;</button>
+      <h2>ล็อกอินรายวัน</h2>
+      <div class="rewards-grid">
+        <!-- (Repeat day1-day7 boxes as in allcard.html) -->
+        <div class="day-box" id="day1"> ... </div>
+        <!-- ... day2 ... through day7 ... -->
+      </div>
+      <button id="claimRewardBtn">รับรางวัล</button>
+    </div>
+  </div>
+  <script src="dailyReward.js"></script>
+</body>
+</html>
