@@ -88,16 +88,25 @@ function extractCardId(text){
   return null;
 }
 
-/* ---------- CAMERA (HD + focus + TRY_HARDER) ---------- */
+/* ---------- CAMERA (robust: BarcodeDetector -> ZXing decodeFromConstraints -> fallback) ---------- */
 async function startLiveCamera(videoEl, onResult){
+  // ต้องเป็น HTTPS และเรียกจาก gesture
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showModal("กล้องไม่พร้อมใช้งานในเบราว์เซอร์นี้ — ใช้ปุ่มอัปโหลดภาพแทนได้");
+    return () => {};
+  }
+
+  // เลือกกล้องหลังถ้าเจอ
+  let backCamId = null;
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === "videoinput");
+    const back = cams.find(c => /back|rear|environment/i.test(c.label)) || cams[0];
+    backCamId = back?.deviceId || null;
+  } catch {}
+
   const constraints = {
-    video: {
-      facingMode: { ideal: "environment" },
-      width:  { ideal: 1920 },
-      height: { ideal: 1080 },
-      frameRate: { ideal: 30 },
-      advanced: [{ focusMode: "continuous" }]
-    }
+    video: backCamId ? { deviceId: { exact: backCamId } } : { facingMode: { ideal: "environment" } }
   };
 
   // 1) Native BarcodeDetector
@@ -121,7 +130,7 @@ async function startLiveCamera(videoEl, onResult){
           c.height = videoEl.videoHeight;
           c.getContext("2d").drawImage(videoEl, 0, 0);
           const codes = await detector.detect(c);
-          if (codes && codes.length && codes[0].rawValue){
+          if (codes?.length && codes[0].rawValue){
             await onResult(codes[0].rawValue);
           }
         }catch{}
@@ -135,12 +144,13 @@ async function startLiveCamera(videoEl, onResult){
         try{ stream.getTracks().forEach(t => t.stop()); }catch{}
         videoEl.srcObject = null;
       };
-    }catch(e){ console.warn("BarcodeDetector failed:", e); }
+    }catch(e){ console.warn("BarcodeDetector path failed:", e?.name || e); }
   }
 
-  // 2) ZXing video fallback (with TRY_HARDER if available)
+  // 2) ZXing – ใช้ decodeFromConstraints เป็นหลัก
   if (window.ZXingBrowser){
     try{
+      // สร้าง reader พร้อม TRY_HARDER ถ้ามี
       let reader;
       try{
         const ZX = (window.ZXing || window.ZXingBrowser?.ZXing || {});
@@ -156,15 +166,32 @@ async function startLiveCamera(videoEl, onResult){
         reader = new ZXingBrowser.BrowserQRCodeReader();
       }
 
-      const controls = await reader.decodeFromVideoDevice(null, videoEl, (result)=>{
-        if (result && result.text) onResult(result.text);
-      }, constraints);
+      const controls = await reader.decodeFromConstraints(
+        { video: constraints.video },
+        videoEl,
+        (result) => { if (result?.text) onResult(result.text); }
+      );
 
       return () => { try{ controls.stop(); }catch{} videoEl.srcObject = null; };
-    }catch(e){ console.warn("ZXing video fallback failed:", e); }
+    }catch(e){
+      console.warn("ZXing decodeFromConstraints failed:", e?.name || e);
+      // สำรอง: บางเวอร์ชันรองรับ decodeFromVideoDevice
+      try{
+        const reader2 = new ZXingBrowser.BrowserQRCodeReader();
+        const controls2 = await reader2.decodeFromVideoDevice(
+          backCamId || null,
+          videoEl,
+          (result) => { if (result?.text) onResult(result.text); }
+        );
+        return () => { try{ controls2.stop(); }catch{} videoEl.srcObject = null; };
+      }catch(e2){
+        console.warn("ZXing decodeFromVideoDevice failed:", e2?.name || e2);
+      }
+    }
   }
 
-  showModal("Camera is not available on this device. You can still upload an image to scan.");
+  // 3) ตกสุดท้าย
+  showModal("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์กล้อง หรือใช้ปุ่มอัปโหลดภาพ (ถ่ายรูป QR แล้วอัปโหลด)");
   return () => {};
 }
 
@@ -232,7 +259,7 @@ async function readImageAndDecode(file, onDecoded){
     const g = c.getContext("2d"); g.drawImage(src,0,0);
     const d = g.getImageData(0,0,c.width,c.height);
     const a = d.data;
-    for (let i=0;i<a.length;i+=4){
+    for (let i=0;i+a.length;i+=4){
       const v = a[i] < th ? 0 : 255;
       const out = invert ? (255 - v) : v;
       a[i]=a[i+1]=a[i+2]=out;
@@ -407,4 +434,4 @@ async function initScanPage(user){
     const img = `<img src="assets/cards/${cardId}.png" onerror="this.onerror=null;this.src='assets/cards/${cardId}.jpg';this.alt='${cardId}';">`;
     showModal(`Unlocked card ${n}!<br>${img}`, ()=> location.href = "card.html");
   }
-      }
+  }
