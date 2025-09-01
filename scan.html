@@ -1,97 +1,50 @@
-<!-- scan.html — สแกนการ์ด (สไตล์เดิม / ไม่มีโลโก้ในลิ้นชัก) -->
+scan.html
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>สแกนการ์ด</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#b91c1c">
-
-  <!-- Icons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon-180.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StrokeCards">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="StrokeCards">
-
-  <!-- Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW register failed:', err));
-    }
-  </script>
-
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-  <!-- สไตล์หลักเดิม (ลิ้นชักแดง ตัวอักษรล้วน) -->
-  <link rel="stylesheet" href="global.css?v=8">
-  <link rel="stylesheet" href="share.css?v=scan-old"> <!-- ใช้ชุดเดิมเป็นฐาน -->
-  <!-- สไตล์เฉพาะหน้า Scan -->
-  <link rel="stylesheet" href="scan.css?v=old-1">
+  <meta charset="UTF-8">
+  <title>Scan Card</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="scan.css">
 </head>
 <body>
-  <!-- Sidebar (ไม่มีบล็อคโลโก้) -->
+  <!-- ===== SIDEBAR (unchanged) ===== -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
     <ul class="menu">
-      <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
-      <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
-      <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
-      <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
-      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
-      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
-      <li class="menu-item"><a href="leaderboard.html">ตารางคะแนน</a></li>
-      <li class="menu-item"><a href="scan.html" class="active">สแกนการ์ด</a></li>
-      <li class="menu-item" id="logout-link"><a href="#">ล็อกเอาท์</a></li>
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
-  <!-- /Sidebar -->
+  <!-- ===== END SIDEBAR ===== -->
 
-  <h1 class="page-title">สแกนการ์ด</h1>
-  <p class="subtitle">หันกล้องไปยัง QR บนการ์ด ระบบจะเพิ่มการ์ดเข้าคลังให้โดยอัตโนมัติ</p>
+  <h1 class="page-title">Scan QR Code</h1>
 
-  <!-- กล้องสแกน -->
-  <section class="panel">
-    <div id="scanner">
-      <video id="preview" playsinline muted></video>
-      <!-- กรอบเล็ง + เส้น -->
-      <div class="frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-      </div>
-      <canvas id="capture" class="hide"></canvas>
-      <div id="torchHint" class="torch-hint">แตะ 🔦 เพื่อเปิดไฟฉาย (ถ้ามี)</div>
+  <div class="scan-box">
+    <!-- Live camera -->
+    <video id="camera" autoplay playsinline muted></video>
+
+    <!-- Actions -->
+    <div class="scan-actions">
+      <button id="uploadBtn" class="btn">Scan from image</button>
+      <div id="dropZone" class="drop-zone">Drag & drop an image here</div>
+      <p class="hint">Tip: You can also scan a link like <code>login.html?card=card7</code></p>
     </div>
 
-    <div class="controls">
-      <button id="btnStart" class="btn btn-grey">เริ่ม</button>
-      <button id="btnStop" class="btn btn-grey">หยุด</button>
-      <button id="btnSwitch" class="btn btn-grey">สลับกล้อง</button>
-      <button id="btnTorch" class="btn btn-red" disabled>🔦 ไฟฉาย</button>
-    </div>
-  </section>
+    <!-- Hidden file input for upload -->
+    <input type="file" id="fileInput" accept="image/*" hidden>
+  </div>
 
-  <!-- ผลลัพธ์ล่าสุด -->
-  <section class="panel">
-    <h2>ผลลัพธ์การสแกน</h2>
-    <div id="resultBox" class="result">
-      <div class="hint">ยังไม่มีการสแกน</div>
-    </div>
-  </section>
-
-  <!-- Modal แจ้งเตือน -->
+  <!-- Modal -->
   <div id="modal" class="modal"></div>
 
-  <!-- Firebase -->
+  <!-- ==== Firebase SDK and Config (you already use these) ==== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -106,12 +59,10 @@
       measurementId: "G-33LJCV1MD8"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
   </script>
 
-  <!-- ตัวอ่าน QR สำรองเมื่อไม่มี BarcodeDetector -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-
-  <!-- โค้ดหลักของสแกน -->
-  <script src="scan.js?v=old-1"></script>
+  <script src="scan.js"></script>
 </body>
 </html>
