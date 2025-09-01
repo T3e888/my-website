@@ -15,7 +15,7 @@
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
     <ul class="menu">
       <li class="menu-item"><a href="card.html">My Card Collection</a></li>
-      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="scan.html" class="active">Scan Card</a></li>
       <li class="menu-item"><a href="share.html">Share</a></li>
       <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
       <li class="menu-item"><a href="learn.html">Learn</a></li>
@@ -28,12 +28,11 @@
 
   <h1 class="page-title">Scan QR Code</h1>
 
-  <!-- ===== Upload-first UI (like your screenshot) ===== -->
+  <!-- Upload-first UI -->
   <section id="uploadPanel" class="upload-card">
     <button class="info-dot" title="Upload or drop a QR image. Or open the camera below.">i</button>
 
     <div class="illustration" aria-hidden="true">
-      <!-- simple inline icon -->
       <svg width="88" height="68" viewBox="0 0 88 68" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="1.5" y="1.5" width="85" height="65" rx="8" stroke="#c5c5c5" stroke-width="3"/>
         <path d="M14 46l14-17 12 12 8-10 18 23H14z" fill="#c5c5c5" opacity=".8"/>
@@ -41,8 +40,8 @@
       </svg>
     </div>
 
-    <div id="dropZone" class="drop-wrap">
-      <button id="uploadBtn" class="red-btn">Choose Image - No image choosen</button>
+    <div id="dropZone" class="drop-wrap" role="button" tabindex="0" aria-label="Choose or drop image">
+      <button id="uploadBtn" class="red-btn">Choose Image — No image chosen</button>
       <div class="drop-hint">Or drop an image to scan</div>
     </div>
 
@@ -50,7 +49,7 @@
     <input id="fileInput" type="file" accept="image/*" hidden />
   </section>
 
-  <!-- ===== Camera panel (shown only when user clicks link) ===== -->
+  <!-- Camera panel (on demand) -->
   <section id="cameraPanel" class="camera-panel">
     <video id="camera" autoplay playsinline muted></video>
     <a id="backToUpload" class="back-link" href="#">← Back to upload</a>
@@ -74,15 +73,12 @@
       measurementId: "G-33LJCV1MD8"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
   </script>
 
-  <!-- Stronger QR reader -->
+  <!-- Stronger QR reader (live + still) -->
   <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest/umd/index.min.js"></script>
 
-  <script src="scan.js?v=redeem-keys-3"></script>
+  <!-- Page logic -->
+  <script src="scan.js?v=redeem-keys-final"></script>
 </body>
-</html>
-
-
+  </html>
