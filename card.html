@@ -16,11 +16,9 @@
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="global.css?v=8">
-  <!-- NEW: shared red sidebar -->
+  <!-- Shared red sidebar -->
   <link rel="stylesheet" href="share.css">
   <link rel="stylesheet" href="card.css">
-  <link rel="stylesheet" href="daily.css?v=1">
-<script src="daily.js?v=1" defer></script>
 </head>
 <body>
   <a href="card.html" class="corner-logo" aria-label="Stroke Card Adventure — home">
@@ -56,9 +54,12 @@
   <div id="overlay" class="overlay"></div>
 
   <h1 style="text-align:center;margin:32px 0 6px;font-weight:900;color:#e53935;font-size:2.3rem;">
-  คลังการ์ดของคุณ
+    คลังการ์ดของคุณ
   </h1>
+
   <div id="cardGrid" class="grid"></div>
+
+  <!-- Your page modal (existing) -->
   <div id="modal" class="modal"></div>
 
   <!-- Firebase -->
@@ -75,13 +76,16 @@
       appId: "1:86689747767:web:0bd80f58f6516d4c73c0b2",
       measurementId: "G-33LJCV1MD8"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
+    const db   = firebase.firestore();
   </script>
+
+  <!-- Daily rewards MUST load after Firebase init -->
+  <link rel="stylesheet" href="daily.css?v=2">
+  <script src="daily.js?v=2"></script>
+
+  <!-- Your page logic -->
   <script src="card.js"></script>
 </body>
-</html>
-
-
-
+    </html>
