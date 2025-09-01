@@ -3,90 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <title>Scan QR Code</title>
-
-  <!-- PWA + viewport -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#b91c1c">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-
-  <!-- SW (same as other pages) -->
-  <script>if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }</script>
-
-  <!-- Shared chrome + this page styles -->
-  <link rel="stylesheet" href="global.css?v=8">
-  <link rel="stylesheet" href="share.css?v=prelogo">
-  <link rel="stylesheet" href="scan.css?v=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="scan.css" />
 </head>
 <body>
-  <!-- Corner logo (optional, common in your pages) -->
-  <a href="card.html" class="corner-logo" aria-label="Stroke Card Adventure — home">
-    <img src="assets/logo.png" alt="Stroke Card Adventure logo">
-  </a>
-
-  <!-- Sidebar trigger -->
+  <!-- ===== SIDEBAR ===== -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
-
-  <!-- Sidebar (exact same structure as other pages) -->
   <nav id="sidebar" class="sidebar">
-    <button id="close-sidebar" class="close-btn" aria-label="Close menu">×</button>
-
-    <div class="brand">
-      <img src="assets/logo.png" alt="Logo">
-      <div class="brand-name">Stroke Card Adventure</div>
-    </div>
-
+    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
     <ul class="menu">
-      <li class="menu-item"><a href="card.html">คลังการ์ด</a></li>
-      <li class="menu-item"><a class="active" href="scan.html">สแกนการ์ด</a></li>
-      <li class="menu-item"><a href="share.html">แบ่งปันการ์ด</a></li>
-      <li class="menu-item"><a href="mission.html">แบบทดสอบ</a></li>
-      <li class="menu-item"><a href="unlock.html">สุ่มรางวัล</a></li>
-      <li class="menu-item"><a href="learn.html">คลังข้อมูล</a></li>
-      <li class="menu-item"><a href="profile.html">โปรไฟล์</a></li>
-      <li class="menu-item"><a href="feedback.html">แสดงความคิดเห็น</a></li>
-      <li class="menu-item"><a href="leaderboard.html">ตารางคะแนน</a></li>
-      <li class="menu-item"><a href="stats.html">สถิติคำถาม</a></li>
-      <li class="menu-item" id="logout-link"><a href="#">ล็อกเอาท์</a></li>
+      <li class="menu-item"><a href="card.html">My Card Collection</a></li>
+      <li class="menu-item"><a href="scan.html">Scan Card</a></li>
+      <li class="menu-item"><a href="share.html">Share</a></li>
+      <li class="menu-item"><a href="mission.html">Quiz Zone</a></li>
+      <li class="menu-item"><a href="learn.html">Learn</a></li>
+      <li class="menu-item"><a href="profile.html">Profile</a></li>
+      <li class="menu-item" id="logout-link"><a href="#">Logout</a></li>
     </ul>
   </nav>
   <div id="overlay" class="overlay"></div>
+  <!-- ===== END SIDEBAR ===== -->
 
-  <!-- Title -->
   <h1 class="page-title">Scan QR Code</h1>
 
-  <!-- Scanner card -->
-  <div class="wrap">
-    <section class="card scan">
-      <!-- Camera preview (hidden until started) -->
-      <div id="camWrap" class="cam-wrap hidden">
-        <video id="video" playsinline></video>
-        <button id="stopCamBtn" class="btn btn-grey small">Stop camera</button>
-      </div>
+  <!-- ===== Upload-first UI (like your screenshot) ===== -->
+  <section id="uploadPanel" class="upload-card">
+    <button class="info-dot" title="Upload or drop a QR image. Or open the camera below.">i</button>
 
-      <!-- Drop / pick image -->
-      <div class="drop">
-        <div class="drop-inner">
-          <div class="img-icon">🖼️</div>
-          <div class="hint">Drop a QR image here or use the button</div>
-        </div>
-        <input id="file" type="file" accept="image/*" capture="environment" hidden>
-      </div>
+    <div class="illustration" aria-hidden="true">
+      <!-- simple inline icon -->
+      <svg width="88" height="68" viewBox="0 0 88 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="1.5" width="85" height="65" rx="8" stroke="#c5c5c5" stroke-width="3"/>
+        <path d="M14 46l14-17 12 12 8-10 18 23H14z" fill="#c5c5c5" opacity=".8"/>
+        <circle cx="57" cy="21" r="6" fill="#c5c5c5"/>
+      </svg>
+    </div>
 
-      <div class="actions">
-        <button id="pickBtn" class="btn btn-red">Choose Image</button>
-        <button id="startCamBtn" class="btn btn-grey">Start Camera</button>
-      </div>
+    <div id="dropZone" class="drop-wrap">
+      <button id="uploadBtn" class="red-btn">Choose Image - No image choosen</button>
+      <div class="drop-hint">Or drop an image to scan</div>
+    </div>
 
-      <!-- Canvas used internally for decoding -->
-      <canvas id="canvas" class="hidden"></canvas>
-    </section>
-  </div>
+    <a id="cameraLink" class="camera-link" href="#">Scan using camera directly</a>
+    <input id="fileInput" type="file" accept="image/*" hidden />
+  </section>
 
-  <!-- Modal + toast -->
+  <!-- ===== Camera panel (shown only when user clicks link) ===== -->
+  <section id="cameraPanel" class="camera-panel">
+    <video id="camera" autoplay playsinline muted></video>
+    <a id="backToUpload" class="back-link" href="#">← Back to upload</a>
+  </section>
+
+  <!-- Modal -->
   <div id="modal" class="modal"></div>
-  <div id="toast"></div>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -103,12 +74,15 @@
       measurementId: "G-33LJCV1MD8"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
   </script>
 
-  <!-- jsQR (QR decoder) -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <!-- Stronger QR reader -->
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest/umd/index.min.js"></script>
 
-  <!-- Page logic -->
-  <script src="scan.js?v=1"></script>
+  <script src="scan.js"></script>
 </body>
 </html>
+
+
