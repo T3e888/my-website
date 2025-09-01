@@ -1,56 +1,72 @@
-/* Daily Rewards — isolated styles (won't affect other pages) */
-.daily-fab{
-  position:fixed; right:16px; bottom:16px; z-index:1400;
+/* daily.css — floating FAB + full-screen modal (game style) */
+:root{
+  --red:#e53935; --red-2:#d32f2f; --pink:#ffcdd2; --muted:#888;
+}
+
+/* Floating button */
+#daily-fab{
+  position:fixed; right:16px; bottom:16px; z-index:1202;
   width:56px; height:56px; border-radius:50%;
-  background:#e53935; color:#fff; font-weight:900; font-size:22px;
+  background:var(--red); color:#fff; border:none; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  box-shadow:0 8px 24px rgba(229,57,53,.35); border:none; cursor:pointer;
+  font-size:22px; box-shadow:0 10px 24px rgba(229,57,53,.35);
 }
-.daily-fab:active{ transform:translateY(1px) }
+#daily-fab:active{ transform:translateY(1px) }
+#daily-fab .sr{ position:absolute; left:-9999px }
 
-.daily-modal{ position:fixed; inset:0; display:none; z-index:2000 }
-.daily-modal.show{ display:block }
-.daily-backdrop{ position:absolute; inset:0; background:#0008 }
-.daily-sheet{
-  position:absolute; inset:0; margin:auto; background:#fff; color:#333;
-  width:min(720px,92vw); height:auto; border-radius:16px; padding:16px;
-  box-shadow:0 18px 60px #00000040;
+/* Modal overlay */
+#daily-modal{
+  position:fixed; inset:0; z-index:2000; display:none;
+  background:rgba(0,0,0,.5); align-items:center; justify-content:center;
 }
-.daily-close{
-  position:absolute; top:10px; right:10px; width:34px; height:34px;
-  border:none; border-radius:50%; background:#eee; color:#e53935; font-weight:900; cursor:pointer;
+#daily-modal.show{ display:flex; }
+#daily-modal .panel{
+  width:min(680px,92vw); background:#fff; border-radius:18px;
+  padding:16px; box-shadow:0 14px 48px rgba(0,0,0,.35); position:relative;
 }
-.daily-title{ text-align:center; color:#d32f2f; font-weight:900; font-size:1.4rem; margin:4px 0 10px }
+#daily-modal .close-x{
+  position:absolute; top:10px; right:10px;
+  width:32px; height:32px; border-radius:50%;
+  border:none; background:#ffe6e6; color:var(--red); font-weight:900; cursor:pointer;
+}
 
+/* Title & hero */
+#daily-modal h2{
+  margin:4px 0 8px; text-align:center; color:var(--red-2);
+  font-weight:900; letter-spacing:.02em;
+}
 .daily-hero{
-  display:flex; align-items:center; justify-content:center; gap:12px; margin:10px 0 12px;
+  margin:10px 0; text-align:center;
+  font-weight:900; font-size:2rem; color:#111;
 }
-.daily-hero .points{
-  font-size:42px; font-weight:900; line-height:1;
+.daily-hero .emoji{ font-size:2.2rem; display:block }
+
+/* 7-day strip */
+.daily-strip{
+  display:grid; grid-template-columns: repeat(7,1fr); gap:8px;
+  margin:12px 0 6px;
 }
-.daily-card{
-  width:140px; height:200px; border-radius:12px; background:#111; color:#fff;
-  display:flex; align-items:center; justify-content:center; font-weight:900; letter-spacing:.06em;
-  box-shadow:0 10px 26px rgba(0,0,0,.35), inset 0 -8px 0 rgba(255,255,255,.06);
+.daily-cell{
+  border:2px solid var(--pink); border-radius:12px; padding:8px;
+  text-align:center; font-weight:800; color:#c62828; background:#ffebee;
+  min-width:0;
+}
+.daily-cell small{ display:block; color:var(--muted); font-weight:700 }
+.daily-cell.claimed{
+  background:#e8f5e9; border-color:#a5d6a7; color:#2e7d32;
+}
+.daily-cell.today{
+  outline:3px solid #ff8a80;
 }
 
-.daily-grid{
-  display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:8px;
+/* Actions */
+.daily-actions{
+  display:flex; gap:10px; justify-content:flex-end; margin-top:10px;
 }
-.daily-day{
-  text-align:center; padding:8px; border-radius:10px; border:2px solid #ffcdd2;
-  background:#ffebee; color:#c62828; font-weight:800; font-size:.95rem;
-}
-.daily-day .small{ display:block; font-size:.8rem; opacity:.8 }
-.daily-day.active{ border-color:#e53935; background:#ffcdd2; color:#b71c1c }
-.daily-day.done{ border-color:#a5d6a7; background:#e8f5e9; color:#2e7d32 }
-.daily-day.done::after{ content:"✓"; display:block; font-weight:900; margin-top:4px }
-
-.daily-actions{ display:flex; gap:10px; justify-content:center; margin-top:12px }
 .daily-btn{
-  border:none; border-radius:999px; padding:10px 16px; font-weight:900; cursor:pointer;
+  border:none; border-radius:12px; padding:10px 14px; font-weight:900; cursor:pointer;
 }
-.daily-btn.red{ background:#e53935; color:#fff }
-.daily-btn.grey{ background:#eee; color:#333 }
+.daily-btn.grey{ background:#eee }
+.daily-btn.red{ background:var(--red); color:#fff }
 
-.daily-msg{ text-align:center; color:#888; margin-top:6px; font-size:.9rem }
+.daily-note{ text-align:center; color:var(--muted); font-size:.95rem; margin-top:4px }
