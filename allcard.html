@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Homepage - Card Mode</title>
+  <link rel="stylesheet" href="styles.css" />  <!-- Link to common CSS -->
+</head>
+<body>
+  <header>
+    <div class="logo">MyApp</div>
+    <button id="openRewardModalBtn">รางวัลล็อกอิน</button>
+  </header>
+  <div class="container">
+    <nav class="sidebar">
+      <ul>
+        <li><a href="card.html">Card</a></li>
+        <li><a href="share.html">Share</a></li>
+        <li><a href="unlock.html">Unlock</a></li>
+      </ul>
+    </nav>
+    <main class="content">
+      <h1>Welcome to Card Mode</h1>
+      <p>Select an option from the sidebar.</p>
+    </main>
+  </div>
+
+  <!-- Daily Login Reward Modal -->
+  <div id="dailyRewardModal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModalBtn">&times;</button>
+      <h2>ล็อกอินรายวัน</h2> <!-- "Daily Login" in Thai -->
+      <div class="rewards-grid">
+        <!-- Day 1 -->
+        <div class="day-box" id="day1">
+          <div class="day-label">Day 1</div>
+          <img src="brain_icon.png" alt="Day 1 Reward" />
+          <div class="reward-text">+2 สมอง(คะแนน)</div>
+        </div>
+        <!-- Day 2 -->
+        <div class="day-box" id="day2">
+          <div class="day-label">Day 2</div>
+          <img src="brain_icon.png" alt="Day 2 Reward" />
+          <div class="reward-text">+3 สมอง(คะแนน)</div>
+        </div>
+        <!-- Day 3 -->
+        <div class="day-box" id="day3">
+          <div class="day-label">Day 3</div>
+          <img src="event_card.png" alt="Day 3 Reward" />
+          <div class="reward-text">การ์ดอีเวนท์</div>
+        </div>
+        <!-- Day 4 -->
+        <div class="day-box" id="day4">
+          <div class="day-label">Day 4</div>
+          <img src="brain_icon.png" alt="Day 4 Reward" />
+          <div class="reward-text">+2 สมอง(คะแนน)</div>
+        </div>
+        <!-- Day 5 -->
+        <div class="day-box" id="day5">
+          <div class="day-label">Day 5</div>
+          <img src="brain_icon.png" alt="Day 5 Reward" />
+          <div class="reward-text">+3 สมอง(คะแนน)</div>
+        </div>
+        <!-- Day 6 -->
+        <div class="day-box" id="day6">
+          <div class="day-label">Day 6</div>
+          <img src="brain_icon.png" alt="Day 6 Reward" />
+          <div class="reward-text">+2 สมอง(คะแนน)</div>
+        </div>
+        <!-- Day 7 -->
+        <div class="day-box" id="day7">
+          <div class="day-label">Day 7</div>
+          <img src="event_card.png" alt="Day 7 Reward" />
+          <div class="reward-text">+2 สมอง(คะแนน) และ การ์ดอีเวนท์</div>
+        </div>
+      </div>
+      <button id="claimRewardBtn">รับรางวัล</button>
+    </div>
+  </div>
+
+  <script src="dailyReward.js"></script>
+</body>
+</html>
