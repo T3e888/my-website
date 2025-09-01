@@ -1,22 +1,24 @@
-/* daily.js — Daily Login Rewards (7-day cycle)
+/* daily.js — Daily Login Rewards (7-day cycle, Firebase-backed)
    Reward plan:
    D1: +2 pts; D2: +3; D3: event card; D4: +2; D5: +3; D6: +2; D7: +2 + event card
-   Data in users/{uid}:
+   Firestore users/{uid}:
      points: number
-     cards: string[]
+     cards: string[]        // will arrayUnion('card_event') on card days
      daily: { last: 'YYYY-MM-DD', streak: number }
 */
 
 (function(){
-  // Require Firebase to be initialized by the page
+  // Require Firebase handles prepared by the page
   if (!window.firebase || !window.auth || !window.db) return;
 
-  // Utils
+  // limit FAB to your “first page after login” only
+  const isFirstPage =
+    /\/allcard\.html$/i.test(location.pathname) ||
+    /\/card\.html$/i.test(location.pathname) ||        // keep if you still use card.html as landing
+    location.pathname === "/" || location.pathname === ""; // optional for root
+
   const pad = (n)=> String(n).padStart(2,'0');
-  const ymd = (d = new Date())=>{
-    // Local calendar day
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  };
+  const ymd = (d = new Date())=> `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   const addDays = (d, days)=>{ const x = new Date(d); x.setDate(x.getDate()+days); return x; };
 
   // Rewards table (index 0..6 for days 1..7)
@@ -30,48 +32,64 @@
     { type: 'combo',  amount: 2, cardId: 'card_event', label: '+2 🧠 + EVENT' },
   ];
 
-  // Build FAB + modal once user is signed in
+  let alreadyAutoOpened = false; // avoid double open per load
+
   auth.onAuthStateChanged((user)=>{
     if (!user) return;
 
-    // FAB
-    if (!document.getElementById('daily-fab')){
-      const fab = document.createElement('button');
-      fab.id = 'daily-fab';
-      fab.title = 'Daily Login Rewards';
-      fab.innerHTML = '🎁<span class="sr">Daily</span>';
-      document.body.appendChild(fab);
-      fab.addEventListener('click', openModal);
-    }
+    // Build modal once (available on any page that includes this file)
+    ensureModalShell();
 
-    // Modal shell
-    if (!document.getElementById('daily-modal')){
-      const modal = document.createElement('div');
-      modal.id = 'daily-modal';
-      modal.innerHTML = `
-        <div class="panel">
-          <button class="close-x" aria-label="Close">×</button>
-          <h2>Daily Login Rewards</h2>
-          <div class="daily-hero" id="daily-hero"></div>
-          <div class="daily-strip" id="daily-strip"></div>
-          <div class="daily-note">Claim once per calendar day. Missing a day resets the cycle.</div>
-          <div class="daily-actions">
-            <button class="daily-btn grey" id="daily-cancel">Close</button>
-            <button class="daily-btn red" id="daily-claim">Claim Reward</button>
-          </div>
-        </div>`;
-      document.body.appendChild(modal);
-      modal.addEventListener('click', (e)=>{
-        if (e.target.id === 'daily-modal') closeModal();
+    // Build FAB only on the “first” page you want
+    if (isFirstPage) ensureFab();
+
+    // Auto-open once per day on the first page after login
+    if (isFirstPage && !alreadyAutoOpened){
+      alreadyAutoOpened = true;
+      readDailyState(user.uid).then(({ claimedToday })=>{
+        if (!claimedToday) openModal();
+        refreshPreview();      // also paint current state
       });
-      modal.querySelector('.close-x').addEventListener('click', closeModal);
-      modal.querySelector('#daily-cancel').addEventListener('click', closeModal);
-      modal.querySelector('#daily-claim').addEventListener('click', claimReward);
+    }else{
+      // still keep the preview in sync
+      refreshPreview();
     }
-
-    // When signed in, we can update the UI preview
-    refreshPreview();
   });
+
+  function ensureFab(){
+    if (document.getElementById('daily-fab')) return;
+    const fab = document.createElement('button');
+    fab.id = 'daily-fab';
+    fab.title = 'Daily Login Rewards';
+    fab.innerHTML = '🎁<span class="sr">Daily</span>';
+    document.body.appendChild(fab);
+    fab.addEventListener('click', openModal);
+  }
+
+  function ensureModalShell(){
+    if (document.getElementById('daily-modal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'daily-modal';
+    modal.innerHTML = `
+      <div class="panel">
+        <button class="close-x" aria-label="Close">×</button>
+        <h2>Daily Login Rewards</h2>
+        <div class="daily-hero" id="daily-hero"></div>
+        <div class="daily-strip" id="daily-strip"></div>
+        <div class="daily-note">Claim once per calendar day. Missing a day resets the cycle.</div>
+        <div class="daily-actions">
+          <button class="daily-btn grey" id="daily-cancel">Close</button>
+          <button class="daily-btn red" id="daily-claim">Claim Reward</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e)=>{
+      if (e.target.id === 'daily-modal') closeModal();
+    });
+    modal.querySelector('.close-x').addEventListener('click', closeModal);
+    modal.querySelector('#daily-cancel').addEventListener('click', closeModal);
+    modal.querySelector('#daily-claim').addEventListener('click', claimReward);
+  }
 
   function openModal(){ document.getElementById('daily-modal')?.classList.add('show'); refreshPreview(); }
   function closeModal(){ document.getElementById('daily-modal')?.classList.remove('show'); }
@@ -80,24 +98,18 @@
     const ref = db.collection('users').doc(uid);
     const s = await ref.get();
     const d = s.exists ? (s.data()||{}) : {};
-    // Default structure
     const daily = d.daily && typeof d.daily==='object' ? d.daily : { last: null, streak: 0 };
     const last = daily.last || null;
     const streak = Number(daily.streak||0);
 
-    // Compute today/next day relationship
     const today = ymd();
     const yesterday = ymd(addDays(new Date(), -1));
     const claimedToday = (last === today);
-    const eligible = !claimedToday;  // can claim again today only if not claimed
 
-    // If last is yesterday, continuing streak, else reset on claim
-    let nextStreakIfClaim = (last === yesterday) ? streak + 1 : 1;
-
-    // Day index in 7-cycle
+    const nextStreakIfClaim = (last === yesterday) ? streak + 1 : 1;
     const dayIdx = ((nextStreakIfClaim - 1) % 7 + 7) % 7; // 0..6
 
-    return { today, last, streak, claimedToday, eligible, dayIdx, nextStreakIfClaim };
+    return { today, last, streak, claimedToday, dayIdx, nextStreakIfClaim };
   }
 
   async function refreshPreview(){
@@ -106,7 +118,6 @@
 
     const { claimedToday, dayIdx } = await readDailyState(user.uid);
 
-    // Hero
     const hero = document.getElementById('daily-hero');
     if (hero){
       const r = PLAN[dayIdx];
@@ -114,7 +125,7 @@
         hero.innerHTML = `<span class="emoji">🧠</span>${r.label}`;
       } else if (r.type === 'card'){
         hero.innerHTML = `<span class="emoji">🃏</span>Event Card`;
-      } else { // combo
+      } else {
         hero.innerHTML = `<span class="emoji">🎉</span>${r.label}`;
       }
       if (claimedToday){
@@ -122,7 +133,6 @@
       }
     }
 
-    // Strip 7 days
     const strip = document.getElementById('daily-strip');
     if (strip){
       strip.innerHTML = '';
@@ -137,7 +147,6 @@
       }
     }
 
-    // Enable/disable the claim button
     const btn = document.getElementById('daily-claim');
     if (btn) btn.disabled = claimedToday;
   }
@@ -206,16 +215,19 @@
     }
   }
 
-  // Tiny toast (reuses #toast if present)
   function toast(t){
     let el = document.getElementById('toast');
     if (!el){
       el = document.createElement('div');
       el.id = 'toast';
       document.body.appendChild(el);
+      el.style.position='fixed'; el.style.left='50%'; el.style.bottom='18px';
+      el.style.transform='translateX(-50%)'; el.style.background='#333';
+      el.style.color='#fff'; el.style.padding='10px 14px'; el.style.borderRadius='10px';
+      el.style.zIndex='3000'; el.style.opacity='0'; el.style.transition='opacity .2s';
     }
     el.textContent = t;
-    el.classList.add('show');
-    setTimeout(()=> el.classList.remove('show'), 1600);
+    requestAnimationFrame(()=>{ el.style.opacity='1'; });
+    setTimeout(()=>{ el.style.opacity='0'; }, 1600);
   }
 })();
