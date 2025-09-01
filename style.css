@@ -1,0 +1,30 @@
+/* Header and global styles */
+body { margin: 0; font-family: sans-serif; }
+header { background: #333; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; }
+header .logo { font-size: 1.2em; font-weight: bold; }
+#openRewardModalBtn { background: #ff9800; color: #fff; border: none; border-radius: 50%; padding: 10px 15px; cursor: pointer; font-size: 0.9em; }
+#openRewardModalBtn:focus { outline: none; }
+
+/* Layout: sidebar + content */
+.container { display: flex; height: 100vh; }
+.sidebar { width: 200px; background: #f4f4f4; padding: 20px; box-sizing: border-box; }
+.sidebar ul { list-style: none; padding: 0; }
+.sidebar li { margin-bottom: 10px; }
+.sidebar a { text-decoration: none; color: #333; padding: 8px 12px; display: block; border-radius: 4px; }
+.sidebar a:hover { background: #ddd; }
+.content { flex: 1; padding: 20px; }
+
+/* Daily Reward Modal */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.modal-content { background: #fff; padding: 20px; border-radius: 8px; width: 300px; max-width: 90%; text-align: center; position: relative; }
+.close-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.2em; cursor: pointer; color: #333; }
+.rewards-grid { display: flex; justify-content: space-between; margin: 10px 0 20px; }
+.day-box { flex: 1; margin: 0 2px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; position: relative; background: #fafafa; }
+.day-box.current { border: 2px solid #4caf50; }
+.day-box img { max-width: 100%; height: auto; display: block; margin: 0 auto 5px; }
+.day-box .day-label { font-weight: bold; font-size: 0.9em; }
+.day-box .reward-text { font-size: 0.85em; }
+.day-box.claimed { background: #d9d9d9; }
+.day-box.claimed::after { content: "✓"; color: #2e7d32; font-size: 1.5em; font-weight: bold; position: absolute; top: 5px; right: 8px; }
+#claimRewardBtn { background: #4caf50; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 1em; }
+#claimRewardBtn:disabled { background: #999; cursor: not-allowed; }
