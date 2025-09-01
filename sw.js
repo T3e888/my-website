@@ -1,5 +1,5 @@
 // sw.js — Network-first for HTML, cache-first for images, SWR for css/js
-const CACHE = "sca-v18"; // bump this
+const CACHE = "sca-v19"; // bump this
 
 const CORE_ASSETS = [
   "./","./index.html","./manifest.webmanifest",
