@@ -1,7 +1,7 @@
 // ========== card.js (no reset + self-heal) ==========
 
 const byId = (id) => document.getElementById(id);
-const TOTAL_CARDS = 25;
+const TOTAL_CARDS = 28;
 
 /* ---------- Sidebar ---------- */
 function setupSidebar() {
