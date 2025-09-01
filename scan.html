@@ -4,7 +4,12 @@
   <meta charset="UTF-8" />
   <title>Scan QR Code</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="scan.css" />
+
+  <!-- Shared styles (for matching red sidebar + fonts) -->
+  <link rel="stylesheet" href="global.css?v=8">
+  <link rel="stylesheet" href="share.css?v=prelogo">
+  <!-- Page styles -->
+  <link rel="stylesheet" href="scan.css?v=2" />
 </head>
 <body>
   <!-- ===== SIDEBAR ===== -->
@@ -13,6 +18,13 @@
   </button>
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+
+    <!-- (Optional) Logo row to match other pages -->
+    <div class="brand">
+      <img src="assets/logo.png" alt="Logo">
+      <div class="brand-name">Stroke Card Adventure</div>
+    </div>
+
     <ul class="menu">
       <li class="menu-item"><a href="card.html">My Card Collection</a></li>
       <li class="menu-item"><a href="scan.html" class="active">Scan Card</a></li>
@@ -51,6 +63,7 @@
 
   <!-- Camera panel (on demand) -->
   <section id="cameraPanel" class="camera-panel">
+    <!-- playsinline+muted help iOS/Safari start the camera -->
     <video id="camera" autoplay playsinline muted></video>
     <a id="backToUpload" class="back-link" href="#">← Back to upload</a>
   </section>
@@ -75,11 +88,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- Stronger QR reader (live + still) -->
-  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest/umd/index.min.js"></script>
+  <!-- ZXing (load before scan.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js"></script>
 
   <!-- Page logic -->
-  <video id="camera" playsinline muted autoplay></video>
-  <script src="scan.js?v=redeem-keys-final"></script>
+  <script src="scan.js?v=redeem-keys-final-2"></script>
 </body>
-</html>
+      </html>
