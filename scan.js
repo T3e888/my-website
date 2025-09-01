@@ -1,9 +1,17 @@
-// --- Auth guard ---
+/ --- Auth guard ---
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
     const params = new URLSearchParams(location.search);
     const cardParam = params.get('card');
-    location.href = cardParam ? `login.html?card=${encodeURIComponent(cardParam)}` : 'login.html';
+    const keyParam  = params.get('k');
+    // Preserve deep link through login (card or k)
+    if (cardParam) {
+      location.href = `login.html?card=${encodeURIComponent(cardParam)}`;
+    } else if (keyParam) {
+      location.href = `login.html?k=${encodeURIComponent(keyParam)}`;
+    } else {
+      location.href = 'login.html';
+    }
     return;
   }
   initScanPage(user).catch(console.error);
@@ -23,18 +31,24 @@ async function initScanPage(user) {
   overlay?.addEventListener('click', closeSidebar);
   logout?.addEventListener('click', (e) => { e.preventDefault(); auth.signOut().then(() => location.href='login.html'); });
 
-  // ===== Unlock if ?card=cardX is in the URL =====
+  // ===== Auto-unlock if ?card=cardX or ?k=key-cardN-XXX is in the URL =====
   const hereParams = new URLSearchParams(location.search);
-  const hereCard = hereParams.get('card');
-  if (isValidCardId(hereCard)) {
-    await saveUnlockedCard(user.uid, hereCard.toLowerCase());
+  const hereCardParam = hereParams.get('card');
+  const hereKeyParam  = hereParams.get('k');
+
+  const directCardId =
+    (isValidCardId(hereCardParam) ? hereCardParam.toLowerCase() : null) ||
+    keyToCardId(hereKeyParam);
+
+  if (directCardId) {
+    await saveUnlockedCard(user.uid, directCardId);
     showModal(
-      `Unlocked card ${numFromCardId(hereCard)}!<br><img src="assets/cards/${hereCard}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
-      () => { cleanCardQueryFromUrl(); location.href = 'card.html'; }
+      `Unlocked card ${numFromCardId(directCardId)}!<br><img src="assets/cards/${directCardId}.png" style="max-width:220px;border-radius:12px;margin-top:10px">`,
+      () => { cleanQueryFromUrl(); location.href = 'card.html'; }
     );
     return;
-  } else if (hereCard) {
-    cleanCardQueryFromUrl();
+  } else if (hereCardParam || hereKeyParam) {
+    cleanQueryFromUrl();
   }
 
   // ===== Elements =====
@@ -56,7 +70,7 @@ async function initScanPage(user) {
       await readImageAndDecode(f, async (text) => {
         const card = extractCardId(text);
         if (card) await handleUnlock(user.uid, card);
-        else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
+        else showModal('Invalid QR. Expected one of: ?k=key-cardN-XXX • ?card=cardN • filename like cardN.png');
       });
     }
     e.target.value = '';
@@ -75,7 +89,7 @@ async function initScanPage(user) {
       await readImageAndDecode(f, async (text) => {
         const card = extractCardId(text);
         if (card) await handleUnlock(user.uid, card);
-        else showModal('Invalid QR. Expect a link that has ?card=cardX or a filename like cardX.png');
+        else showModal('Invalid QR. Expected one of: ?k=key-cardN-XXX • ?card=cardN • filename like cardN.png');
       });
     }
   });
@@ -174,26 +188,65 @@ async function startLiveCamera(videoEl, onResult) {
 // ---------- Parsing helpers ----------
 function extractCardId(text) {
   text = (text || '').trim();
+
+  // 1) Already a plain card id?
   if (isValidCardId(text)) return text.toLowerCase();
+
+  // 2) The whole text might already be a key like "key-card10-001"
+  const keyDirect = keyToCardId(text);
+  if (keyDirect) return keyDirect;
+
+  // 3) Try to parse as URL (full or host-only)
   let u = null;
   try { u = new URL(text); }
   catch {
     if (/^[a-z0-9.-]+\.[a-z]{2,}/i.test(text)) { try { u = new URL('https://' + text); } catch {} }
   }
   if (u) {
+    // a) new redeem style: ?k=key-cardN-XXX
+    const k = u.searchParams.get('k');
+    const fromK = keyToCardId(k);
+    if (fromK) return fromK;
+
+    // b) old style: ?card=cardN
     const q = u.searchParams.get('card');
     if (isValidCardId(q)) return q.toLowerCase();
+
+    // c) filename fallback: .../cardN.png
     const last = (u.pathname.split('/').pop() || '').toLowerCase();
     const m = last.match(/^card(0?[1-9]|1[0-9]|2[0-5])(?:\.png)?$/);
     if (m) return `card${Number(m[1])}`;
   }
+
+  // 4) Look for “…cardN…” anywhere in raw text
   const m2 = text.toLowerCase().match(/card(0?[1-9]|1[0-9]|2[0-5])\b/);
   if (m2) return `card${Number(m2[1])}`;
+
+  // 5) Look for “…key-cardN-XXX…” anywhere in raw text
+  const keyInline = keyToCardId(text);
+  if (keyInline) return keyInline;
+
   return null;
 }
+
+// Convert "key-cardN-00X" to "cardN" (N = 1..25)
+function keyToCardId(raw){
+  if (!raw) return null;
+  const s = decodeURIComponent(String(raw)).toLowerCase().trim();
+  // Accept: key-card10-001 / keycard10-001 / key-card 10-001 (spaces tolerant)
+  const m = s.match(/key-?\s*card\s*(0?[1-9]|1[0-9]|2[0-5])-(?:\d{3})\b/);
+  return m ? `card${Number(m[1])}` : null;
+}
+
 function isValidCardId(v){ return typeof v==='string' && /^card(0?[1-9]|1[0-9]|2[0-5])$/i.test(v); }
 function numFromCardId(id){ return String(Number((id||'').replace(/[^0-9]/g,''))); }
-function cleanCardQueryFromUrl(){ const url=new URL(location.href); url.searchParams.delete('card'); history.replaceState({},'',url.toString()); }
+
+function cleanQueryFromUrl(){
+  const url = new URL(location.href);
+  url.searchParams.delete('card');
+  url.searchParams.delete('k');
+  history.replaceState({}, '', url.toString());
+}
 
 // ---------- Firestore save ----------
 async function saveUnlockedCard(uid, cardId) {
@@ -233,4 +286,4 @@ function showModal(msg,cb){
   modal.innerHTML=`<div class="modal-content">${msg}<br><button class="modal-close">OK</button></div>`;
   modal.classList.add('active');
   modal.querySelector('.modal-close').onclick=()=>{ modal.classList.remove('active'); if(cb) cb(); };
-    }
+  }
