@@ -64,7 +64,7 @@ auth.onAuthStateChanged(async (user) => {
   }
 
   // Default landing
-  location.replace(nextParam || 'card.html');
+  location.replace(nextParam || 'allcard.html');
 });
 
 // ----- Login form -----
@@ -90,7 +90,7 @@ document.getElementById('loginForm').addEventListener('submit', function (e) {
         } else if (nextParam) {
           location.replace(nextParam);
         } else {
-          location.replace('card.html');
+          location.replace('allcard.html');
         }
       };
     })
