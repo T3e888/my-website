@@ -1,9 +1,9 @@
-// ===== Firebase handles (page already includes firebase compat) =====
+// ===== Firebase handles (page includes compat SDK already) =====
 /* global firebase, ZXingBrowser */
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* ---------- small utils ---------- */
+/* ---------- DOM helpers & modal ---------- */
 const $ = (id) => document.getElementById(id);
 function showModal(msg, cb){
   const modal = $("modal");
@@ -14,12 +14,16 @@ function showModal(msg, cb){
     cb && cb();
   };
 }
+
+/* ---------- tiny utils ---------- */
 function isValidCardId(v){ return typeof v === "string" && /^card(0?[1-9]|1[0-9]|2[0-5])$/i.test(v); }
 function numFromCardId(id){ return String(Number((id||"").replace(/[^0-9]/g,""))); }
 function cleanCardQueryFromUrl(){
   const url = new URL(location.href);
   url.searchParams.delete("card");
   url.searchParams.delete("k");
+  url.searchParams.delete("key");
+  url.searchParams.delete("code");
   history.replaceState({}, "", url.toString());
 }
 
@@ -29,17 +33,18 @@ async function saveUnlockedCard(uid, cardId){
   await ref.set({ cards: firebase.firestore.FieldValue.arrayUnion(cardId) }, { merge: true });
 }
 
-/* ---------- PARSING: now supports redeem keys ---------- */
+/* ---------- Mapping redeem keys -> card ids ---------- */
 /*
-  รองรับ:
-  - ?k=key-card1-001
+  Accept:
+  - ?k=key-card1-001 (also ?key= or ?code=)
   - ?card=card1
-  - ชื่อไฟล์ /path/card1.png, card1.jpg
-  - ข้อความดิบ "key-card1-001" หรือ "card1"
+  - filename like /path/card1.png or card1.jpg
+  - raw "key-card1-001" or "card1"
+  - raw query string like "k=key-card1-001"
 */
 function mapKeyToCardId(k){
   const s = (k||"").toString().trim().toLowerCase();
-  const m = s.match(/^key-?card(\d{1,2})-(\d{3})$/); // key-card10-002
+  const m = s.match(/^key-?card(\d{1,2})-(\d{3})$/);   // e.g. key-card10-002
   if (!m) return null;
   const n = Number(m[1]);
   if (n >= 1 && n <= 25) return `card${n}`;
@@ -52,27 +57,33 @@ function extractCardId(text){
   // already a card id
   if (isValidCardId(t)) return t.toLowerCase();
 
+  // raw query-style string: k=key-cardX-YYY
+  const rawParam = t.match(/[?&#]?(?:k|key|code)=([^&#\s]+)/i);
+  if (rawParam){
+    const viaParam = mapKeyToCardId(rawParam[1]);
+    if (viaParam) return viaParam;
+  }
+
   // plain redeem key
   const plainKey = mapKeyToCardId(t);
   if (plainKey) return plainKey;
 
-  // might be a URL
+  // try as URL (full or host-only)
   let u = null;
   try { u = new URL(t); }
   catch {
-    // try to coerce host-only text into a URL
     if (/^[a-z0-9.-]+\.[a-z]{2,}/i.test(t)) {
-      try { u = new URL(/^https?:\/\//i.test(t) ? t : "https://"+t); } catch {}
+      try { u = new URL(/^https?:\/\//i.test(t) ? t : "https://" + t); } catch {}
     }
   }
 
   if (u){
-    // 1) redeem key
+    // 1) ?k / ?key / ?code
     const k = u.searchParams.get("k") || u.searchParams.get("key") || u.searchParams.get("code");
     const fromK = mapKeyToCardId(k);
     if (fromK) return fromK;
 
-    // 2) plain ?card=cardX
+    // 2) ?card=cardX
     const q = u.searchParams.get("card");
     if (isValidCardId(q)) return q.toLowerCase();
 
@@ -82,7 +93,7 @@ function extractCardId(text){
     if (mf) return mf[1];
   }
 
-  // 4) a filename or token inside the text
+  // 4) token inside the text
   const mfile = t.toLowerCase().match(/card(0?[1-9]|1[0-9]|2[0-5])(?:\.(png|jpg|jpeg))?/);
   if (mfile) return `card${Number(mfile[1])}`;
 
@@ -91,7 +102,7 @@ function extractCardId(text){
 
 /* ---------- CAMERA (BarcodeDetector -> ZXing video) ---------- */
 async function startLiveCamera(videoEl, onResult){
-  // Native detector
+  // Native detector first
   if ("BarcodeDetector" in window){
     try{
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -128,7 +139,7 @@ async function startLiveCamera(videoEl, onResult){
     }catch(e){ console.warn("BarcodeDetector failed:", e); }
   }
 
-  // ZXing video fallback
+  // ZXing live fallback
   if (window.ZXingBrowser){
     try{
       const reader = new ZXingBrowser.BrowserQRCodeReader();
@@ -174,10 +185,10 @@ async function readImageAndDecode(file, onDecoded){
 // Auth guard
 auth.onAuthStateChanged(async (user)=>{
   if (!user){
-    // keep ?card or ?k if present so we can auto-claim after login
+    // keep params so we can auto-claim after login
     const p = new URLSearchParams(location.search);
     const cardParam = p.get("card");
-    const keyParam  = p.get("k");
+    const keyParam  = p.get("k") || p.get("key") || p.get("code");
     if (cardParam) location.href = `login.html?card=${encodeURIComponent(cardParam)}`;
     else if (keyParam) location.href = `login.html?k=${encodeURIComponent(keyParam)}`;
     else location.href = "login.html";
@@ -187,6 +198,10 @@ auth.onAuthStateChanged(async (user)=>{
 });
 
 async function initScanPage(user){
+  // If an overlay is somehow left on from another page, clear it.
+  $("overlay")?.classList.remove("active");
+  $("sidebar")?.classList.remove("open");
+
   // ===== Sidebar =====
   $("menu-toggle")?.addEventListener("click", ()=>{
     $("sidebar").classList.add("open"); $("overlay").classList.add("active");
@@ -198,12 +213,12 @@ async function initScanPage(user){
 
   // ===== Auto-claim if URL has ?k=… or ?card=… =====
   const here = new URLSearchParams(location.search);
-  const fromUrl = extractCardId(here.get("k") || here.get("card") || "");
+  const fromUrl = extractCardId(here.get("k") || here.get("key") || here.get("code") || here.get("card") || "");
   if (fromUrl){
     await handleUnlock(user.uid, fromUrl);
     cleanCardQueryFromUrl();
     return;
-  }else if (here.get("k") || here.get("card")){
+  }else if (here.get("k") || here.get("key") || here.get("code") || here.get("card")){
     cleanCardQueryFromUrl();
   }
 
@@ -217,16 +232,19 @@ async function initScanPage(user){
   const uploadBtn   = $("uploadBtn");
   const dropZone    = $("dropZone");
 
-  // Upload / Drop
+  // Upload / Drop (make whole area clickable)
+  dropZone?.addEventListener("click", () => fileInput?.click());
+  dropZone?.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); fileInput?.click(); }});
   uploadBtn?.addEventListener("click", ()=> fileInput.click());
+
   fileInput?.addEventListener("change", async (e)=>{
     const f = e.target.files?.[0];
     if (f){
-      uploadBtn.textContent = `Choose Image - ${f.name}`;
+      uploadBtn.textContent = `Choose Image — ${f.name}`;
       await readImageAndDecode(f, async (raw)=>{
         const card = extractCardId(raw);
         if (card) await handleUnlock(user.uid, card);
-        else showModal("Invalid QR. Expect a redeem link like ‘?k=key-cardX-001’, a link with ‘?card=cardX’, or a filename like ‘cardX.png’.");
+        else showModal("Invalid QR. Expect a redeem link like “?k=key-cardX-001”, a link with “?card=cardX”, or a filename like “cardX.png”.");
       });
     }
     e.target.value = "";
@@ -241,18 +259,18 @@ async function initScanPage(user){
   dropZone?.addEventListener("drop", async (e)=>{
     const f = e.dataTransfer?.files?.[0];
     if (f){
-      uploadBtn.textContent = `Choose Image - ${f.name}`;
+      uploadBtn.textContent = `Choose Image — ${f.name}`;
       await readImageAndDecode(f, async (raw)=>{
         const card = extractCardId(raw);
         if (card) await handleUnlock(user.uid, card);
-        else showModal("Invalid QR. Expect a redeem link like ‘?k=key-cardX-001’, a link with ‘?card=cardX’, or a filename like ‘cardX.png’.");
+        else showModal("Invalid QR. Expect a redeem link like “?k=key-cardX-001”, a link with “?card=cardX”, or a filename like “cardX.png”.");
       });
     }
   });
 
   // Camera (on click)
   let stopControls = null;
-  $("cameraLink")?.addEventListener("click", async (e)=>{
+  cameraLink?.addEventListener("click", async (e)=>{
     e.preventDefault();
     uploadPanel.style.display = "none";
     cameraPanel.classList.add("show");
@@ -265,7 +283,7 @@ async function initScanPage(user){
     });
   });
 
-  $("backToUpload")?.addEventListener("click", (e)=>{
+  backToUpload?.addEventListener("click", (e)=>{
     e.preventDefault();
     stopControls && stopControls();
     cameraPanel.classList.remove("show");
@@ -276,9 +294,8 @@ async function initScanPage(user){
   async function handleUnlock(uid, cardId){
     await saveUnlockedCard(uid, cardId);
 
-    // show image if exists (.png -> .jpg fallback), else placeholder
     const n = numFromCardId(cardId);
     const img = `<img src="assets/cards/${cardId}.png" onerror="this.onerror=null;this.src='assets/cards/${cardId}.jpg';this.alt='${cardId}';">`;
     showModal(`Unlocked card ${n}!<br>${img}`, ()=> location.href = "card.html");
   }
-}
+  }
