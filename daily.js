@@ -1,57 +1,41 @@
-/* daily.js — Daily Login Rewards (7-day cycle, Firebase-backed)
-   Reward plan:
-   D1: +2 pts; D2: +3; D3: event card; D4: +2; D5: +3; D6: +2; D7: +2 + event card
-   Firestore users/{uid}:
-     points: number
-     cards: string[]        // will arrayUnion('card_event') on card days
-     daily: { last: 'YYYY-MM-DD', streak: number }
-*/
-
+// daily.js v3 — Firebase daily reward (7 วันวนลูป)
 (function(){
-  // Require Firebase handles prepared by the page
   if (!window.firebase || !window.auth || !window.db) return;
 
-  // limit FAB to your “first page after login” only
-  const isFirstPage =
-    /\/allcard\.html$/i.test(location.pathname) ||
-    /\/card\.html$/i.test(location.pathname) ||        // keep if you still use card.html as landing
-    location.pathname === "/" || location.pathname === ""; // optional for root
+  // เด้งอัตโนมัติบนหน้าแรกหลังล็อกอินเท่านั้น
+  const isLanding = /\/allcard\.html$/i.test(location.pathname);
 
-  const pad = (n)=> String(n).padStart(2,'0');
-  const ymd = (d = new Date())=> `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  const addDays = (d, days)=>{ const x = new Date(d); x.setDate(x.getDate()+days); return x; };
+  const pad = n => String(n).padStart(2,'0');
+  const ymd = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const addDays = (d, days)=>{ const x=new Date(d); x.setDate(x.getDate()+days); return x; };
 
-  // Rewards table (index 0..6 for days 1..7)
+  const CARD_REWARD_ID = 'card30';
   const PLAN = [
     { type: 'points', amount: 2, label: '+2 🧠' },
     { type: 'points', amount: 3, label: '+3 🧠' },
-    { type: 'card',   cardId: 'card_event', label: 'EVENT' },
+    { type: 'card',   cardId: CARD_REWARD_ID, label: 'Card 30' },
     { type: 'points', amount: 2, label: '+2 🧠' },
     { type: 'points', amount: 3, label: '+3 🧠' },
     { type: 'points', amount: 2, label: '+2 🧠' },
-    { type: 'combo',  amount: 2, cardId: 'card_event', label: '+2 🧠 + EVENT' },
+    { type: 'combo',  amount: 2, cardId: CARD_REWARD_ID, label: '+2 🧠 + Card 30' },
   ];
 
-  let alreadyAutoOpened = false; // avoid double open per load
+  let autoOpenedOnce = false;
 
   auth.onAuthStateChanged((user)=>{
     if (!user) return;
 
-    // Build modal once (available on any page that includes this file)
     ensureModalShell();
+    ensureFab();
+    document.getElementById('open-daily-from-logo')?.addEventListener('click', openModal);
 
-    // Build FAB only on the “first” page you want
-    if (isFirstPage) ensureFab();
-
-    // Auto-open once per day on the first page after login
-    if (isFirstPage && !alreadyAutoOpened){
-      alreadyAutoOpened = true;
+    if (isLanding && !autoOpenedOnce){
+      autoOpenedOnce = true;
       readDailyState(user.uid).then(({ claimedToday })=>{
         if (!claimedToday) openModal();
-        refreshPreview();      // also paint current state
+        refreshPreview();
       });
-    }else{
-      // still keep the preview in sync
+    } else {
       refreshPreview();
     }
   });
@@ -76,16 +60,14 @@
         <h2>Daily Login Rewards</h2>
         <div class="daily-hero" id="daily-hero"></div>
         <div class="daily-strip" id="daily-strip"></div>
-        <div class="daily-note">Claim once per calendar day. Missing a day resets the cycle.</div>
+        <div class="daily-note">รับได้วันละครั้ง ข้ามวันรีเซ็ตรอบใหม่</div>
         <div class="daily-actions">
-          <button class="daily-btn grey" id="daily-cancel">Close</button>
-          <button class="daily-btn red" id="daily-claim">Claim Reward</button>
+          <button class="daily-btn grey" id="daily-cancel">ปิด</button>
+          <button class="daily-btn red"  id="daily-claim">รับรางวัล</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
-    modal.addEventListener('click', (e)=>{
-      if (e.target.id === 'daily-modal') closeModal();
-    });
+    modal.addEventListener('click', (e)=>{ if (e.target.id==='daily-modal') closeModal(); });
     modal.querySelector('.close-x').addEventListener('click', closeModal);
     modal.querySelector('#daily-cancel').addEventListener('click', closeModal);
     modal.querySelector('#daily-claim').addEventListener('click', claimReward);
@@ -98,16 +80,16 @@
     const ref = db.collection('users').doc(uid);
     const s = await ref.get();
     const d = s.exists ? (s.data()||{}) : {};
-    const daily = d.daily && typeof d.daily==='object' ? d.daily : { last: null, streak: 0 };
-    const last = daily.last || null;
-    const streak = Number(daily.streak||0);
+    const daily = (d.daily && typeof d.daily==='object') ? d.daily : { last:null, streak:0 };
+    const last   = daily.last || null;
+    const streak = Number(daily.streak || 0);
 
     const today = ymd();
     const yesterday = ymd(addDays(new Date(), -1));
     const claimedToday = (last === today);
 
     const nextStreakIfClaim = (last === yesterday) ? streak + 1 : 1;
-    const dayIdx = ((nextStreakIfClaim - 1) % 7 + 7) % 7; // 0..6
+    const dayIdx = ((nextStreakIfClaim - 1) % 7 + 7) % 7;
 
     return { today, last, streak, claimedToday, dayIdx, nextStreakIfClaim };
   }
@@ -117,30 +99,26 @@
     if (!user) return;
 
     const { claimedToday, dayIdx } = await readDailyState(user.uid);
+    const hero  = document.getElementById('daily-hero');
+    const strip = document.getElementById('daily-strip');
+    const r = PLAN[dayIdx];
 
-    const hero = document.getElementById('daily-hero');
     if (hero){
-      const r = PLAN[dayIdx];
-      if (r.type === 'points'){
-        hero.innerHTML = `<span class="emoji">🧠</span>${r.label}`;
-      } else if (r.type === 'card'){
-        hero.innerHTML = `<span class="emoji">🃏</span>Event Card`;
-      } else {
-        hero.innerHTML = `<span class="emoji">🎉</span>${r.label}`;
-      }
+      if (r.type === 'points')      hero.innerHTML = `<span class="emoji">🧠</span>${r.label}`;
+      else if (r.type === 'card')   hero.innerHTML = `<span class="emoji">🃏</span>${r.label}`;
+      else                          hero.innerHTML = `<span class="emoji">🎉</span>${r.label}`;
       if (claimedToday){
-        hero.innerHTML += `<div style="font-size:1rem;color:#2e7d32;margin-top:6px">Already claimed today</div>`;
+        hero.innerHTML += `<div style="font-size:1rem;color:#2e7d32;margin-top:6px">รับรางวัลวันนี้แล้ว</div>`;
       }
     }
 
-    const strip = document.getElementById('daily-strip');
     if (strip){
       strip.innerHTML = '';
       for (let i=0;i<7;i++){
-        const r = PLAN[i];
+        const ri = PLAN[i];
         const cell = document.createElement('div');
         cell.className = 'daily-cell';
-        cell.innerHTML = `<div>${r.label}</div><small>Day ${i+1}</small>`;
+        cell.innerHTML = `<div>${ri.label}</div><small>Day ${i+1}</small>`;
         if (i < dayIdx) cell.classList.add('claimed');
         if (i === dayIdx) cell.classList.add('today');
         strip.appendChild(cell);
@@ -152,9 +130,7 @@
   }
 
   async function claimReward(){
-    const user = auth.currentUser;
-    if (!user) return;
-
+    const user = auth.currentUser; if (!user) return;
     const uref = db.collection('users').doc(user.uid);
 
     try{
@@ -165,53 +141,42 @@
         const last   = daily.last || null;
         const streak = Number(daily.streak || 0);
 
-        const pad = n => String(n).padStart(2,'0');
-        const today = (()=>{ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; })();
-        const ymd = (d)=> `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-        const yesterday = (()=>{ const d=new Date(); d.setDate(d.getDate()-1); return ymd(d); })();
-
-        if (last === today){
-          return { already:true, reward:null };
-        }
+        const today = ymd();
+        const yesterday = ymd(addDays(new Date(), -1));
+        if (last === today) return { already:true };
 
         const nextStreak = (last === yesterday) ? streak + 1 : 1;
         const idx = ((nextStreak - 1) % 7 + 7) % 7;
         const reward = PLAN[idx];
 
-        const updates = { daily: { last: today, streak: nextStreak } };
-
+        const upd = { daily: { last: today, streak: nextStreak } };
         if (reward.type === 'points'){
-          updates.points = firebase.firestore.FieldValue.increment(reward.amount);
+          upd.points = firebase.firestore.FieldValue.increment(reward.amount);
         } else if (reward.type === 'card'){
-          updates.cards = firebase.firestore.FieldValue.arrayUnion(reward.cardId);
-        } else { // combo
-          updates.points = firebase.firestore.FieldValue.increment(reward.amount);
-          updates.cards  = firebase.firestore.FieldValue.arrayUnion(reward.cardId);
+          upd.cards  = firebase.firestore.FieldValue.arrayUnion(reward.cardId);
+        } else {
+          upd.points = firebase.firestore.FieldValue.increment(reward.amount);
+          upd.cards  = firebase.firestore.FieldValue.arrayUnion(reward.cardId);
         }
 
-        tx.set(uref, updates, { merge: true });
+        tx.set(uref, upd, { merge: true });
         return { already:false, reward };
       });
 
       if (result.already){
-        toast('You already claimed today.');
+        toast('วันนี้รับแล้ว');
       }else{
         const r = result.reward;
-        if (r.type === 'points'){
-          toast(`+${r.amount} Brain points 🎉`);
-        } else if (r.type === 'card'){
-          toast(`Got an EVENT card 🎉`);
-        } else {
-          toast(`+${r.amount} Brain points + EVENT card 🎉`);
-        }
+        if (r.type === 'points')      toast(`+${r.amount} Brain points 🎉`);
+        else if (r.type === 'card')   toast(`ได้ Card 30 🎉`);
+        else                          toast(`+${r.amount} Brain points + Card 30 🎉`);
       }
 
       await refreshPreview();
-      setTimeout(()=> document.getElementById('daily-modal')?.classList.remove('show'), 700);
-
+      setTimeout(()=> closeModal(), 700);
     }catch(e){
       console.error(e);
-      toast('Claim failed, please try again.');
+      toast('รับรางวัลไม่สำเร็จ ลองอีกครั้ง');
     }
   }
 
@@ -220,14 +185,15 @@
     if (!el){
       el = document.createElement('div');
       el.id = 'toast';
+      Object.assign(el.style,{
+        position:'fixed',left:'50%',bottom:'18px',transform:'translateX(-50%)',
+        background:'#333',color:'#fff',padding:'10px 14px',borderRadius:'10px',
+        zIndex:'3000',opacity:'0',transition:'opacity .2s'
+      });
       document.body.appendChild(el);
-      el.style.position='fixed'; el.style.left='50%'; el.style.bottom='18px';
-      el.style.transform='translateX(-50%)'; el.style.background='#333';
-      el.style.color='#fff'; el.style.padding='10px 14px'; el.style.borderRadius='10px';
-      el.style.zIndex='3000'; el.style.opacity='0'; el.style.transition='opacity .2s';
     }
     el.textContent = t;
-    requestAnimationFrame(()=>{ el.style.opacity='1'; });
-    setTimeout(()=>{ el.style.opacity='0'; }, 1600);
+    requestAnimationFrame(()=> el.style.opacity='1');
+    setTimeout(()=> el.style.opacity='0', 1600);
   }
 })();
