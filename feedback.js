@@ -134,7 +134,7 @@ async function claimReward(){
 
     tx.set(uref, {
       points: firebase.firestore.FieldValue.increment(5),
-      cards: firebase.firestore.FieldValue.arrayUnion('card25'),
+      cards: firebase.firestore.FieldValue.arrayUnion('card30'),
       flags: {
         feedbackAwardGiven: true,
         feedbackAwardPatched: true,          // marker so other pages know it's applied
@@ -148,7 +148,7 @@ async function claimReward(){
   if (result === "claimed") {
     flags.feedbackAwardGiven = true;
     updateProgress();
-    showModal("🎉 ยินดีด้วยคุณได้รับรางวัล <b>+5 points</b> และปลดล็อค <b>การ์ดEventลับ #25</b>.", () => {
+    showModal("🎉 ยินดีด้วยคุณได้รับรางวัล <b>+5 points</b> และปลดล็อค <b>การ์ดEventลับ #30</b>.", () => {
       // stay here, or go to collection:
       // location.href = 'card.html';
     });
