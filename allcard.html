@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="daily.css?v=3">
 </head>
 <body>
-  <!-- Drawer (มีเฉพาะ 3 รายการ) -->
+  <!-- Drawer: มีแค่ 3 รายการ -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
@@ -29,7 +29,7 @@
   <header class="hub-header">
     <h1 class="hub-title">Card</h1>
     <div class="hub-actions">
-      <!-- คลิกโลโก้เพื่อเปิด Daily -->
+      <!-- คลิกโลโก้เพื่อเปิดรางวัลรายวัน -->
       <img id="open-daily-from-logo" class="hub-logo" src="assets/logo.png" alt="Logo">
     </div>
   </header>
@@ -50,7 +50,7 @@
     </a>
   </div>
 
-  <p class="hub-note">วันนี้รับรางวัลหรือยัง? กดโลโก้มุมขวาบนหรือไอคอน 🎁 เพื่อเปิด “ล็อกอินรายวัน”</p>
+  <p class="hub-note">ถ้ายังไม่ได้รับวันนี้ ระบบจะเด้งรางวัลอัตโนมัติบนหน้านี้ หรือกดโลโก้มุมขวาบน/ปุ่ม 🎁 ก็ได้</p>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -67,7 +67,7 @@
       measurementId: "G-33LJCV1MD8"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    // ให้ daily.js ใช้
+    // ให้ daily.js ใช้งาน
     window.auth = firebase.auth();
     window.db   = firebase.firestore();
   </script>
@@ -75,7 +75,7 @@
   <!-- Daily rewards -->
   <script src="daily.js?v=3"></script>
 
-  <!-- Drawer toggle + auto-open เมื่อยังไม่ได้รับวันนี้ -->
+  <!-- Drawer toggle -->
   <script>
     (function(){
       const $ = id => document.getElementById(id);
