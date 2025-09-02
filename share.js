@@ -1,11 +1,11 @@
-// share.js — pre-logo, fully clickable tiles + Thai modal messages
+// share.js — instant-convert borrows (no 3-day wait) + Thai modal messages
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const $ = (id) => document.getElementById(id);
 const DAY = 24 * 60 * 60 * 1000;
-const BORROW_MS = 3 * DAY;
+const BORROW_MS = 3 * DAY; // kept for compatibility (unused for countdown now)
 
 let currentUid = null;
 let ownedCardsCache = [];
@@ -49,7 +49,6 @@ async function getUsernameByUid(uid){
 }
 
 /* ---------- ensure *my* username mapping exists on login ---------- */
-/* (keeps your rules happy and makes recipient lookup reliable) */
 async function ensureSelfUsernameMapping(user){
   const uref = db.collection("users").doc(user.uid);
   const snap = await uref.get();
@@ -61,7 +60,6 @@ async function ensureSelfUsernameMapping(user){
   try {
     await db.collection("usernames").doc(uname).set({ uid: user.uid, username: uname }, { merge: true });
   } catch (e) {
-    // Likely taken by someone else per rules → suffix with -xxxx, then persist back to /users
     const fallback = `${uname}-${user.uid.slice(0,4).toLowerCase()}`;
     await db.collection("usernames").doc(fallback).set({ uid: user.uid, username: fallback }, { merge: true });
     await uref.set({ username: fallback }, { merge: true });
@@ -95,9 +93,10 @@ function renderOwnedCards(cards){
   };
 }
 
-/* ---------- Create borrow doc ---------- */
+/* ---------- Create borrow doc (until = now) ---------- */
 async function createBorrowDoc(toUid, fromUid, cardId){
-  const untilTs = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + BORROW_MS));
+  // keep 4 required fields; set "until" to now (so receiver can insta-convert)
+  const untilTs = firebase.firestore.Timestamp.fromDate(new Date());
   const ref = db.collection("users").doc(toUid).collection("shared").doc(cardId);
   await ref.set({
     cardId,
@@ -107,7 +106,7 @@ async function createBorrowDoc(toUid, fromUid, cardId){
   });
 }
 
-/* ---------- Share flow + user messages (NO pre-read of shared doc) ---------- */
+/* ---------- Share flow + user messages ---------- */
 async function onShareClick(fromUid, cardId){
   const username = ($("toUser").value || "").trim().toLowerCase();
   if (!username){ showModal("กรุณากรอกชื่อผู้รับ"); return; }
@@ -128,7 +127,7 @@ async function onShareClick(fromUid, cardId){
     const toCards = (toDoc.exists && Array.isArray(toDoc.data().cards)) ? toDoc.data().cards : [];
     if (toCards.includes(cardId)){ showModal("ผู้รับเป็นเจ้าของการ์ดนี้อยู่แล้ว"); return; }
 
-    // 4) just try to create the borrow doc (rules will block duplicates)
+    // 4) create borrow doc (rules block duplicates)
     try{
       await createBorrowDoc(toUid, fromUid, cardId);
     }catch(e){
@@ -160,63 +159,66 @@ async function onShareClick(fromUid, cardId){
   }
 }
 
-/* ---------- Borrowed countdown + log ---------- */
+/* ---------- Borrowed → instant convert on receiver ---------- */
 function watchBorrowed(uid){
   const list = $("borrowedList");
-  list.innerHTML = `<div class="hint">กำลังโหลด…</div>`;
-  let timer = null;
-  const items = new Map();
+  if (list) list.innerHTML = `<div class="hint">กำลังตรวจรับการ์ด…</div>`;
+
+  const uref  = db.collection("users").doc(uid);
+  const inbox = db.collection("shareInbox");
+  const accepting = new Set(); // avoid duplicate work per card
 
   db.collection("users").doc(uid).collection("shared").onSnapshot(async (snap)=>{
-    items.clear(); list.innerHTML = "";
     if (snap.empty){
-      list.innerHTML = `<div class="hint">ตอนนี้คุณยังไม่ได้ยืมการ์ดใด ๆ</div>`;
-      if (timer){ clearInterval(timer); timer = null; }
+      if (list) list.innerHTML = `<div class="hint">กล่องรับว่าง</div>`;
       return;
     }
-    for (const d of snap.docs){
-      const v = d.data();
-      const cardId = v.cardId;
-      const until  = v.until?.toDate ? v.until.toDate().getTime() : (Date.now() + BORROW_MS);
-      const fromName = await getUsernameByUid(v.fromUid);
-      const el = document.createElement("div");
-      el.className = "borrowed";
-      el.innerHTML = `
-        <img class="thumb" src="assets/cards/${cardId}.png"
-             onerror="this.onerror=null;this.src='assets/cards/${cardId}.jpg'">
-        <div class="meta">
-          <div><b>${cardId}</b> — ยืมมาจาก <b>@${fromName}</b></div>
-          <div class="timer" data-card="${cardId}">—</div>
-        </div>`;
-      list.appendChild(el);
-      items.set(cardId, { el, until });
-    }
 
-    if (timer) clearInterval(timer);
-    timer = setInterval(async ()=>{
-      const now = Date.now();
-      for (const [cid, obj] of items){
-        const remain = obj.until - now;
-        const tEl = obj.el.querySelector(`.timer[data-card="${cid}"]`);
-        if (!tEl) continue;
-        if (remain > 0){
-          const s = Math.floor(remain/1000);
-          const h  = String(Math.floor(s/3600)).padStart(2,'0');
-          const m  = String(Math.floor((s%3600)/60)).padStart(2,'0');
-          const ss = String(s%60).padStart(2,'0');
-          tEl.textContent = `เวลาคงเหลือ: ${h}:${m}:${ss}`;
-        }else{
-          tEl.textContent = "กำลังเปลี่ยนสถานะเป็นเจ้าของ…";
-          items.delete(cid);
-          await db.runTransaction(async (tx)=>{
-            const uref = db.collection("users").doc(uid);
-            tx.set(uref, { cards: firebase.firestore.FieldValue.arrayUnion(cid) }, { merge: true });
-            tx.delete( uref.collection("shared").doc(cid) );
-          });
+    for (const d of snap.docs){
+      const v = d.data() || {};
+      const cid = v.cardId;
+      if (!cid || accepting.has(cid)) continue;
+      accepting.add(cid);
+
+      try{
+        // 1) add to owned cards (if not yet) and delete shared/{cid}
+        await db.runTransaction(async (tx)=>{
+          const us = await tx.get(uref);
+          const cards = (us.exists && Array.isArray(us.data().cards)) ? us.data().cards : [];
+          if (!cards.includes(cid)){
+            tx.set(uref, { cards: firebase.firestore.FieldValue.arrayUnion(cid) }, { merge:true });
+          }
+          tx.delete( uref.collection("shared").doc(cid) );
+        });
+
+        // 2) mark latest matching inbox row as converted
+        try{
+          const q = await inbox
+            .where("toUid","==",uid)
+            .where("cardId","==",cid)
+            .orderBy("createdAt","desc")
+            .limit(1).get();
+          if (!q.empty){
+            await q.docs[0].ref.update({
+              status: "converted",
+              acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }catch{}
+
+        // 3) quick feedback in UI
+        if (list){
+          const el = document.createElement("div");
+          el.className = "borrowed";
+          el.innerHTML = `<b>${cid}</b> ได้รับแล้ว`;
+          list.prepend(el);
         }
+      }catch(e){
+        console.warn("instant accept failed", cid, e);
+      }finally{
+        accepting.delete(cid);
       }
-      if (items.size === 0){ clearInterval(timer); timer = null; }
-    }, 1000);
+    }
   });
 }
 
@@ -265,7 +267,7 @@ auth.onAuthStateChanged(async (user)=>{
     });
   }
 
-  // NEW: make sure my /usernames/{name} mapping exists (or auto-suffix if taken)
+  // ensure my /usernames/{name} mapping exists (or auto-suffix if taken)
   await ensureSelfUsernameMapping(user);
 
   // live owned cards
@@ -275,6 +277,9 @@ auth.onAuthStateChanged(async (user)=>{
     renderOwnedCards(ownedCardsCache);
   });
 
+  // instant-accept incoming borrows
   watchBorrowed(user.uid);
+
+  // activity log
   renderLogLive(user.uid);
 });
