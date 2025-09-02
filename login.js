@@ -39,13 +39,11 @@ const validCard  = /^card([1-9]|1[0-9]|2[0-5])$/;
 auth.onAuthStateChanged(async (user) => {
   if (!user) return;
 
-  // If this login was invoked with a redeem key, go straight to redeem.
   if (keyParam) {
     location.replace(`redeem.html?k=${encodeURIComponent(keyParam)}`);
     return;
   }
 
-  // Legacy ?card=cardX support (only when no key present)
   if (cardParam && validCard.test(cardParam)) {
     try {
       const uref = db.collection('users').doc(user.uid);
@@ -58,13 +56,12 @@ auth.onAuthStateChanged(async (user) => {
         );
       }
     } catch (e) {
-      // Non-blocking; still continue to card page
       console.warn('legacy ?card= write skipped:', e?.message || e);
     }
   }
 
-  // Default landing
-  location.replace(nextParam || 'card.html');
+  // ✅ default landing → allcard.html
+  location.replace(nextParam || 'allcard.html');
 });
 
 // ----- Login form -----
@@ -85,12 +82,11 @@ document.getElementById('loginForm').addEventListener('submit', function (e) {
       showModal('✅ Login successful!', '#299c34');
       loginModalBtn.onclick = () => {
         if (keyParam) {
-          // If this login was initiated by a redeem link, continue that flow
           location.replace(`redeem.html?k=${encodeURIComponent(keyParam)}`);
         } else if (nextParam) {
           location.replace(nextParam);
         } else {
-          location.replace('card.html');
+          location.replace('allcard.html'); // ✅ เดิม card.html
         }
       };
     })
