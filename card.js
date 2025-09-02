@@ -98,7 +98,7 @@ async function ensureFeedbackAwardApplied(uid, data){
   if (!flags.feedbackAwardGiven) return;
 
   const cards = Array.isArray(data.cards) ? data.cards : [];
-  const hasCard25 = cards.includes('card25');
+  const hasCard25 = cards.includes('card30');
 
   if (hasCard25) {
     // mark that it’s already applied so we never double-fix
@@ -111,7 +111,7 @@ async function ensureFeedbackAwardApplied(uid, data){
   // If award was given but card is missing (e.g., doc got overwritten),
   // restore card25 and the +5 once, then mark as patched.
   await db.collection('users').doc(uid).set({
-    cards:  firebase.firestore.FieldValue.arrayUnion('card25'),
+    cards:  firebase.firestore.FieldValue.arrayUnion('card30'),
     points: firebase.firestore.FieldValue.increment(5),
     flags: {
       feedbackAwardPatched: true,
