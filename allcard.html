@@ -17,32 +17,26 @@
 </head>
 <body>
   <!-- Drawer: มีแค่ 3 รายการ -->
-  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
-    <span class="menu-icon"><span></span><span></span><span></span></span>
-  </button>
   <nav id="sidebar" class="sidebar">
-    <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
-    <ul class="menu">
-      <li class="menu-item"><a class="active" href="allcard.html">รวมโหมดการ์ด</a></li>
-      <li class="menu-item"><a href="allmission.html">ภารกิจ</a></li>
-      <li class="menu-item"><a href="alldata.html">ข้อมูลส่วนตัว/กระดานคะแนน</a></li>
-    </ul>
-  </nav>
-  <div id="overlay" class="overlay"></div>
+  <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
+  <ul class="menu">
+    <li class="menu-item"><a class="active" href="allcard.html">รวมโหมดการ์ด</a></li>
+    <li class="menu-item"><a href="allmission.html">ภารกิจ</a></li>
+    <li class="menu-item"><a href="alldata.html">ข้อมูลส่วนตัว/กระดานคะแนน</a></li>
+  </ul>
+</nav>
+<div id="overlay" class="overlay"></div>
 
-  <!-- Header -->
 <header class="hub-header">
-  <!-- ซ้าย: ปุ่มเปิดเมนู -->
+  <!-- เหลือปุ่มเมนูไว้แค่ตัวเดียวใน header -->
   <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
     <span class="menu-icon"><span></span><span></span><span></span></span>
   </button>
 
-  <h1 style="text-align:center;margin:30px 0 6px;
-           font-weight:900;color:#e53935;font-size:1.9rem;">
-        รวมโหมดการ์ด
+  <h1 style="text-align:center;margin:30px 0 6px;font-weight:900;color:#e53935;font-size:1.9rem;">
+    รวมโหมดการ์ด
   </h1>
 
-  <!-- ขวา: โลโก้ (คลิกเพื่อเปิดรางวัลรายวันก็ได้) -->
   <div class="hub-actions">
     <img id="open-daily-from-logo" class="hub-logo" src="assets/logo.png" alt="Logo">
   </div>
