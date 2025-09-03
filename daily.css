@@ -1,6 +1,7 @@
-/* daily.css — floating FAB + full-screen modal (game style) */
+/* daily.css v4 — floating FAB + board look */
 :root{
-  --red:#e53935; --red-2:#d32f2f; --pink:#ffcdd2; --muted:#888;
+  --red:#e53935; --red-2:#d32f2f; --pink:#ffcdd2; --muted:#7a7a7a;
+  --beige:#fff7f2; --beige-2:#fde9df; --green:#2e7d32;
 }
 
 /* Floating button */
@@ -20,46 +21,97 @@
   background:rgba(0,0,0,.5); align-items:center; justify-content:center;
 }
 #daily-modal.show{ display:flex; }
+
+/* Panel */
 #daily-modal .panel{
-  width:min(680px,92vw); background:#fff; border-radius:18px;
-  padding:16px; box-shadow:0 14px 48px rgba(0,0,0,.35); position:relative;
+  width:min(720px,92vw); background:#fff; border-radius:20px;
+  padding:18px 16px 14px; box-shadow:0 14px 48px rgba(0,0,0,.35); position:relative;
+  border:2px solid #f1ded9;
 }
+
+/* Close */
 #daily-modal .close-x{
   position:absolute; top:10px; right:10px;
   width:32px; height:32px; border-radius:50%;
   border:none; background:#ffe6e6; color:var(--red); font-weight:900; cursor:pointer;
 }
 
-/* Title & hero */
-#daily-modal h2{
-  margin:4px 0 8px; text-align:center; color:var(--red-2);
-  font-weight:900; letter-spacing:.02em;
+/* Ribbon title */
+.ribbon{
+  position:relative; margin:0 auto 8px; width:fit-content;
+  background:linear-gradient(0deg,#ff6b6b,#ff8a80);
+  padding:10px 22px; border-radius:12px; color:#fff; font-weight:900; box-shadow:0 6px 16px rgba(255,105,105,.35);
 }
+.ribbon::before,.ribbon::after{
+  content:""; position:absolute; top:50%; width:14px; height:14px; background:#cf4b4b;
+  transform:translateY(-50%) rotate(45deg); filter:brightness(.95);
+}
+.ribbon::before{ left:-7px } .ribbon::after{ right:-7px }
+
+/* Today hero */
 .daily-hero{
-  margin:10px 0; text-align:center;
-  font-weight:900; font-size:2rem; color:#111;
+  display:grid; justify-items:center; gap:4px; margin:8px 0 10px;
 }
-.daily-hero .emoji{ font-size:2.2rem; display:block }
+.today-chip{
+  background:#ffe0e0; color:#c62828; font-weight:800; font-size:.85rem;
+  padding:4px 10px; border-radius:999px;
+}
+.hero-icon{ font-size:2.2rem; line-height:1 }
+.hero-text{ font-size:1.6rem; font-weight:900; color:#222 }
+.claimed-note{ color:var(--green); font-size:.95rem; margin-top:2px }
 
-/* 7-day strip */
-.daily-strip{
-  display:grid; grid-template-columns: repeat(7,1fr); gap:8px;
-  margin:12px 0 6px;
+/* Board grid (2 แถว 4x3 บนจอเล็ก, ขยายอัตโนมัติเมื่อกว้าง) */
+.daily-board{
+  background:linear-gradient(#fff,#fff) padding-box, linear-gradient(180deg,#f1e0d9,#f0d5c9) border-box;
+  border:2px solid transparent; border-radius:16px;
+  padding:14px; display:grid; gap:12px;
+  grid-template-columns: repeat(4, minmax(84px,1fr));
 }
-.daily-cell{
-  border:2px solid var(--pink); border-radius:12px; padding:8px;
-  text-align:center; font-weight:800; color:#c62828; background:#ffebee;
-  min-width:0;
-}
-.daily-cell small{ display:block; color:var(--muted); font-weight:700 }
-.daily-cell.claimed{
-  background:#e8f5e9; border-color:#a5d6a7; color:#2e7d32;
-}
-.daily-cell.today{
-  outline:3px solid #ff8a80;
+@media (min-width:560px){
+  .daily-board{ grid-template-columns: repeat(7, minmax(92px,1fr)); }
 }
 
-/* Actions */
+/* Cell */
+.daily-board .cell{
+  position:relative; border:none; background:var(--beige);
+  border-radius:14px; padding:14px 8px 12px; cursor:default;
+  box-shadow:0 4px 10px rgba(0,0,0,.06) inset, 0 2px 6px rgba(0,0,0,.06);
+  display:grid; justify-items:center; gap:6px;
+  transition:transform .12s ease;
+}
+.daily-board .cell:hover{ transform:translateY(-1px) }
+
+.day-pill{
+  position:absolute; top:8px; left:8px;
+  background:#fff; color:#8b5e3c; border:1px solid #edd5c7;
+  padding:2px 8px; border-radius:999px; font-weight:800; font-size:.75rem;
+}
+.cell-icon{ font-size:1.8rem; line-height:1; margin-top:4px }
+.cell-text{ font-weight:900; color:#333; font-size:1.05rem; text-align:center }
+
+/* Today focus */
+.is-today{
+  background:linear-gradient(#fff,#fff) padding-box, linear-gradient(180deg,#ffd7d7,#ffbaba) border-box;
+  border:2px solid transparent;
+  box-shadow:0 0 0 3px rgba(255,138,128,.35);
+}
+.is-today .cell-icon{ animation:pulse 1.4s infinite }
+@keyframes pulse { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.08) } }
+
+/* Claimed stamp */
+.stamp{
+  position:absolute; right:8px; bottom:8px; font-size:.7rem; font-weight:900;
+  color:#7a3e3e; background:#f7d4d4; border:1px dashed #eaa; padding:2px 6px; border-radius:8px;
+  opacity:0; transform:rotate(-8deg) scale(.9); transition:opacity .2s, transform .2s;
+  pointer-events:none;
+}
+.is-claimed{ background:#e8f5e9; }
+.is-claimed .cell-text{ color:#205b22 }
+.is-claimed .stamp{ opacity:1; transform:rotate(-8deg) scale(1) }
+
+/* Footnote & actions */
+.daily-note{ text-align:center; color:var(--muted); font-size:.95rem; margin:10px 0 8px }
+
 .daily-actions{
   display:flex; gap:10px; justify-content:flex-end; margin-top:10px;
 }
@@ -68,5 +120,4 @@
 }
 .daily-btn.grey{ background:#eee }
 .daily-btn.red{ background:var(--red); color:#fff }
-
-.daily-note{ text-align:center; color:var(--muted); font-size:.95rem; margin-top:4px }
+.daily-btn[disabled]{ opacity:.6; cursor:not-allowed }
