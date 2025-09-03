@@ -1,0 +1,62 @@
+/* fonts.css — โหลดท้ายสุดเพื่อ “ยกเครื่องฟอนต์ทั้งเว็บ”
+   และปรับหัวเรื่องในฮับให้อยู่กลางจริง/บาลานซ์กับไอคอน */
+
+:root{
+  --font-body: "Trirong", serif;
+  --font-fun:  "Itim", cursive;
+}
+
+/* ใช้ Trirong กับคอนเทนต์ทั้งหมด */
+html, body,
+button, input, textarea, select, option,
+p, a, li, span, div, small {
+  font-family: var(--font-body), "Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-weight: 400;
+}
+
+/* ใช้ Itim กับหัวเรื่อง/ไตเติล */
+h1, h2, h3,
+.page-title,
+.hub-header h1,
+.tile h3,
+.sub-header h1{
+  font-family: var(--font-fun), "Noto Sans Thai", cursive !important;
+  font-weight: 400; /* Itim มีน้ำหนักเดียว */
+}
+
+/* ==== จัดศูนย์หัวเรื่องในฮับให้เนียน ==== */
+.hub-header{
+  display: grid;
+  grid-template-columns: 48px 1fr 48px; /* ซ้าย-กลาง-ขวาเท่ากัน */
+  align-items: center;
+  column-gap: 8px;
+  padding: 10px 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  position: sticky; top: 0; z-index: 1000;
+}
+.hub-header h1{
+  margin: 0;
+  text-align: center;
+  color: #e53935;
+  font-size: 1.8rem;   /* ปรับขนาดจากที่นี่ ไม่ใช้ inline */
+  font-weight: 900;
+}
+.sidebar-toggle{
+  width: 48px; height: 48px; border: none; background: transparent; cursor: pointer;
+}
+.menu-icon{ display:flex; flex-direction:column; gap:6px }
+.menu-icon span{ width:24px; height:3px; background:#e53935; border-radius:2px }
+.hub-actions{ display:flex; justify-content:flex-end; }
+.hub-logo{ width:40px; height:40px; border-radius:50%; object-fit:cover; }
+
+/* จอเล็ก: ย่อตัวอักษรและคอลัมน์ */
+@media (max-width: 420px){
+  .hub-header{ grid-template-columns: 44px 1fr 44px; padding: 8px 12px; }
+  .hub-header h1{ font-size: 1.6rem; }
+}
+/* จอใหญ่: ขยายเล็กน้อย */
+@media (min-width: 768px){
+  .hub-header{ grid-template-columns: 56px 1fr 56px; }
+  .hub-header h1{ font-size: 1.9rem; }
+}
