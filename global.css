@@ -316,3 +316,28 @@ select:-webkit-autofill{
   font-size: 1.8rem;
   color: #e53935;
 }
+/* ==== PATCH: center title + balance with hamburger & logo (override) ==== */
+.hub-header{
+  /* กว้างคอลัมน์ซ้าย/ขวาเท่ากัน ทำให้หัวเรื่องกลางจริง */
+  grid-template-columns: 48px 1fr 48px;
+  column-gap: 8px;              /* ระยะห่างปุ่ม/โลโก้กับหัวเรื่อง */
+}
+
+.sidebar-toggle{
+  width: 48px; height: 48px;    /* ให้พอดีกับคอลัมน์ซ้าย */
+}
+
+.hub-actions{ justify-content: flex-end; }
+.hub-logo{ width: 40px; height: 40px; border-radius: 50%; }
+
+/* ย่อขนาดตัวอักษรบนจอเล็ก ให้บาลานซ์กับโลโก้และไม่ดันลง */
+@media (max-width: 420px){
+  .hub-header{ grid-template-columns: 44px 1fr 44px; padding: 8px 12px; }
+  .hub-header h1{ font-size: 1.6rem; }  /* จาก 1.8rem -> 1.6rem */
+}
+
+/* จอใหญ่ขึ้น ขยายเล็กน้อย */
+@media (min-width: 768px){
+  .hub-header{ grid-template-columns: 56px 1fr 56px; }
+  .hub-header h1{ font-size: 1.9rem; }
+}
