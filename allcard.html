@@ -6,20 +6,20 @@
   <title>Card Mode</title>
 
   <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Itim&family=Trirong:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
-  <!-- Styles (เรียงลำดับให้ fonts.css โหลดท้ายสุด) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Itim&family=Trirong:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="global.css">
   <link rel="stylesheet" href="share.css">
   <link rel="stylesheet" href="hub.css?v=1">
   <link rel="stylesheet" href="daily.css?v=3">
-  <!-- โหลดทับสุดท้าย: ตั้งฟอนต์ทั้งเว็บ + ปรับหัวข้อให้อยู่กลางจริง -->
-  <link rel="stylesheet" href="fonts.css?v=1">
 </head>
 <body>
-  <!-- Drawer (เมนูมี 3 รายการ) -->
+  <!-- Drawer: มีแค่ 3 รายการ -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon"><span></span><span></span><span></span></span>
+  </button>
   <nav id="sidebar" class="sidebar">
     <button id="close-sidebar" class="close-btn" aria-label="Close menu">&times;</button>
     <ul class="menu">
@@ -30,21 +30,23 @@
   </nav>
   <div id="overlay" class="overlay"></div>
 
-  <!-- Header (เหลือปุ่ม menu-toggle แค่ตัวเดียว) -->
-  <header class="hub-header">
-    <!-- ซ้าย: ปุ่มเปิดเมนู -->
-    <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
-      <span class="menu-icon"><span></span><span></span><span></span></span>
-    </button>
+  <!-- Header -->
+<header class="hub-header">
+  <!-- ซ้าย: ปุ่มเปิดเมนู -->
+  <button id="menu-toggle" class="sidebar-toggle" aria-label="Open menu">
+    <span class="menu-icon"><span></span><span></span><span></span></span>
+  </button>
 
-    <!-- กลาง: ชื่อหน้า (ไม่มี inline style) -->
-    <h1>รวมโหมดการ์ด</h1>
+  <h1 style="text-align:center;margin:30px 0 6px;
+           font-weight:900;color:#e53935;font-size:1.9rem;">
+        รวมโหมดการ์ด
+  </h1>
 
-    <!-- ขวา: โลโก้ (คลิกเพื่อเปิดรางวัลรายวัน) -->
-    <div class="hub-actions">
-      <img id="open-daily-from-logo" class="hub-logo" src="assets/logo.png" alt="Logo">
-    </div>
-  </header>
+  <!-- ขวา: โลโก้ (คลิกเพื่อเปิดรางวัลรายวันก็ได้) -->
+  <div class="hub-actions">
+    <img id="open-daily-from-logo" class="hub-logo" src="assets/logo.png" alt="Logo">
+  </div>
+</header>
 
   <!-- Tiles -->
   <div class="hub-grid">
@@ -62,9 +64,7 @@
     </a>
   </div>
 
-  <p class="hub-note">
-    ถ้ายังไม่ได้รับวันนี้ ระบบจะเด้งรางวัลอัตโนมัติบนหน้านี้ หรือกดโลโก้มุมขวาบน/ปุ่ม 🎁 ก็ได้
-  </p>
+  <p class="hub-note">ถ้ายังไม่ได้รับวันนี้ ระบบจะเด้งรางวัลอัตโนมัติบนหน้านี้ หรือกดโลโก้มุมขวาบน/ปุ่ม 🎁 ก็ได้</p>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -93,10 +93,10 @@
   <script>
     (function(){
       const $ = id => document.getElementById(id);
-      const open  = ()=>{ $("sidebar").classList.add("open"); $("overlay").classList.add("active"); };
+      $("menu-toggle")?.addEventListener("click", ()=>{
+        $("sidebar").classList.add("open"); $("overlay").classList.add("active");
+      });
       const close = ()=>{ $("sidebar").classList.remove("open"); $("overlay").classList.remove("active"); };
-
-      $("menu-toggle")?.addEventListener("click", open);
       $("close-sidebar")?.addEventListener("click", close);
       $("overlay")?.addEventListener("click", close);
     })();
