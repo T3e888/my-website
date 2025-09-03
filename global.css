@@ -1,6 +1,31 @@
 /* Center the big page title and keep it clear of the left hamburger */
-.page-title{
+/* ===== Centered header for hubs (allcard/allmission/alldata) ===== */
+.hub-header{
+  display: grid;
+  grid-template-columns: 44px 1fr 44px; /* ซ้าย(ปุ่ม) | กลาง(หัวเรื่อง) | ขวา(โลโก้) */
+  align-items: center;
+  padding: 10px 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  position: sticky; top: 0; z-index: 1000;
+}
+
+.hub-header h1{
+  margin: 0;
   text-align: center;
+  font-weight: 900;
+  font-size: 1.8rem;
+  color: #e53935;
+}
+
+.sidebar-toggle{
+  width: 44px; height: 44px; border: none; background: transparent; cursor: pointer;
+}
+.menu-icon{ display:flex; flex-direction:column; gap:6px }
+.menu-icon span{ width:24px; height:3px; background:#e53935; border-radius:2px }
+
+.hub-actions{ display:flex; justify-content:flex-end; }
+.hub-logo{ width:40px; height:40px; border-radius:50%; object-fit:cover; }
 
 /* ---------------------------------------------------
    global.css — Stroke Card Adventure (light theme)
