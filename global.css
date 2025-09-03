@@ -341,3 +341,35 @@ select:-webkit-autofill{
   .hub-header{ grid-template-columns: 56px 1fr 56px; }
   .hub-header h1{ font-size: 1.9rem; }
 }
+/* === Fonts: site-wide === */
+:root{
+  --font-body: "Trirong", serif;   /* เนื้อหาหลัก */
+  --font-fun:  "Itim", cursive;    /* หัวเรื่อง/ข้อความเด่น */
+}
+
+/* ใช้ Trirong กับทั้งเว็บ */
+html, body{
+  font-family: var(--font-body), "Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* ใช้ Itim กับหัวเรื่อง/ไตเติลหลัก */
+h1, h2, h3,
+.page-title,
+.hub-header h1,
+.tile h3,
+.sub-header h1{
+  font-family: var(--font-fun), "Noto Sans Thai", cursive !important;
+  font-weight: 400; /* Itim มีน้ำหนักเดียว */
+}
+
+/* ยูทิลิตี้ (อยากบังคับใช้ที่จุดใดจุดหนึ่ง) */
+.font-body { font-family: var(--font-body) !important; }
+.font-fun  { font-family: var(--font-fun)  !important; }
+
+/* ตัวอย่างน้ำหนัก/เอียงสำหรับ Trirong (เลือกใช้เมื่อจำเป็น) */
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.italic { font-style: italic; }
