@@ -1,4 +1,5 @@
-// daily.js v3 — Firebase daily reward (7 วันวนลูป)
+<script>
+// daily.js v4 — Firebase daily reward board (7 วันวนลูป)
 (function(){
   if (!window.firebase || !window.auth || !window.db) return;
 
@@ -57,16 +58,29 @@
     modal.innerHTML = `
       <div class="panel">
         <button class="close-x" aria-label="Close">×</button>
-        <h2>Daily Login Rewards</h2>
+
+        <!-- Ribbon -->
+        <div class="ribbon">
+          <span>Daily Login Rewards</span>
+        </div>
+
+        <!-- Today hero -->
         <div class="daily-hero" id="daily-hero"></div>
-        <div class="daily-strip" id="daily-strip"></div>
+
+        <!-- Board -->
+        <div class="daily-board" id="daily-board"></div>
+
         <div class="daily-note">รับได้วันละครั้ง ข้ามวันรีเซ็ตรอบใหม่</div>
+
+        <!-- Actions -->
         <div class="daily-actions">
           <button class="daily-btn grey" id="daily-cancel">ปิด</button>
           <button class="daily-btn red"  id="daily-claim">รับรางวัล</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
+
+    // events
     modal.addEventListener('click', (e)=>{ if (e.target.id==='daily-modal') closeModal(); });
     modal.querySelector('.close-x').addEventListener('click', closeModal);
     modal.querySelector('#daily-cancel').addEventListener('click', closeModal);
@@ -94,34 +108,58 @@
     return { today, last, streak, claimedToday, dayIdx, nextStreakIfClaim };
   }
 
+  function iconFor(r){
+    if (r.type==='points') return '🧠';
+    if (r.type==='card')   return '🃏';
+    return '🎁';
+  }
+
+  function textFor(r){
+    if (r.type==='points') return `+${r.amount}`;
+    if (r.type==='card')   return `Card 30`;
+    return `+${r.amount} + Card 30`;
+  }
+
   async function refreshPreview(){
     const user = auth.currentUser;
     if (!user) return;
 
-    const { claimedToday, dayIdx } = await readDailyState(user.uid);
-    const hero  = document.getElementById('daily-hero');
-    const strip = document.getElementById('daily-strip');
-    const r = PLAN[dayIdx];
+    const state = await readDailyState(user.uid);
+    const { claimedToday, dayIdx } = state;
 
+    // hero
+    const hero = document.getElementById('daily-hero');
+    const r = PLAN[dayIdx];
     if (hero){
-      if (r.type === 'points')      hero.innerHTML = `<span class="emoji">🧠</span>${r.label}`;
-      else if (r.type === 'card')   hero.innerHTML = `<span class="emoji">🃏</span>${r.label}`;
-      else                          hero.innerHTML = `<span class="emoji">🎉</span>${r.label}`;
-      if (claimedToday){
-        hero.innerHTML += `<div style="font-size:1rem;color:#2e7d32;margin-top:6px">รับรางวัลวันนี้แล้ว</div>`;
-      }
+      hero.innerHTML = `
+        <div class="today-chip">วันนี้</div>
+        <div class="hero-icon">${iconFor(r)}</div>
+        <div class="hero-text">${textFor(r)}</div>
+        ${claimedToday ? `<div class="claimed-note">รับรางวัลวันนี้แล้ว</div>` : ``}
+      `;
+      hero.classList.toggle('claimed', claimedToday);
     }
 
-    if (strip){
-      strip.innerHTML = '';
+    // board
+    const board = document.getElementById('daily-board');
+    if (board){
+      board.innerHTML = '';
       for (let i=0;i<7;i++){
         const ri = PLAN[i];
-        const cell = document.createElement('div');
-        cell.className = 'daily-cell';
-        cell.innerHTML = `<div>${ri.label}</div><small>Day ${i+1}</small>`;
-        if (i < dayIdx) cell.classList.add('claimed');
-        if (i === dayIdx) cell.classList.add('today');
-        strip.appendChild(cell);
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'cell';
+        cell.innerHTML = `
+          <span class="day-pill">DAY ${pad(i+1)}</span>
+          <span class="cell-icon">${iconFor(ri)}</span>
+          <span class="cell-text">${textFor(ri)}</span>
+          <span class="stamp">CLAIMED</span>
+          <span class="focus-ring"></span>
+        `;
+        if (i < dayIdx) cell.classList.add('is-claimed');
+        if (i === dayIdx) cell.classList.add('is-today');
+        // ไม่กดรับจาก cell – กดปุ่มหลักด้านล่างแทน เพื่อความชัดเจน
+        board.appendChild(cell);
       }
     }
 
@@ -197,3 +235,4 @@
     setTimeout(()=> el.style.opacity='0', 1600);
   }
 })();
+</script>
