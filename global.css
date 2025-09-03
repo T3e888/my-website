@@ -251,3 +251,26 @@ select:-webkit-autofill{
 .merge-row{ display:grid; grid-template-columns:1fr auto 1fr auto; gap:.5rem; align-items:center; }
 .mut-circle{ width:220px; height:220px; border:2px dashed var(--line); border-radius:999px; display:grid; place-items:center; margin:0 auto; background:#fff; }
 .mut-inner{ width:110px; height:110px; border:1px solid var(--line); border-radius:.6rem; display:grid; place-items:center; background:#fff; }
+
+/* Back header & button (shared) */
+.back-btn{
+  background:#fff; color:#e53935; font-weight:700;
+  border:none; border-radius:8px; padding:4px 10px;
+  cursor:pointer; font-size:.85rem;
+  box-shadow:0 1px 4px rgba(0,0,0,.12);
+}
+.back-btn:hover{ background:#ffe6e6; }
+
+.sub-header{
+  position:sticky; top:0; z-index:1000;
+  display:flex; align-items:center; gap:14px;
+  padding:10px 14px; background:#e53935; color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.sub-header h1{
+  margin:0; font-size:1.05rem; font-weight:900; letter-spacing:.02em;
+}
+
+/* ถ้ามีโลโก้มุมขวาบนอยู่แล้ว ป้องกันชนแถบหัว */
+.corner-logo{ top:72px; }
+@media (min-width:480px){ .corner-logo{ top:80px; } }
