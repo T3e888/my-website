@@ -274,3 +274,20 @@ select:-webkit-autofill{
 /* ถ้ามีโลโก้มุมขวาบนอยู่แล้ว ป้องกันชนแถบหัว */
 .corner-logo{ top:72px; }
 @media (min-width:480px){ .corner-logo{ top:80px; } }
+
+.hub-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px; /* ซ้าย กลาง ขวา */
+  align-items: center;
+  padding: 10px 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.hub-header h1 {
+  text-align: center;
+  margin: 0;
+  font-weight: 900;
+  font-size: 1.8rem;
+  color: #e53935;
+}
