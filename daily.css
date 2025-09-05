@@ -199,3 +199,56 @@
 .hero-icon{ font-size:2.3rem }
 .hero-text{ font-size:1.8rem; font-weight:900; color:#222 }
 .claimed-note{ color:#2e7d32; font-size:.98rem; margin-top:2px }
+/* === Desktop-mode & wide screens patch (v4.3) =================== */
+
+/* 1) แผงหลักกว้างขึ้นบนจอใหญ่ และเลื่อนแนวตั้งได้ */
+#daily-modal .panel{
+  width: min(900px, 96vw);
+  max-height: 90vh;
+  overflow: auto;            /* กันเนื้อหาเกินความสูงหน้าจอ */
+}
+
+/* 2) กรอบบอร์ด: เลื่อนแนวนอนได้ถ้ากว้างไม่พอ (โหมดเดสก์ทอปบนมือถือ) */
+.board-wrap{
+  margin: 10px 6px 0;
+  border-radius: 18px;
+  border: 2px solid #efd9cf;
+  background: linear-gradient(#ffffff,#ffffff) padding-box,
+              linear-gradient(180deg,#f3e3db,#ead1c6) border-box;
+  padding: 14px;
+  overflow-x: auto;          /* <-- สำคัญ: เปิดสกอลล์แนวนอน */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 3) กริด: บนจอเล็กยังเป็น 3/4 คอลัมน์เหมือนเดิม */
+.daily-board{
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(3, minmax(84px,1fr));
+}
+
+/* ≥420px → 4 คอลัมน์ */
+@media (min-width:420px){
+  .daily-board{ grid-template-columns: repeat(4, minmax(86px,1fr)); }
+}
+
+/* ≥560px (หรือเมื่อเข้าชมแบบเดสก์ทอปที่ viewport แคบ) 
+   บังคับให้เป็น 7 ช่อง และตั้งความกว้างขั้นต่ำทั้งหมด ~7*120px
+   เพื่อไม่ให้การ์ดถูกบีบจนแตกเลย์เอาต์ */
+@media (min-width:560px){
+  .daily-board{
+    grid-template-columns: repeat(7, minmax(110px,1fr));
+    min-width: 770px;        /* 7 ช่อง x ~110px + gap => กันบีบ */
+  }
+}
+
+/* การ์ดดูแน่นขึ้นนิดหน่อยบนจอใหญ่ */
+@media (min-width:768px){
+  .daily-board .cell{
+    min-height: 120px;
+    padding: 18px 12px 16px;
+  }
+  .cell-icon{ font-size: 2.0rem }
+  .cell-text{ font-size: 1.12rem }
+}
+
+/* (คงเอฟเฟ็กต์ is-today / is-claimed เดิมไว้ได้ทั้งหมด) */
