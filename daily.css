@@ -121,3 +121,81 @@
 .daily-btn.grey{ background:#eee }
 .daily-btn.red{ background:var(--red); color:#fff }
 .daily-btn[disabled]{ opacity:.6; cursor:not-allowed }
+/* ---- Board polish (override) ---- */
+
+/* กรอบบอร์ดแบบมีขอบสีกลาง ๆ และเงาบาง */
+.board-wrap{
+  margin: 10px 6px 0;
+  border-radius: 18px;
+  border: 2px solid #efd9cf;
+  background: linear-gradient(#ffffff,#ffffff) padding-box,
+              linear-gradient(180deg,#f3e3db,#ead1c6) border-box;
+  padding: 14px;
+}
+
+/* บนจอเล็ก: 3 คอลัมน์ 2 แถว (เห็นครบ ไม่ล้น) */
+.daily-board{
+  display:grid; gap:14px;
+  grid-template-columns: repeat(3, minmax(84px,1fr));
+}
+
+/* จอกว้างขึ้นค่อยขยายคอลัมน์ */
+@media (min-width:420px){
+  .daily-board{ grid-template-columns: repeat(4, minmax(86px,1fr)); }
+}
+@media (min-width:560px){
+  .daily-board{ grid-template-columns: repeat(7, minmax(92px,1fr)); }
+}
+
+/* การ์ดรางวัลให้สม่ำเสมอมากขึ้น */
+.daily-board .cell{
+  border:none; background:#fff7f2;
+  border-radius:16px; padding:16px 10px 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.06);
+  display:grid; justify-items:center; gap:8px;
+  min-height: 112px;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.daily-board .cell:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0,0,0,.08);
+}
+
+/* ป้าย Day */
+.day-pill{
+  position:absolute; top:8px; left:8px;
+  background:#fff; color:#8b5e3c; border:1px solid #edd5c7;
+  padding:2px 8px; border-radius:999px; font-weight:800; font-size:.74rem;
+}
+
+/* ไอคอน/ข้อความ */
+.cell-icon{ font-size:1.9rem; line-height:1; margin-top:6px }
+.cell-text{ font-weight:900; color:#333; font-size:1.06rem; text-align:center }
+
+/* วันนี้: ขอบไล่เฉด + glow */
+.is-today{
+  background: radial-gradient(ellipse at top,#fff0f0,transparent 60%),
+              #fff7f2;
+  box-shadow: 0 0 0 4px rgba(255,138,128,.35), 0 8px 22px rgba(255,138,128,.18);
+  outline: 2px solid #ffb7ae;
+}
+.is-today .cell-icon{ animation:pulse 1.4s infinite }
+@keyframes pulse { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.08) } }
+
+/* รับแล้ว: โทนเขียวอ่อน + ตราปั๊ม */
+.is-claimed{ background:#e8f5e9; }
+.is-claimed .cell-text{ color:#205b22 }
+.stamp{
+  position:absolute; right:8px; bottom:8px; font-size:.72rem; font-weight:900;
+  color:#7a3e3e; background:#f7d4d4; border:1px dashed #eaa; padding:2px 6px; border-radius:8px;
+  opacity:0; transform:rotate(-7deg) scale(.9); transition:opacity .2s, transform .2s;
+  pointer-events:none;
+}
+.is-claimed .stamp{ opacity:1; transform:rotate(-7deg) scale(1) }
+
+/* ส่วนหัว */
+.daily-hero{ display:grid; justify-items:center; gap:6px; margin:8px 0 12px }
+.today-chip{ background:#ffe0e0; color:#c62828; font-weight:800; font-size:.88rem; padding:5px 12px; border-radius:999px }
+.hero-icon{ font-size:2.3rem }
+.hero-text{ font-size:1.8rem; font-weight:900; color:#222 }
+.claimed-note{ color:#2e7d32; font-size:.98rem; margin-top:2px }
