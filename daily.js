@@ -1,11 +1,12 @@
-/* daily.js v4 — Daily Login Rewards (7-day loop)
-   - FAB 🎁 สร้างทันที (แม้ยังไม่ล็อกอิน)
-   - Modal โชว์พรีวิวได้ทั้งตอนล็อกอิน/ยังไม่ล็อกอิน
-   - Auto-open เมื่อเข้าหน้า allcard.html และยังไม่ได้กดรับวันนี้
-   - ใช้ Firebase (auth, db) ถ้ามี — ถ้าไม่มีจะแสดงโหมดพรีวิวเฉยๆ
+/* daily.js v4.1 — Board layout (match daily.css v4)
+   - FAB 🎁 สร้างเสมอ
+   - Modal ใช้ .ribbon + .daily-board/.cell ให้ตรง CSS
+   - กดรับได้จากปุ่ม หรือคลิกช่อง "วันนี้"
+   - Auto-open บน allcard.html ถ้ายังไม่ได้รับวันนี้
 */
+
 (function () {
-  // ---------- Helpers ----------
+  // ---------- helpers ----------
   const pad = (n) => String(n).padStart(2, "0");
   const ymd = (d = new Date()) =>
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -15,33 +16,33 @@
     return x;
   };
 
-  // ---------- Reward plan (7 วันวน) ----------
-  const CARD_REWARD_ID = "card30"; // *** เปลี่ยนได้ภายหลัง ***
+  // ---------- rewards plan (วน 7 วัน) ----------
+  const CARD_REWARD_ID = "card30"; // การ์ด 30 ได้จากรางวัลรายวัน
   const PLAN = [
-    { type: "points", amount: 2, label: "+2 🧠" },
-    { type: "points", amount: 3, label: "+3 🧠" },
-    { type: "card", cardId: CARD_REWARD_ID, label: "Card 30" },
-    { type: "points", amount: 2, label: "+2 🧠" },
-    { type: "points", amount: 3, label: "+3 🧠" },
-    { type: "points", amount: 2, label: "+2 🧠" },
-    { type: "combo", amount: 2, cardId: CARD_REWARD_ID, label: "+2 🧠 + Card 30" },
+    { type: "points", amount: 2, icon: "🧠", text: "+2" },
+    { type: "points", amount: 3, icon: "🧠", text: "+3" },
+    { type: "card",   cardId: CARD_REWARD_ID, icon: "🃏", text: "Card 30" },
+    { type: "points", amount: 2, icon: "🧠", text: "+2" },
+    { type: "points", amount: 3, icon: "🧠", text: "+3" },
+    { type: "points", amount: 2, icon: "🧠", text: "+2" },
+    { type: "combo",  amount: 2, cardId: CARD_REWARD_ID, icon: "🎁", text: "+2 + Card 30" },
   ];
 
-  // ---------- สร้าง FAB + Modal "ทันที" ----------
+  // ---------- build shell (FAB + MODAL) ----------
   ensureModalShell();
   ensureFab();
 
-  // ให้เรียกจากภายนอกได้ (เช่น ผูกกับโลโก้)
-  window.openDaily = openModal;
+  // export open/close
+  window.openDaily  = openModal;
   window.closeDaily = closeModal;
 
-  // ---------- Hook Firebase auth ถ้ามี ----------
+  // ---------- firebase hook (ถ้ามี) ----------
   document.addEventListener("DOMContentLoaded", hookAuthIfReady);
   hookAuthIfReady();
 
   function hookAuthIfReady() {
     if (!window.firebase || !window.auth || !window.db) {
-      // ยังไม่มี Firebase → แสดงพรีวิวโหมดล็อกเอาต์ไว้ก่อน
+      // ไม่มี Firebase → โหมดพรีวิว (ล็อกเอาต์)
       refreshPreviewLoggedOut();
       return;
     }
@@ -50,35 +51,34 @@
     let autoOpenedOnce = false;
 
     auth.onAuthStateChanged(async (user) => {
-      // ให้โลโก้เปิดหน้าต่าง daily ได้เสมอ
+      // ให้คลิกโลโก้เปิด daily ได้
       document
         .getElementById("open-daily-from-logo")
         ?.addEventListener("click", openModal);
 
       if (!user) {
-        refreshPreviewLoggedOut(); // ยังไม่ล็อกอิน
+        refreshPreviewLoggedOut();
         return;
       }
 
-      // ล็อกอินแล้ว
       if (isLanding && !autoOpenedOnce) {
         autoOpenedOnce = true;
         try {
           const { claimedToday } = await readDailyState(user.uid);
           if (!claimedToday) openModal();
-        } catch (_) {}
+        } catch {}
       }
-      refreshPreview(); // เติมข้อมูลจริง
+      refreshPreview();
     });
   }
 
-  // ---------- UI Shell ----------
+  // ---------- ui shell ----------
   function ensureFab() {
     if (document.getElementById("daily-fab")) return;
     const fab = document.createElement("button");
     fab.id = "daily-fab";
     fab.title = "Daily Login Rewards";
-    fab.innerHTML = "🎁<span class=\"sr\">Daily</span>";
+    fab.innerHTML = '🎁<span class="sr">Daily</span>';
     document.body.appendChild(fab);
     fab.addEventListener("click", openModal);
   }
@@ -90,10 +90,18 @@
     modal.innerHTML = `
       <div class="panel">
         <button class="close-x" aria-label="Close">×</button>
-        <h2>Daily Login Rewards</h2>
-        <div class="daily-hero" id="daily-hero"></div>
-        <div class="daily-strip" id="daily-strip"></div>
+
+        <div class="ribbon">Daily Login Rewards</div>
+
+        <div class="daily-hero" id="daily-hero">
+          <!-- today chip + icon + text will be injected -->
+        </div>
+
+        <!-- บอร์ดรางวัล -->
+        <div class="daily-board" id="daily-board"></div>
+
         <div class="daily-note">รับได้วันละครั้ง ข้ามวันรีเซ็ตรอบใหม่</div>
+
         <div class="daily-actions">
           <button class="daily-btn grey" id="daily-cancel">ปิด</button>
           <button class="daily-btn red"  id="daily-claim">รับรางวัล</button>
@@ -121,7 +129,7 @@
     document.getElementById("daily-modal")?.classList.remove("show");
   }
 
-  // ---------- Data (Firebase) ----------
+  // ---------- data (firebase) ----------
   async function readDailyState(uid) {
     const ref = db.collection("users").doc(uid);
     const s = await ref.get();
@@ -141,26 +149,7 @@
     return { today, last, streak, claimedToday, dayIdx, nextStreakIfClaim };
   }
 
-  // ---------- Render ----------
-  function renderStrip(dayIdx, claimedToday, mode = "login") {
-    const strip = document.getElementById("daily-strip");
-    if (!strip) return;
-
-    strip.innerHTML = "";
-    for (let i = 0; i < 7; i++) {
-      const ri = PLAN[i];
-      const cell = document.createElement("div");
-      cell.className = "daily-cell";
-      cell.innerHTML = `<div>${ri.label}</div><small>Day ${i + 1}</small>`;
-
-      if (mode === "login") {
-        if (i < dayIdx) cell.classList.add("claimed");
-        if (i === dayIdx) cell.classList.add("today");
-      }
-      strip.appendChild(cell);
-    }
-  }
-
+  // ---------- render ----------
   async function refreshPreview() {
     const user = auth.currentUser;
     if (!user) return refreshPreviewLoggedOut();
@@ -168,34 +157,74 @@
     const { claimedToday, dayIdx } = await readDailyState(user.uid);
     const r = PLAN[dayIdx];
 
+    // hero (บนหัว)
     const hero = document.getElementById("daily-hero");
     if (hero) {
-      if (r.type === "points") hero.innerHTML = `<span class="emoji">🧠</span>${r.label}`;
-      else if (r.type === "card") hero.innerHTML = `<span class="emoji">🃏</span>${r.label}`;
-      else hero.innerHTML = `<span class="emoji">🎉</span>${r.label}`;
-      if (claimedToday) {
-        hero.innerHTML += `<div style="font-size:1rem;color:#2e7d32;margin-top:6px">รับรางวัลวันนี้แล้ว</div>`;
-      }
+      hero.innerHTML = `
+        <div class="today-chip">วันนี้</div>
+        <div class="hero-icon">${r.icon}</div>
+        <div class="hero-text">${r.text}</div>
+        ${claimedToday ? `<div class="claimed-note">รับรางวัลวันนี้แล้ว</div>` : ``}
+      `;
     }
 
-    renderStrip(dayIdx, claimedToday, "login");
+    // board
+    renderBoard(dayIdx, claimedToday, /*loggedIn*/ true);
 
+    // ปุ่ม
     const btn = document.getElementById("daily-claim");
     if (btn) btn.disabled = claimedToday;
   }
 
   function refreshPreviewLoggedOut() {
     const hero = document.getElementById("daily-hero");
-    if (hero)
-      hero.innerHTML = `<span class="emoji">🔒</span>โปรดล็อกอินเพื่อรับรางวัล`;
-
-    renderStrip(0, false, "logout");
-
+    if (hero) {
+      const r = PLAN[0];
+      hero.innerHTML = `
+        <div class="today-chip">ล็อกอินเพื่อรับ</div>
+        <div class="hero-icon">🔒</div>
+        <div class="hero-text">${r.text}</div>`;
+    }
+    renderBoard(0, false, /*loggedIn*/ false);
     const btn = document.getElementById("daily-claim");
     if (btn) btn.disabled = true;
   }
 
-  // ---------- Claim ----------
+  function renderBoard(dayIdx, claimedToday, loggedIn) {
+    const board = document.getElementById("daily-board");
+    if (!board) return;
+
+    board.innerHTML = "";
+    for (let i = 0; i < 7; i++) {
+      const ri = PLAN[i];
+      const cell = document.createElement("div");
+      cell.className = "cell";
+
+      // state classes
+      if (loggedIn) {
+        if (i < dayIdx) cell.classList.add("is-claimed");
+        if (i === dayIdx) cell.classList.add("is-today");
+      }
+
+      // html
+      cell.innerHTML = `
+        <span class="day-pill">DAY ${i + 1}</span>
+        <div class="cell-icon">${i < dayIdx ? "✅" : ri.icon}</div>
+        <div class="cell-text">${i < dayIdx ? "รับแล้ว" : ri.text}</div>
+        <span class="stamp">CLAIMED</span>
+      `;
+
+      // คลิกช่องของ "วันนี้" เพื่อรับ (เฉพาะล็อกอินและยังไม่รับวันนี้)
+      if (loggedIn && i === dayIdx && !claimedToday) {
+        cell.style.cursor = "pointer";
+        cell.addEventListener("click", claimReward, { once: true });
+      }
+
+      board.appendChild(cell);
+    }
+  }
+
+  // ---------- claim ----------
   async function claimReward() {
     const user = auth.currentUser;
     if (!user) {
@@ -212,6 +241,7 @@
           data.daily && typeof data.daily === "object"
             ? data.daily
             : { last: null, streak: 0 };
+
         const last = daily.last || null;
         const streak = Number(daily.streak || 0);
 
@@ -241,9 +271,9 @@
         toast("วันนี้รับแล้ว");
       } else {
         const r = result.reward;
-        if (r.type === "points") toast(`+${r.amount} Brain points 🎉`);
-        else if (r.type === "card") toast(`ได้ Card 30 🎉`);
-        else toast(`+${r.amount} Brain points + Card 30 🎉`);
+        if (r.type === "points")      toast(`+${r.amount} Brain points 🎉`);
+        else if (r.type === "card")   toast(`ได้ Card 30 🎉`);
+        else                          toast(`+${r.amount} Brain points + Card 30 🎉`);
       }
 
       await refreshPreview();
@@ -254,7 +284,7 @@
     }
   }
 
-  // ---------- Toast ----------
+  // ---------- toast ----------
   function toast(t) {
     let el = document.getElementById("toast");
     if (!el) {
