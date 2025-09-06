@@ -95,5 +95,15 @@
       $("overlay")?.addEventListener("click", close);
     })();
   </script>
+  <script>
+  async function logout() {
+    try {
+      await firebase.auth().signOut();
+      location.href = "login.html"; // หรือหน้าไหนก็ได้
+    } catch (err) {
+      alert("Sign out failed: " + (err?.message || err));
+    }
+  }
+  </script>
 </body>
 </html>
